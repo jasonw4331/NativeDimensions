@@ -27,14 +27,23 @@ class Main extends PluginBase {
 	private static $instance;
 
 	/** @var string|null $endGenerator */
-	private $endGenerator = null;
+	protected $endGenerator = null;
+
+	/**
+	 * @return Main
+	 */
+	public static function getInstance() : Main {
+		return self::$instance;
+	}
 
 	public function onLoad() {
+		self::$instance = $this;
 		LevelProviderManager::addProvider(AnvilDimensionProvider::class);
 		//LevelProviderManager::addProvider(LevelDBDimensionProvider::class); // TODO
 	}
 
 	public function onEnable() {
+		new DimensionListener($this);
 		$this->endGenerator = GeneratorManager::getGenerator("ender");
 		$multiworld = $this->getServer()->getPluginManager()->getPlugin("MultiWorld");
 		if($multiworld !== null)
@@ -48,29 +57,22 @@ class Main extends PluginBase {
 
 	/**
 	 * @param string $generator
+	 *
+	 * @return Main
 	 */
-	public function setEndGenerator(string $generator) : void {
+	public function setEndGenerator(string $generator) : self {
 		if(!($generator !== null and class_exists($generator, true) and is_subclass_of($generator, Generator::class))){
 			$this->endGenerator = GeneratorManager::getGenerator("ender");
 		}
 		$this->endGenerator = EnderGenerator::class;
+		return $this;
 	}
 
 	/**
-	 * @param LevelLoadEvent $event
-	 *
-	 * @throws \ReflectionException
+	 * @return string|null
 	 */
-	public function onLevelLoad(LevelLoadEvent $event) : void {
-		$provider = $event->getLevel()->getProvider();
-		if($provider instanceof Anvil and !$provider instanceof AnvilDimensionProvider) {
-			if($this->dimensionExists($event->getLevel(), -1))
-				$this->generateLevelDimension($event->getLevel()->getFolderName(), $event->getLevel()->getSeed(), Nether::class, [], -1);
-			if($this->endGenerator !== null) {
-				if($this->dimensionExists($event->getLevel(), 1))
-					$this->generateLevelDimension($event->getLevel()->getFolderName(), $event->getLevel()->getSeed(), $this->endGenerator, [], -1); // TODO
-			}
-		}
+	public function getEndGenerator() : ?string {
+		return $this->endGenerator;
 	}
 
 	/**
@@ -86,7 +88,7 @@ class Main extends PluginBase {
 	 * @throws \ReflectionException
 	 */
 	public function generateLevelDimension(string $name, int $seed = null, $generator = null, array $options = [], int $dimension = -1) : bool {
-		if(trim($name) === "" or $this->getServer()->isLevelGenerated($name."dim".$dimension)) {
+		if(trim($name) === "" or $this->getServer()->isLevelGenerated($name." dim".$dimension)) {
 			return false;
 		}
 
@@ -110,20 +112,20 @@ class Main extends PluginBase {
 		$providerClass::generate($path, $name, $seed, $generator, $options);
 
 		/** @see LevelProvider::__construct() */
-		$level = new Level($this->getServer(), $name."dim".$dimension, new $providerClass($path));
+		$level = new Level($this->getServer(), $name." dim".$dimension, new $providerClass($path));
 		$ref = new \ReflectionClass($this->getServer());
 		$prop = $ref->getProperty("levels");
 		$prop->setAccessible(true);
 		$levels = $prop->getValue($this->getServer());
 		$levels[$level->getId()] = $level;
-		$prop->setValue($levels);
+		$prop->setValue($this->getServer(), $levels);
 		$prop->setAccessible(false);
 
 		(new LevelInitEvent($level))->call();
 
 		(new LevelLoadEvent($level))->call();
 
-		$this->getLogger()->notice($this->getServer()->getLanguage()->translateString("pocketmine.level.backgroundGeneration", [$name."dim".$dimension]));
+		$this->getLogger()->notice($this->getServer()->getLanguage()->translateString("pocketmine.level.backgroundGeneration", [$name." dim".$dimension]));
 
 		$spawnLocation = $level->getSpawnLocation();
 		$centerX = $spawnLocation->getFloorX() >> 4;
@@ -151,7 +153,112 @@ class Main extends PluginBase {
 		return true;
 	}
 
-	public function dimensionExists(Level $level, int $dimension) : bool {
+	/**
+	 * @param Level $level
+	 * @param int $dimension
+	 *
+	 * @return bool
+	 */
+	public static function dimensionExists(Level $level, int $dimension) : bool {
 		return AnvilDimensionProvider::isValid($level->getProvider()->getPath(), $dimension); // TODO: levelDB provider
+	}
+
+	/**
+	 * @param Level $level the dimension level instance
+	 *
+	 * @return Level|null the overworld level instance
+	 */
+	public static function getDimensionBaseLevel(Level $level) : ?Level {
+		if(($strpos = strpos($level->getFolderName(), "dim-1")) !== false) {
+			$overworldName = str_replace(" dim-1", "", $level->getFolderName());
+			return Server::getInstance()->getLevelByName($overworldName);
+		}
+		return null;
+	}
+
+	/**
+	 * @param Position $position
+	 *
+	 * @return bool false on failure
+	 */
+	public function makePortal(Position $position) : bool {
+		if(!$position->isValid())
+			return false;
+		$level = $position->getLevel();
+		$xDirection = (bool)mt_rand(0,1);
+		if($xDirection) {
+			// portals
+			$level->setBlock($position, BlockFactory::get(BlockIds::PORTAL), false, false);
+			$level->setBlock($position->getSide(Vector3::SIDE_UP), BlockFactory::get(BlockIds::PORTAL), false, false);
+			$level->setBlock($position->getSide(Vector3::SIDE_UP, 2), BlockFactory::get(BlockIds::PORTAL), false, false);
+			$level->setBlock($position->getSide(Vector3::SIDE_NORTH), BlockFactory::get(BlockIds::PORTAL), false, false);
+			$level->setBlock($position->getSide(Vector3::SIDE_NORTH)->getSide(Vector3::SIDE_UP), BlockFactory::get(BlockIds::PORTAL), false, false);
+			$level->setBlock($position->getSide(Vector3::SIDE_NORTH)->getSide(Vector3::SIDE_UP, 2), BlockFactory::get(BlockIds::PORTAL), false, false);
+			// obsidian
+			$level->setBlock($position->getSide(Vector3::SIDE_SOUTH), BlockFactory::get(BlockIds::OBSIDIAN), false, false);
+			$level->setBlock($position->getSide(Vector3::SIDE_SOUTH)->getSide(Vector3::SIDE_DOWN), BlockFactory::get(BlockIds::OBSIDIAN), false, false);
+			$level->setBlock($position->getSide(Vector3::SIDE_SOUTH)->getSide(Vector3::SIDE_UP), BlockFactory::get(BlockIds::OBSIDIAN), false, false);
+			$level->setBlock($position->getSide(Vector3::SIDE_SOUTH)->getSide(Vector3::SIDE_UP, 2), BlockFactory::get(BlockIds::OBSIDIAN), false, false);
+			$level->setBlock($position->getSide(Vector3::SIDE_SOUTH)->getSide(Vector3::SIDE_UP, 3), BlockFactory::get(BlockIds::OBSIDIAN), false, false);
+			$level->setBlock($position->getSide(Vector3::SIDE_DOWN), BlockFactory::get(BlockIds::OBSIDIAN), false, false);
+			$level->setBlock($position->getSide(Vector3::SIDE_DOWN)->getSide(Vector3::SIDE_NORTH), BlockFactory::get(BlockIds::OBSIDIAN), false, false);
+			$level->setBlock($position->getSide(Vector3::SIDE_UP, 3), BlockFactory::get(BlockIds::OBSIDIAN), false, false);
+			$level->setBlock($position->getSide(Vector3::SIDE_UP, 3)->getSide(Vector3::SIDE_NORTH), BlockFactory::get(BlockIds::OBSIDIAN), false, false);
+			$level->setBlock($position->getSide(Vector3::SIDE_NORTH, 2), BlockFactory::get(BlockIds::OBSIDIAN), false, false);
+			$level->setBlock($position->getSide(Vector3::SIDE_NORTH, 2)->getSide(Vector3::SIDE_DOWN), BlockFactory::get(BlockIds::OBSIDIAN), false, false);
+			$level->setBlock($position->getSide(Vector3::SIDE_NORTH, 2)->getSide(Vector3::SIDE_UP), BlockFactory::get(BlockIds::OBSIDIAN), false, false);
+			$level->setBlock($position->getSide(Vector3::SIDE_NORTH, 2)->getSide(Vector3::SIDE_UP, 2), BlockFactory::get(BlockIds::OBSIDIAN), false, false);
+			$level->setBlock($position->getSide(Vector3::SIDE_NORTH, 2)->getSide(Vector3::SIDE_UP, 3), BlockFactory::get(BlockIds::OBSIDIAN), false, false);
+			// air
+			$level->setBlock($position->getSide(Vector3::SIDE_EAST), BlockFactory::get(BlockIds::AIR), false, false);
+			$level->setBlock($position->getSide(Vector3::SIDE_UP)->getSide(Vector3::SIDE_EAST), BlockFactory::get(BlockIds::AIR), false, false);
+			$level->setBlock($position->getSide(Vector3::SIDE_UP, 2)->getSide(Vector3::SIDE_EAST), BlockFactory::get(BlockIds::AIR), false, false);
+			$level->setBlock($position->getSide(Vector3::SIDE_EAST)->getSide(Vector3::SIDE_EAST), BlockFactory::get(BlockIds::AIR), false, false);
+			$level->setBlock($position->getSide(Vector3::SIDE_EAST)->getSide(Vector3::SIDE_UP)->getSide(Vector3::SIDE_EAST), BlockFactory::get(BlockIds::AIR), false, false);
+			$level->setBlock($position->getSide(Vector3::SIDE_EAST)->getSide(Vector3::SIDE_UP, 2)->getSide(Vector3::SIDE_EAST), BlockFactory::get(BlockIds::AIR), false, false);
+			$level->setBlock($position->getSide(Vector3::SIDE_WEST), BlockFactory::get(BlockIds::AIR), false, false);
+			$level->setBlock($position->getSide(Vector3::SIDE_UP)->getSide(Vector3::SIDE_WEST), BlockFactory::get(BlockIds::AIR), false, false);
+			$level->setBlock($position->getSide(Vector3::SIDE_UP, 2)->getSide(Vector3::SIDE_WEST), BlockFactory::get(BlockIds::AIR), false, false);
+			$level->setBlock($position->getSide(Vector3::SIDE_EAST)->getSide(Vector3::SIDE_WEST), BlockFactory::get(BlockIds::AIR), false, false);
+			$level->setBlock($position->getSide(Vector3::SIDE_EAST)->getSide(Vector3::SIDE_UP)->getSide(Vector3::SIDE_WEST), BlockFactory::get(BlockIds::AIR), false, false);
+			$level->setBlock($position->getSide(Vector3::SIDE_EAST)->getSide(Vector3::SIDE_UP, 2)->getSide(Vector3::SIDE_WEST), BlockFactory::get(BlockIds::AIR), false, false);
+			return true;
+		}
+		// portals
+		$level->setBlock($position, BlockFactory::get(BlockIds::PORTAL, 1), false, false);
+		$level->setBlock($position->getSide(Vector3::SIDE_UP), BlockFactory::get(BlockIds::PORTAL, 1), false, false);
+		$level->setBlock($position->getSide(Vector3::SIDE_UP, 2), BlockFactory::get(BlockIds::PORTAL, 1), false, false);
+		$level->setBlock($position->getSide(Vector3::SIDE_EAST), BlockFactory::get(BlockIds::PORTAL, 1), false, false);
+		$level->setBlock($position->getSide(Vector3::SIDE_EAST)->getSide(Vector3::SIDE_UP), BlockFactory::get(BlockIds::PORTAL, 1), false, false);
+		$level->setBlock($position->getSide(Vector3::SIDE_EAST)->getSide(Vector3::SIDE_UP, 2), BlockFactory::get(BlockIds::PORTAL, 1), false, false);
+		// obsidian
+		$level->setBlock($position->getSide(Vector3::SIDE_WEST), BlockFactory::get(BlockIds::OBSIDIAN), false, false);
+		$level->setBlock($position->getSide(Vector3::SIDE_WEST)->getSide(Vector3::SIDE_DOWN), BlockFactory::get(BlockIds::OBSIDIAN), false, false);
+		$level->setBlock($position->getSide(Vector3::SIDE_WEST)->getSide(Vector3::SIDE_UP), BlockFactory::get(BlockIds::OBSIDIAN), false, false);
+		$level->setBlock($position->getSide(Vector3::SIDE_WEST)->getSide(Vector3::SIDE_UP, 2), BlockFactory::get(BlockIds::OBSIDIAN), false, false);
+		$level->setBlock($position->getSide(Vector3::SIDE_WEST)->getSide(Vector3::SIDE_UP, 3), BlockFactory::get(BlockIds::OBSIDIAN), false, false);
+		$level->setBlock($position->getSide(Vector3::SIDE_DOWN), BlockFactory::get(BlockIds::OBSIDIAN), false, false);
+		$level->setBlock($position->getSide(Vector3::SIDE_DOWN)->getSide(Vector3::SIDE_EAST), BlockFactory::get(BlockIds::OBSIDIAN), false, false);
+		$level->setBlock($position->getSide(Vector3::SIDE_UP, 3), BlockFactory::get(BlockIds::OBSIDIAN), false, false);
+		$level->setBlock($position->getSide(Vector3::SIDE_UP, 3)->getSide(Vector3::SIDE_EAST), BlockFactory::get(BlockIds::OBSIDIAN), false, false);
+		$level->setBlock($position->getSide(Vector3::SIDE_EAST, 2), BlockFactory::get(BlockIds::OBSIDIAN), false, false);
+		$level->setBlock($position->getSide(Vector3::SIDE_EAST, 2)->getSide(Vector3::SIDE_DOWN), BlockFactory::get(BlockIds::OBSIDIAN), false, false);
+		$level->setBlock($position->getSide(Vector3::SIDE_EAST, 2)->getSide(Vector3::SIDE_UP), BlockFactory::get(BlockIds::OBSIDIAN), false, false);
+		$level->setBlock($position->getSide(Vector3::SIDE_EAST, 2)->getSide(Vector3::SIDE_UP, 2), BlockFactory::get(BlockIds::OBSIDIAN), false, false);
+		$level->setBlock($position->getSide(Vector3::SIDE_EAST, 2)->getSide(Vector3::SIDE_UP, 3), BlockFactory::get(BlockIds::OBSIDIAN), false, false);
+		// air
+		$level->setBlock($position->getSide(Vector3::SIDE_NORTH), BlockFactory::get(BlockIds::AIR), false, false);
+		$level->setBlock($position->getSide(Vector3::SIDE_UP)->getSide(Vector3::SIDE_NORTH), BlockFactory::get(BlockIds::AIR), false, false);
+		$level->setBlock($position->getSide(Vector3::SIDE_UP, 2)->getSide(Vector3::SIDE_NORTH), BlockFactory::get(BlockIds::AIR), false, false);
+		$level->setBlock($position->getSide(Vector3::SIDE_EAST)->getSide(Vector3::SIDE_NORTH), BlockFactory::get(BlockIds::AIR), false, false);
+		$level->setBlock($position->getSide(Vector3::SIDE_EAST)->getSide(Vector3::SIDE_UP)->getSide(Vector3::SIDE_NORTH), BlockFactory::get(BlockIds::AIR), false, false);
+		$level->setBlock($position->getSide(Vector3::SIDE_EAST)->getSide(Vector3::SIDE_UP, 2)->getSide(Vector3::SIDE_NORTH), BlockFactory::get(BlockIds::AIR), false, false);
+		$level->setBlock($position->getSide(Vector3::SIDE_SOUTH), BlockFactory::get(BlockIds::AIR), false, false);
+		$level->setBlock($position->getSide(Vector3::SIDE_UP)->getSide(Vector3::SIDE_SOUTH), BlockFactory::get(BlockIds::AIR), false, false);
+		$level->setBlock($position->getSide(Vector3::SIDE_UP, 2)->getSide(Vector3::SIDE_SOUTH), BlockFactory::get(BlockIds::AIR), false, false);
+		$level->setBlock($position->getSide(Vector3::SIDE_EAST)->getSide(Vector3::SIDE_SOUTH), BlockFactory::get(BlockIds::AIR), false, false);
+		$level->setBlock($position->getSide(Vector3::SIDE_EAST)->getSide(Vector3::SIDE_UP)->getSide(Vector3::SIDE_SOUTH), BlockFactory::get(BlockIds::AIR), false, false);
+		$level->setBlock($position->getSide(Vector3::SIDE_EAST)->getSide(Vector3::SIDE_UP, 2)->getSide(Vector3::SIDE_SOUTH), BlockFactory::get(BlockIds::AIR), false, false);
+		return true;
 	}
 }
