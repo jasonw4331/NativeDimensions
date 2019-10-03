@@ -260,5 +260,6 @@ class Main extends PluginBase {
 		$level->setBlock($position->getSide(Vector3::SIDE_EAST)->getSide(Vector3::SIDE_UP)->getSide(Vector3::SIDE_SOUTH), BlockFactory::get(BlockIds::AIR), false, false);
 		$level->setBlock($position->getSide(Vector3::SIDE_EAST)->getSide(Vector3::SIDE_UP, 2)->getSide(Vector3::SIDE_SOUTH), BlockFactory::get(BlockIds::AIR), false, false);
 		return true;
+		// TODO: levelDB portal map
 	}
 }

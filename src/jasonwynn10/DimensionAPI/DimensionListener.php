@@ -31,11 +31,9 @@ class DimensionListener implements Listener {
 		if($provider instanceof Anvil and !$provider instanceof AnvilDimensionProvider) {
 			if($this->plugin->dimensionExists($event->getLevel(), -1))
 				$this->plugin->generateLevelDimension($event->getLevel()->getFolderName(), $event->getLevel()->getSeed(), Nether::class, [], -1);
-			echo "Generating Nether Dimension\n";
 			if($this->plugin->getEndGenerator() !== null) {
 				if($this->plugin->dimensionExists($event->getLevel(), 1))
 					$this->plugin->generateLevelDimension($event->getLevel()->getFolderName(), $event->getLevel()->getSeed(), $this->plugin->getEndGenerator(), [], 1);
-				echo "Generating End Dimension\n";
 			}
 		}
 	}
