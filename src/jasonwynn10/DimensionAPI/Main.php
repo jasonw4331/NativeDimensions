@@ -3,19 +3,29 @@ declare(strict_types=1);
 namespace jasonwynn10\DimensionAPI;
 
 use czechpmdevs\multiworld\generator\ender\EnderGenerator;
+use jasonwynn10\DimensionAPI\block\EndPortal;
+use jasonwynn10\DimensionAPI\block\EndPortalFrame;
+use jasonwynn10\DimensionAPI\block\Obsidian;
+use jasonwynn10\DimensionAPI\block\Portal;
+use jasonwynn10\DimensionAPI\provider\AnvilDimensionProvider;
+use pocketmine\block\BlockFactory;
+use pocketmine\block\BlockIds;
 use pocketmine\event\level\LevelInitEvent;
 use pocketmine\event\level\LevelLoadEvent;
-use pocketmine\event\Listener;
 use pocketmine\level\format\io\LevelProvider;
 use pocketmine\level\format\io\LevelProviderManager;
-use pocketmine\level\format\io\region\Anvil;
 use pocketmine\level\generator\Generator;
 use pocketmine\level\generator\GeneratorManager;
-use pocketmine\level\generator\hell\Nether;
 use pocketmine\level\Level;
+use pocketmine\level\Position;
+use pocketmine\math\Vector3;
 use pocketmine\plugin\PluginBase;
+use pocketmine\Server;
 
-class Main extends PluginBase implements Listener {
+class Main extends PluginBase {
+	/** @var Main */
+	private static $instance;
+
 	/** @var string|null $endGenerator */
 	private $endGenerator = null;
 
@@ -29,6 +39,11 @@ class Main extends PluginBase implements Listener {
 		$multiworld = $this->getServer()->getPluginManager()->getPlugin("MultiWorld");
 		if($multiworld !== null)
 			$this->endGenerator = EnderGenerator::class;
+
+		BlockFactory::registerBlock(new Obsidian());
+		BlockFactory::registerBlock(new Portal());
+		BlockFactory::registerBlock(new EndPortalFrame());
+		BlockFactory::registerBlock(new EndPortal());
 	}
 
 	/**
