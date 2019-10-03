@@ -5,3 +5,5 @@ api: 3.0.0
 description: "A plugin which loads dimensions within worlds and provides an API for managing dimensions across worlds"
 author: "jasonwynn10"
 load: STARTUP
+softdepend:
+- MultiWorld
