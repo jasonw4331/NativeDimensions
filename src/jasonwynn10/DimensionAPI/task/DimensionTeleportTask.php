@@ -29,7 +29,7 @@ class DimensionTeleportTask extends Task {
 	}
 
 	public function onRun(int $currentTick){
-		if(!$this->entity->isCollided or !$this->entity->getLevel()->getBlock($this->entity->floor()) instanceof Portal or !$this->entity->getLevel()->getBlock($this->entity->floor()) instanceof EndPortal) {
+		if(!$this->entity->getLevel()->getBlock($this->entity->floor()) instanceof Portal and !$this->entity->getLevel()->getBlock($this->entity->floor()) instanceof EndPortal) {
 			return;
 		}
 

@@ -49,10 +49,10 @@ class Main extends PluginBase {
 		if($multiworld !== null)
 			$this->endGenerator = EnderGenerator::class;
 
-		BlockFactory::registerBlock(new Obsidian());
-		BlockFactory::registerBlock(new Portal());
-		BlockFactory::registerBlock(new EndPortalFrame());
-		BlockFactory::registerBlock(new EndPortal());
+		BlockFactory::registerBlock(new Obsidian(), true);
+		BlockFactory::registerBlock(new Portal(), true);
+		BlockFactory::registerBlock(new EndPortalFrame(), true);
+		BlockFactory::registerBlock(new EndPortal(), true);
 	}
 
 	/**

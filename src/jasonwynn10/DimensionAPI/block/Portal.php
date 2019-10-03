@@ -170,7 +170,7 @@ class Portal extends Transparent {
 	public function onEntityCollide(Entity $entity): void{
 		// TODO: track recent teleports
 		$level = $entity->getLevel();
-		if(($strpos = strpos($level->getFolderName(), "dim-1")) !== false) {
+		if(strpos($level->getFolderName(), "dim-1") !== false) {
 			$overworldLevel = Main::getDimensionBaseLevel($level);
 			if($overworldLevel !== null) {
 				$overworldX = $this->x * 8;
@@ -180,39 +180,79 @@ class Portal extends Transparent {
 					for($c = -$i; $c < $i; ++$c) {
 						$block = $overworldLevel->getBlock(new Vector3($overworldX + $c, $overworldY, $overworldZ));
 						if($block instanceof Portal and !$block->getSide(Vector3::SIDE_UP) instanceof Obsidian) {
-							$entity->teleport(new Position($overworldX, $overworldY, $overworldZ, $overworldLevel), $entity->getYaw(), $entity->getPitch());
+							Main::getInstance()->getScheduler()->scheduleDelayedTask(new DimensionTeleportTask($entity, DimensionIds::OVERWORLD, new Position($overworldX, $overworldY, $overworldZ, $overworldLevel)), 20 * 4);
 							return;
 						}
 						$block = $overworldLevel->getBlock(new Vector3($overworldX, $overworldY + $c, $overworldZ));
 						if($block instanceof Portal and !$block->getSide(Vector3::SIDE_UP) instanceof Obsidian) {
-							$entity->teleport(new Position($overworldX, $overworldY, $overworldZ, $overworldLevel), $entity->getYaw(), $entity->getPitch());
+							Main::getInstance()->getScheduler()->scheduleDelayedTask(new DimensionTeleportTask($entity, DimensionIds::OVERWORLD, new Position($overworldX, $overworldY, $overworldZ, $overworldLevel)), 20 * 4);
 							return;
 						}
 						$block = $overworldLevel->getBlock(new Vector3($overworldX, $overworldY, $overworldZ + $c));
 						if($block instanceof Portal and !$block->getSide(Vector3::SIDE_UP) instanceof Obsidian) {
-							$entity->teleport(new Position($overworldX, $overworldY, $overworldZ, $overworldLevel), $entity->getYaw(), $entity->getPitch());
+							Main::getInstance()->getScheduler()->scheduleDelayedTask(new DimensionTeleportTask($entity, DimensionIds::OVERWORLD, new Position($overworldX, $overworldY, $overworldZ, $overworldLevel)), 20 * 4);
 							return;
 						}
 						$block = $overworldLevel->getBlock(new Vector3($overworldX + $c, $overworldY + $c, $overworldZ));
 						if($block instanceof Portal and !$block->getSide(Vector3::SIDE_UP) instanceof Obsidian) {
-							$entity->teleport(new Position($overworldX, $overworldY, $overworldZ, $overworldLevel), $entity->getYaw(), $entity->getPitch());
+							Main::getInstance()->getScheduler()->scheduleDelayedTask(new DimensionTeleportTask($entity, DimensionIds::OVERWORLD, new Position($overworldX, $overworldY, $overworldZ, $overworldLevel)), 20 * 4);
 							return;
 						}
 						$block = $overworldLevel->getBlock(new Vector3($overworldX + $c, $overworldY, $overworldZ + $c));
 						if($block instanceof Portal and !$block->getSide(Vector3::SIDE_UP) instanceof Obsidian) {
-							$entity->teleport(new Position($overworldX, $overworldY, $overworldZ, $overworldLevel), $entity->getYaw(), $entity->getPitch());
+							Main::getInstance()->getScheduler()->scheduleDelayedTask(new DimensionTeleportTask($entity, DimensionIds::OVERWORLD, new Position($overworldX, $overworldY, $overworldZ, $overworldLevel)), 20 * 4);
 							return;
 						}
 						$block = $overworldLevel->getBlock(new Vector3($overworldX, $overworldY + $c, $overworldZ + $c));
 						if($block instanceof Portal and !$block->getSide(Vector3::SIDE_UP) instanceof Obsidian) {
-							$entity->teleport(new Position($overworldX, $overworldY, $overworldZ, $overworldLevel), $entity->getYaw(), $entity->getPitch());
+							Main::getInstance()->getScheduler()->scheduleDelayedTask(new DimensionTeleportTask($entity, DimensionIds::OVERWORLD, new Position($overworldX, $overworldY, $overworldZ, $overworldLevel)), 20 * 4);
 							return;
 						}
 					}
 				}
-				$validPos = new Position($overworldX, $overworldY, $overworldZ, $overworldLevel);
-				Main::getInstance()->makePortal($validPos);
-				Main::getInstance()->getScheduler()->scheduleDelayedTask(new DimensionTeleportTask($entity, DimensionIds::NETHER, $validPos), 20 * 4);
+				/** @var Position|null $validBlock */
+				$validBlock = null;
+				for($i = 0; $i < $overworldLevel->getWorldHeight(); ++$i) {
+					for($c = -$i; $c < $i; ++$c) {
+						$validBlock = $overworldLevel->getBlock(new Vector3($overworldX + $c, $overworldY, $overworldZ));
+						if($validBlock instanceof Air) {
+							Main::getInstance()->getScheduler()->scheduleDelayedTask(new DimensionTeleportTask($entity, DimensionIds::OVERWORLD, new Position($overworldX, $overworldY, $overworldZ, $overworldLevel)), 20 * 4);
+							return;
+						}
+						$validBlock = $overworldLevel->getBlock(new Vector3($overworldX, $overworldY + $c, $overworldZ));
+						if($validBlock instanceof Air) {
+							Main::getInstance()->getScheduler()->scheduleDelayedTask(new DimensionTeleportTask($entity, DimensionIds::OVERWORLD, new Position($overworldX, $overworldY, $overworldZ, $overworldLevel)), 20 * 4);
+							return;
+						}
+						$validBlock = $overworldLevel->getBlock(new Vector3($overworldX, $overworldY, $overworldZ + $c));
+						if($validBlock instanceof Air) {
+							Main::getInstance()->getScheduler()->scheduleDelayedTask(new DimensionTeleportTask($entity, DimensionIds::OVERWORLD, new Position($overworldX, $overworldY, $overworldZ, $overworldLevel)), 20 * 4);
+							return;
+						}
+						$validBlock = $overworldLevel->getBlock(new Vector3($overworldX + $c, $overworldY + $c, $overworldZ));
+						if($validBlock instanceof Air) {
+							Main::getInstance()->getScheduler()->scheduleDelayedTask(new DimensionTeleportTask($entity, DimensionIds::OVERWORLD, new Position($overworldX, $overworldY, $overworldZ, $overworldLevel)), 20 * 4);
+							return;
+						}
+						$validBlock = $overworldLevel->getBlock(new Vector3($overworldX + $c, $overworldY, $overworldZ + $c));
+						if($validBlock instanceof Air) {
+							Main::getInstance()->getScheduler()->scheduleDelayedTask(new DimensionTeleportTask($entity, DimensionIds::OVERWORLD, new Position($overworldX, $overworldY, $overworldZ, $overworldLevel)), 20 * 4);
+							return;
+						}
+						$validBlock = $overworldLevel->getBlock(new Vector3($overworldX, $overworldY + $c, $overworldZ + $c));
+						if($validBlock instanceof Air) {
+							Main::getInstance()->getScheduler()->scheduleDelayedTask(new DimensionTeleportTask($entity, DimensionIds::OVERWORLD, new Position($overworldX, $overworldY, $overworldZ, $overworldLevel)), 20 * 4);
+							return;
+						}
+					}
+				}
+				if($validBlock !== null){
+					Main::getInstance()->makePortal($validBlock->asPosition());
+				}else {
+					$validBlock = new Position($overworldX, $overworldY, $overworldZ, $overworldLevel);
+					Main::getInstance()->makePortal($validBlock);
+				}
+				Main::getInstance()->getScheduler()->scheduleDelayedTask(new DimensionTeleportTask($entity, DimensionIds::OVERWORLD, $validBlock->asPosition()), 20 * 4);
 			}
 			return;
 		}
@@ -223,7 +263,6 @@ class Portal extends Transparent {
 			$netherX = $this->x / 8;
 			$netherZ = $this->z / 8;
 			$netherY = $this->y;
-			/** @var Block|null $validBlock */
 			$validBlock = null;
 			for($i = 0; $i < $netherLevel->getWorldHeight(); ++$i) {
 				for($c = -$i; $c < $i; ++$c) {
@@ -247,13 +286,49 @@ class Portal extends Transparent {
 						break;
 				}
 			}
-			if($validBlock !== null)
+			if($validBlock !== null){
 				Main::getInstance()->makePortal($validBlock->asPosition());
-			else {
+			}else {
 				$validBlock = new Position($netherX, $netherY, $netherZ, $netherLevel);
 				Main::getInstance()->makePortal($validBlock);
 			}
 			Main::getInstance()->getScheduler()->scheduleDelayedTask(new DimensionTeleportTask($entity, DimensionIds::NETHER, $validBlock->asPosition()), 20 * 4);
+			return;
 		}
+		$netherLevel = Server::getInstance()->getLevelByName($netherWorldName);
+		$netherX = $this->x / 8;
+		$netherZ = $this->z / 8;
+		$netherY = $this->y;
+		/** @var Block|null $validBlock */
+		$validBlock = null;
+		for($i = 0; $i < $netherLevel->getWorldHeight(); ++$i) {
+			for($c = -$i; $c < $i; ++$c) {
+				$validBlock = $netherLevel->getBlock(new Vector3($netherX + $c, $netherY, $netherZ));
+				if($validBlock instanceof Air)
+					break;
+				$validBlock = $netherLevel->getBlock(new Vector3($netherX, $netherY + $c, $netherZ));
+				if($validBlock instanceof Air)
+					break;
+				$validBlock = $netherLevel->getBlock(new Vector3($netherX, $netherY, $netherZ + $c));
+				if($validBlock instanceof Air)
+					break;
+				$validBlock = $netherLevel->getBlock(new Vector3($netherX + $c, $netherY + $c, $netherZ));
+				if($validBlock instanceof Air)
+					break;
+				$validBlock = $netherLevel->getBlock(new Vector3($netherX + $c, $netherY, $netherZ + $c));
+				if($validBlock instanceof Air)
+					break;
+				$validBlock = $netherLevel->getBlock(new Vector3($netherX, $netherY + $c, $netherZ + $c));
+				if($validBlock instanceof Air)
+					break;
+			}
+		}
+		if($validBlock !== null) {
+			Main::getInstance()->makePortal($validBlock->asPosition());
+		}else {
+			$validBlock = new Position($netherX, $netherY, $netherZ, $netherLevel);
+			Main::getInstance()->makePortal($validBlock);
+		}
+		Main::getInstance()->getScheduler()->scheduleDelayedTask(new DimensionTeleportTask($entity, DimensionIds::NETHER, $validBlock->asPosition()), 20 * 4);
 	}
 }
