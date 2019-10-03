@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace jasonwynn10\DimensionAPI;
+namespace jasonwynn10\DimensionAPI\provider;
 
 
 use pocketmine\level\format\io\leveldb\LevelDB;
