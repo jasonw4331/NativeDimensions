@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace jasonwynn10\DimensionAPI;
 
-use jasonwynn10\DimensionAPI\provider\AnvilDimensionProvider;
+use jasonwynn10\DimensionAPI\provider\AnvilDimension;
 use pocketmine\event\entity\EntityTeleportEvent;
 use pocketmine\event\level\LevelLoadEvent;
 use pocketmine\event\Listener;
@@ -28,7 +28,7 @@ class DimensionListener implements Listener {
 	 */
 	public function onLevelLoad(LevelLoadEvent $event) : void {
 		$provider = $event->getLevel()->getProvider();
-		if($provider instanceof Anvil and !$provider instanceof AnvilDimensionProvider) {
+		if($provider instanceof Anvil and !$provider instanceof AnvilDimension) {
 			if($this->plugin->dimensionExists($event->getLevel(), -1))
 				$this->plugin->generateLevelDimension($event->getLevel()->getFolderName(), $event->getLevel()->getSeed(), Nether::class, [], -1);
 			if($this->plugin->getEndGenerator() !== null) {
