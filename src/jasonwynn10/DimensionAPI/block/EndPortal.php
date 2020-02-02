@@ -136,15 +136,10 @@ class EndPortal extends Solid {
 		$enderWorldName = $level->getFolderName()." dim1";
 		if(!Main::dimensionExists($level, 1)) {
 			Main::getInstance()->generateLevelDimension($level->getFolderName(), $level->getSeed(), EnderGenerator::class, [], 1);
-			$enderLevel = Server::getInstance()->getLevelByName($enderWorldName);
-			$pos = new Position(100, 48, 0, $enderLevel);
-
-			Main::getInstance()->getScheduler()->scheduleDelayedTask(new DimensionTeleportTask($entity, DimensionIds::THE_END, $pos), 1);
-			return;
 		}
 		$enderLevel = Server::getInstance()->getLevelByName($enderWorldName);
 		$pos = new Position(100, 48, 0, $enderLevel);
 
-		Main::getInstance()->getScheduler()->scheduleDelayedTask(new DimensionTeleportTask($entity, DimensionIds::THE_END, $pos), 20 * 4);
+		Main::getInstance()->getScheduler()->scheduleDelayedTask(new DimensionTeleportTask($entity, DimensionIds::THE_END, $pos), 1);
 	}
 }
