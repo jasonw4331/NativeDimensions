@@ -82,9 +82,10 @@ class Portal extends Transparent {
 		return true;
 	}
 
-	/**
-	 * @return bool
-	 */
+	public function canBeFlowedInto() : bool{
+		return true;
+	}
+
 	public function hasEntityCollision(): bool{
 		return true;
 	}
