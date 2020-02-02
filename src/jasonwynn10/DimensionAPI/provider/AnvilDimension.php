@@ -66,10 +66,10 @@ class AnvilDimension extends Anvil {
 	 * @return string
 	 */
 	public function getGenerator() : string {
-		if($this->dimension === -1)
-			return (new Nether())->getName();
-		elseif($this->dimension === 1 and class_exists("czechpmdevs\\multiworld\\generator\\ender\\EnderGenerator"))
-			return (new EnderGenerator())->getName();
-		return (new Normal())->getName();
+		if($this->dimension < 0)
+			return "nether";
+		elseif($this->dimension > 0)
+			return "ender";
+		return "normal";
 	}
 }
