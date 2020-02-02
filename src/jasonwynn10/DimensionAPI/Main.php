@@ -46,13 +46,13 @@ class Main extends PluginBase {
 		new DimensionListener($this);
 		$this->endGenerator = GeneratorManager::getGenerator("ender");
 		$multiworld = $this->getServer()->getPluginManager()->getPlugin("MultiWorld");
-		if($multiworld !== null)
+		if($multiworld !== null) {
 			$this->endGenerator = EnderGenerator::class;
-
+			BlockFactory::registerBlock(new EndPortalFrame(), true);
+			BlockFactory::registerBlock(new EndPortal(), true);
+		}
 		BlockFactory::registerBlock(new Obsidian(), true);
 		BlockFactory::registerBlock(new Portal(), true);
-		BlockFactory::registerBlock(new EndPortalFrame(), true);
-		BlockFactory::registerBlock(new EndPortal(), true);
 	}
 
 	/**
