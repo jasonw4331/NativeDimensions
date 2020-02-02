@@ -171,7 +171,7 @@ class Portal extends Transparent {
 	public function onEntityCollide(Entity $entity): void{
 		// TODO: track recent teleports
 		$level = $entity->getLevel();
-		if(strpos($level->getFolderName(), "dim-1") !== false) {
+		if(strpos($level->getFolderName(), " dim-1") !== false) {
 			$overworldLevel = Main::getDimensionBaseLevel($level);
 			if($overworldLevel !== null) {
 				$overworldX = $this->x * 8;

@@ -114,7 +114,7 @@ class EndPortal extends Solid {
 	 */
 	public function onEntityCollide(Entity $entity): void{
 		$level = $entity->getLevel();
-		if(strpos($level->getFolderName(), "dim1") !== false) {
+		if(strpos($level->getFolderName(), " dim1") !== false) {
 			$overworldLevel = Main::getDimensionBaseLevel($level);
 			if($overworldLevel !== null) {
 				$overworld = $overworldLevel->getSafeSpawn();

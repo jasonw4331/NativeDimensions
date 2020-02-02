@@ -38,6 +38,19 @@ class DimensionListener implements Listener {
 		}
 	}
 
+	public function onDataPacket(DataPacketSendEvent $event) {
+		$player = $event->getPlayer();
+		$packet = $event->getPacket();
+		if($packet instanceof StartGamePacket) {
+			if(strpos($player->getLevel()->getFolderName(), " dim-1") !== false)
+				$packet->dimension = DimensionIds::NETHER;
+			elseif(strpos($player->getLevel()->getFolderName(), " dim1") !== false)
+				$packet->dimension = DimensionIds::THE_END;
+			else
+				$packet->dimension = DimensionIds::OVERWORLD;
+		}
+	}
+
 	public function onRespawn(PlayerRespawnEvent $event) : void {
 		$player = $event->getPlayer();
 		if(!$player->isAlive()) {

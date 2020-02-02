@@ -112,7 +112,7 @@ class Main extends PluginBase {
 		$providerClass::generate($path, $name, $seed, $generator, $options);
 
 		/** @see LevelProvider::__construct() */
-		$level = new Level($this->getServer(), $name." dim".$dimension, new $providerClass($path));
+		$level = new Level($this->getServer(), $name." dim".$dimension, new $providerClass($path, $dimension));
 		$ref = new \ReflectionClass($this->getServer());
 		$prop = $ref->getProperty("levels");
 		$prop->setAccessible(true);
@@ -170,7 +170,7 @@ class Main extends PluginBase {
 	 */
 	public static function getDimensionBaseLevel(Level $level) : ?Level {
 		if(($strpos = strpos($level->getFolderName(), "dim")) !== false) {
-			$overworldName = preg_replace("([a-zA-Z0-9\s]*)(dim-?\d)", '${1}', $level->getFolderName());
+			$overworldName = preg_replace('/([a-zA-Z0-9\s]*)(\sdim-?\d)/', '${1}', $level->getFolderName());
 			return Server::getInstance()->getLevelByName($overworldName);
 		}
 		return null;
