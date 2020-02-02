@@ -99,12 +99,12 @@ class Main extends PluginBase {
 		}
 
 		if(!($generator !== null and class_exists($generator, true) and is_subclass_of($generator, Generator::class))){
-			$generator = GeneratorManager::getGenerator("hell");
+			$generator = GeneratorManager::getGenerator("hell"); // default to hell because this is a dimension
 		}
 
 		$providerClass = LevelProviderManager::getProviderByName("anvil_dimension");
 		if($providerClass === null){
-			throw new \InvalidStateException("Default world provider has not been registered");
+			throw new \InvalidStateException("Dimension world provider has not been registered");
 		}
 
 		$path = $this->getServer()->getDataPath() . "worlds/" . $name . "/";
