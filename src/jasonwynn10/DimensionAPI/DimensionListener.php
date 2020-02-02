@@ -9,8 +9,12 @@ use pocketmine\event\level\LevelLoadEvent;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerBedEnterEvent;
 use pocketmine\event\player\PlayerRespawnEvent;
+use pocketmine\event\server\DataPacketSendEvent;
 use pocketmine\level\format\io\region\Anvil;
 use pocketmine\level\generator\hell\Nether;
+use pocketmine\level\generator\normal\Normal;
+use pocketmine\network\mcpe\protocol\StartGamePacket;
+use pocketmine\network\mcpe\protocol\types\DimensionIds;
 
 class DimensionListener implements Listener {
 	/** @var Main */
@@ -31,7 +35,7 @@ class DimensionListener implements Listener {
 		if($provider instanceof Anvil and !$provider instanceof AnvilDimension) {
 			if($this->plugin->dimensionExists($event->getLevel(), -1))
 				$this->plugin->generateLevelDimension($event->getLevel()->getFolderName(), $event->getLevel()->getSeed(), Nether::class, [], -1);
-			if($this->plugin->getEndGenerator() !== null) {
+			if($this->plugin->getEndGenerator() !== Normal::class) {
 				if($this->plugin->dimensionExists($event->getLevel(), 1))
 					$this->plugin->generateLevelDimension($event->getLevel()->getFolderName(), $event->getLevel()->getSeed(), $this->plugin->getEndGenerator(), [], 1);
 			}

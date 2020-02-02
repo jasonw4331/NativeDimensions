@@ -2,7 +2,6 @@
 declare(strict_types=1);
 namespace jasonwynn10\DimensionAPI;
 
-use czechpmdevs\multiworld\generator\ender\EnderGenerator;
 use jasonwynn10\DimensionAPI\block\EndPortal;
 use jasonwynn10\DimensionAPI\block\EndPortalFrame;
 use jasonwynn10\DimensionAPI\block\Obsidian;
@@ -16,6 +15,7 @@ use pocketmine\level\format\io\LevelProvider;
 use pocketmine\level\format\io\LevelProviderManager;
 use pocketmine\level\generator\Generator;
 use pocketmine\level\generator\GeneratorManager;
+use pocketmine\level\generator\normal\Normal;
 use pocketmine\level\Level;
 use pocketmine\level\Position;
 use pocketmine\math\Vector3;
@@ -26,8 +26,8 @@ class Main extends PluginBase {
 	/** @var Main */
 	private static $instance;
 
-	/** @var string|null $endGenerator */
-	protected $endGenerator = null;
+	/** @var string $endGenerator */
+	protected $endGenerator = Normal::class;
 
 	/**
 	 * @return Main
@@ -45,9 +45,7 @@ class Main extends PluginBase {
 	public function onEnable() {
 		new DimensionListener($this);
 		$this->endGenerator = GeneratorManager::getGenerator("ender");
-		$multiworld = $this->getServer()->getPluginManager()->getPlugin("MultiWorld");
-		if($multiworld !== null) {
-			$this->endGenerator = EnderGenerator::class;
+		if($this->endGenerator !== Normal::class) {
 			BlockFactory::registerBlock(new EndPortalFrame(), true);
 			BlockFactory::registerBlock(new EndPortal(), true);
 		}
@@ -62,16 +60,15 @@ class Main extends PluginBase {
 	 */
 	public function setEndGenerator(string $generator) : self {
 		if(!($generator !== null and class_exists($generator, true) and is_subclass_of($generator, Generator::class))){
-			$this->endGenerator = GeneratorManager::getGenerator("ender");
+			$this->endGenerator = $generator;
 		}
-		$this->endGenerator = EnderGenerator::class;
 		return $this;
 	}
 
 	/**
-	 * @return string|null
+	 * @return string
 	 */
-	public function getEndGenerator() : ?string {
+	public function getEndGenerator() : string {
 		return $this->endGenerator;
 	}
 

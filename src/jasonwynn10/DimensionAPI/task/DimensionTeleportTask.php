@@ -9,6 +9,7 @@ use pocketmine\entity\Entity;
 use pocketmine\math\Vector3;
 use pocketmine\network\mcpe\protocol\ChangeDimensionPacket;
 use pocketmine\network\mcpe\protocol\PlayStatusPacket;
+use pocketmine\Player;
 use pocketmine\scheduler\Task;
 
 class DimensionTeleportTask extends Task {
@@ -29,17 +30,25 @@ class DimensionTeleportTask extends Task {
 	}
 
 	public function onRun(int $currentTick){
+		if($this->entity->getLevel() === null)
+			return;
 		if(!$this->entity->getLevel()->getBlock($this->entity->floor()) instanceof Portal and !$this->entity->getLevel()->getBlock($this->entity->floor()) instanceof EndPortal) {
 			return;
 		}
 
-		$pk = new ChangeDimensionPacket();
-		$pk->dimension = $this->dimension;
-		$pk->position = $this->position;
-		$pk->respawn = $this->respawn;
-		$this->entity->dataPacket($pk);
-		$this->entity->sendPlayStatus(PlayStatusPacket::PLAYER_SPAWN);
-		$this->entity->teleport($this->position);
+		if($this->entity instanceof Player) {
+			$pk = new ChangeDimensionPacket();
+			$pk->dimension = $this->dimension;
+			$pk->position = $this->position;
+			$pk->respawn = $this->respawn;
+			$this->entity->dataPacket($pk);
+
+			$this->entity->sendPlayStatus(PlayStatusPacket::PLAYER_SPAWN);
+			$this->entity->teleport($this->position);
+			$this->entity->sendPlayStatus(PlayStatusPacket::PLAYER_SPAWN);
+		}else{
+			$this->entity->teleport($this->position);
+		}
 
 		return;
 	}
