@@ -135,6 +135,8 @@ class Portal extends Transparent {
 		if($player instanceof Player){
 			$this->meta = $player->getDirection() & 0x01;
 		}
+		if(strpos($this->getLevel()->getFolderName(), " dim1") !== false)
+			return true;
 		$this->getLevel()->setBlock($block, $this, true, true);
 
 		// TODO: levelDB portal mapping
