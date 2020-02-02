@@ -182,6 +182,8 @@ class Main extends PluginBase {
 		if(!$position->isValid())
 			return false;
 		$level = $position->getLevel();
+		if(strpos($level->getFolderName(), " dim1"))
+			return false; // no portals in the end
 		$xDirection = (bool)mt_rand(0,1);
 		if($xDirection) {
 			// portals
