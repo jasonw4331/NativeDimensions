@@ -7,7 +7,7 @@ use jasonwynn10\DimensionAPI\block\EndPortal;
 use jasonwynn10\DimensionAPI\block\EndPortalFrame;
 use jasonwynn10\DimensionAPI\block\Obsidian;
 use jasonwynn10\DimensionAPI\block\Portal;
-use jasonwynn10\DimensionAPI\provider\AnvilDimensionProvider;
+use jasonwynn10\DimensionAPI\provider\AnvilDimension;
 use pocketmine\block\BlockFactory;
 use pocketmine\block\BlockIds;
 use pocketmine\event\level\LevelInitEvent;
@@ -38,7 +38,7 @@ class Main extends PluginBase {
 
 	public function onLoad() {
 		self::$instance = $this;
-		LevelProviderManager::addProvider(AnvilDimensionProvider::class);
+		LevelProviderManager::addProvider(AnvilDimension::class);
 		//LevelProviderManager::addProvider(LevelDBDimensionProvider::class); // TODO
 	}
 
@@ -102,7 +102,7 @@ class Main extends PluginBase {
 			$generator = GeneratorManager::getGenerator("hell");
 		}
 
-		$providerClass = LevelProviderManager::getProviderByName("anvildimensions");
+		$providerClass = LevelProviderManager::getProviderByName("anvil_dimension");
 		if($providerClass === null){
 			throw new \InvalidStateException("Default world provider has not been registered");
 		}
@@ -160,7 +160,7 @@ class Main extends PluginBase {
 	 * @return bool
 	 */
 	public static function dimensionExists(Level $level, int $dimension) : bool {
-		return AnvilDimensionProvider::isValid($level->getProvider()->getPath(), $dimension); // TODO: levelDB provider
+		return AnvilDimension::isValid($level->getProvider()->getPath(), $dimension); // TODO: levelDB provider
 	}
 
 	/**

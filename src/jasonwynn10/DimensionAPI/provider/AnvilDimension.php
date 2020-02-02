@@ -1,12 +1,13 @@
 <?php
 declare(strict_types=1);
-
 namespace jasonwynn10\DimensionAPI\provider;
 
-
+use czechpmdevs\multiworld\generator\ender\EnderGenerator;
 use pocketmine\level\format\io\region\Anvil;
+use pocketmine\level\generator\hell\Nether;
+use pocketmine\level\generator\normal\Normal;
 
-class AnvilDimensionProvider extends Anvil {
+class AnvilDimension extends Anvil {
 
 	/** @var int */
 	protected $dimension;
@@ -58,6 +59,17 @@ class AnvilDimensionProvider extends Anvil {
 	}
 
 	public static function getProviderName() : string{
-		return "anvildimensions";
+		return "anvil_dimension";
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getGenerator() : string {
+		if($this->dimension === -1)
+			return (new Nether())->getName();
+		elseif($this->dimension === 1 and class_exists("czechpmdevs\\multiworld\\generator\\ender\\EnderGenerator"))
+			return (new EnderGenerator())->getName();
+		return (new Normal())->getName();
 	}
 }
