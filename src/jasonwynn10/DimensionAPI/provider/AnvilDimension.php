@@ -55,6 +55,10 @@ class AnvilDimension extends Anvil {
 		}
 	}
 
+	public function getName() : string {
+		return parent::getName()." div".$this->dimension;
+	}
+
 	public static function getProviderName() : string{
 		return "anvil_dimension";
 	}
