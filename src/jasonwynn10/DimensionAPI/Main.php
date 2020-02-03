@@ -22,9 +22,29 @@ use pocketmine\Server;
 class Main extends PluginBase {
 	/** @var Main */
 	private static $instance;
+	/** @var int[] $teleporting */
+	protected static $teleporting = [];
 
 	public static function getInstance() : Main {
 		return self::$instance;
+	}
+
+	/**
+	 * @return int[]
+	 */
+	public static function getTeleporting() : array {
+		return self::$teleporting;
+	}
+
+	public static function addTeleportingId(int $id) : void {
+		if(!in_array($id, self::$teleporting))
+			self::$teleporting[] = $id;
+	}
+
+	public static function removeTeleportingId(int $id) : void {
+		$key = array_search($id, self::$teleporting);
+		if($key !== false)
+			unset(self::$teleporting[$key]);
 	}
 
 	public function onLoad() {
@@ -117,7 +137,7 @@ class Main extends PluginBase {
 	}
 
 	public static function getDimensionBaseLevel(Level $level) : ?Level {
-		if(($strpos = strpos($level->getFolderName(), "dim")) !== false) {
+		if(strpos($level->getFolderName(), " dim") !== false) {
 			$overworldName = preg_replace('/([a-zA-Z0-9\s]*)(\sdim-?\d)/', '${1}', $level->getFolderName());
 			return Server::getInstance()->getLevelByName($overworldName);
 		}

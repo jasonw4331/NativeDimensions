@@ -35,16 +35,16 @@ declare(strict_types = 1);
 
 namespace jasonwynn10\DimensionAPI\block;
 
-use czechpmdevs\multiworld\generator\ender\EnderGenerator;
 use jasonwynn10\DimensionAPI\Main;
-use jasonwynn10\DimensionAPI\task\DimensionTeleportTask;
 use pocketmine\block\Block;
+use pocketmine\block\BlockFactory;
+use pocketmine\block\BlockIds;
 use pocketmine\block\Solid;
 use pocketmine\entity\Entity;
 use pocketmine\item\Item;
 use pocketmine\level\Position;
+use pocketmine\math\Vector3;
 use pocketmine\network\mcpe\protocol\ShowCreditsPacket;
-use pocketmine\network\mcpe\protocol\types\DimensionIds;
 use pocketmine\Player;
 use pocketmine\Server;
 
@@ -116,30 +116,38 @@ class EndPortal extends Solid {
 		$level = $entity->getLevel();
 		if(strpos($level->getFolderName(), " dim1") !== false) {
 			$overworldLevel = Main::getDimensionBaseLevel($level);
-			if($overworldLevel !== null) {
-				$overworld = $overworldLevel->getSafeSpawn();
-				if($entity instanceof Player) {
-					$data = Server::getInstance()->getOfflinePlayerData($entity->getName());
-					if($data->getByte("seenCredits", 0, true) == 0) {
-						$data->setByte("seenCredits", 1);
-						Server::getInstance()->saveOfflinePlayerData($entity->getName(), $data);
-						$pk = new ShowCreditsPacket();
-						$pk->playerEid = $entity->getId();
-						$pk->status = ShowCreditsPacket::STATUS_START_CREDITS;
-						$entity->sendDataPacket($pk);
-					}
-				}
-				Main::getInstance()->getScheduler()->scheduleDelayedTask(new DimensionTeleportTask($entity, DimensionIds::OVERWORLD, $overworld), 1);
+			if($overworldLevel === null) {
+				return;
 			}
-			return;
+			$overworld = $overworldLevel->getSpawnLocation();
+			if($entity instanceof Player) {
+				if(in_array($entity->getId(), Main::getTeleporting()))
+					return;
+				Main::addTeleportingId($entity->getId());
+				$data = Server::getInstance()->getOfflinePlayerData($entity->getName());
+				if($data->getByte("seenCredits", 0, true) == 0) {
+					$data->setByte("seenCredits", 1);
+					Server::getInstance()->saveOfflinePlayerData($entity->getName(), $data);
+					$pk = new ShowCreditsPacket();
+					$pk->playerEid = $entity->getId();
+					$pk->status = ShowCreditsPacket::STATUS_START_CREDITS;
+					$entity->sendDataPacket($pk);
+				}
+			}
+			$entity->teleport($overworld);
+		}else{
+			$enderWorldName = $level->getFolderName()." dim1";
+			if(!Main::dimensionExists($level, 1)) {
+				Main::getInstance()->generateLevelDimension($level->getFolderName(), 1, $level->getSeed());
+				return;
+			}
+			$enderLevel = Server::getInstance()->getLevelByName($enderWorldName);
+			$entity->teleport(new Position(100, 49, 0, $enderLevel));
+			for($x = 100 - 2; $x <= 100 + 2; ++$x) {
+				for($z = 100 - 2; $z <= 100 + 2; ++$z) {
+					$enderLevel->setBlock(new Vector3($x, 48, $z), BlockFactory::get(BlockIds::OBSIDIAN), false, false);
+				}
+			}
 		}
-		$enderWorldName = $level->getFolderName()." dim1";
-		if(!Main::dimensionExists($level, 1)) {
-			Main::getInstance()->generateLevelDimension($level->getFolderName(), $level->getSeed(), EnderGenerator::class, [], 1);
-		}
-		$enderLevel = Server::getInstance()->getLevelByName($enderWorldName);
-		$pos = new Position(100, 48, 0, $enderLevel);
-
-		Main::getInstance()->getScheduler()->scheduleDelayedTask(new DimensionTeleportTask($entity, DimensionIds::THE_END, $pos), 1);
 	}
 }

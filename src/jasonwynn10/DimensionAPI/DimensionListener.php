@@ -1,6 +1,5 @@
 <?php
 declare(strict_types=1);
-
 namespace jasonwynn10\DimensionAPI;
 
 use jasonwynn10\DimensionAPI\provider\AnvilDimension;
@@ -11,10 +10,14 @@ use pocketmine\event\player\PlayerBedEnterEvent;
 use pocketmine\event\player\PlayerRespawnEvent;
 use pocketmine\event\server\DataPacketSendEvent;
 use pocketmine\level\format\io\region\Anvil;
-use pocketmine\level\generator\hell\Nether;
+use pocketmine\level\generator\GeneratorManager;
 use pocketmine\level\generator\normal\Normal;
+use pocketmine\network\mcpe\protocol\ChangeDimensionPacket;
+use pocketmine\network\mcpe\protocol\PlayStatusPacket;
 use pocketmine\network\mcpe\protocol\StartGamePacket;
 use pocketmine\network\mcpe\protocol\types\DimensionIds;
+use pocketmine\Player;
+use pocketmine\scheduler\Task;
 
 class DimensionListener implements Listener {
 	/** @var Main */
@@ -34,10 +37,10 @@ class DimensionListener implements Listener {
 		$provider = $event->getLevel()->getProvider();
 		if($provider instanceof Anvil and !$provider instanceof AnvilDimension) {
 			if($this->plugin->dimensionExists($event->getLevel(), -1))
-				$this->plugin->generateLevelDimension($event->getLevel()->getFolderName(), $event->getLevel()->getSeed(), Nether::class, [], -1);
-			if($this->plugin->getEndGenerator() !== Normal::class) {
+				$this->plugin->generateLevelDimension($event->getLevel()->getFolderName(), -1, $event->getLevel()->getSeed());
+			if(GeneratorManager::getGenerator("ender") !== Normal::class) {
 				if($this->plugin->dimensionExists($event->getLevel(), 1))
-					$this->plugin->generateLevelDimension($event->getLevel()->getFolderName(), $event->getLevel()->getSeed(), $this->plugin->getEndGenerator(), [], 1);
+					$this->plugin->generateLevelDimension($event->getLevel()->getFolderName(), 1, $event->getLevel()->getSeed());
 			}
 		}
 	}
@@ -67,7 +70,44 @@ class DimensionListener implements Listener {
 	}
 
 	public function onTeleport(EntityTeleportEvent $event) : void {
-		// TODO: track teleports for portal interactions
+		$player = $event->getEntity();
+		if(!$player instanceof Player)
+			return;
+		$level = $event->getTo()->getLevel();
+		if($level === null or $level->getFolderName() === $event->getFrom()->getLevel()->getFolderName())
+			return;
+		$pk = new ChangeDimensionPacket();
+		if(strpos($level->getFolderName(), " dim-1") !== false) {
+			$pk->dimension = DimensionIds::NETHER;
+			// TODO: save nether portal connections for 300 ticks after use
+		}elseif(strpos($level->getFolderName(), " dim1") !== false) {
+			$pk->dimension = DimensionIds::THE_END;
+		}else{
+			$pk->dimension = DimensionIds::OVERWORLD;
+		}
+		$pk->position = $event->getTo();
+		$pk->respawn = false;
+		//$player->sendDataPacket($pk);
+
+		//$player->sendPlayStatus(PlayStatusPacket::PLAYER_SPAWN);
+
+		$this->plugin->getScheduler()->scheduleDelayedTask(new class($player) extends Task {
+			/** @var Player $player */
+			protected $player;
+
+			public function __construct(Player $player) {
+				$this->player = $player;
+			}
+
+			/**
+			 * @inheritDoc
+			 */
+			public function onRun(int $currentTick) {
+				//$this->player->sendPlayStatus(PlayStatusPacket::PLAYER_SPAWN);
+				Main::removeTeleportingId($this->player->getId());
+			}
+		}, 20);
+		// TODO: portal cooldown
 	}
 
 	/**

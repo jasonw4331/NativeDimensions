@@ -2,10 +2,7 @@
 declare(strict_types=1);
 namespace jasonwynn10\DimensionAPI\provider;
 
-use czechpmdevs\multiworld\generator\ender\EnderGenerator;
 use pocketmine\level\format\io\region\Anvil;
-use pocketmine\level\generator\hell\Nether;
-use pocketmine\level\generator\normal\Normal;
 
 class AnvilDimension extends Anvil {
 
@@ -71,5 +68,13 @@ class AnvilDimension extends Anvil {
 		elseif($this->dimension > 0)
 			return "ender";
 		return "normal";
+	}
+
+	public function getWorldHeight() : int {
+		if($this->dimension < 0)
+			return 128;
+		elseif($this->dimension > 0)
+			return 256;
+		return parent::getWorldHeight();
 	}
 }
