@@ -64,7 +64,7 @@ class Main extends PluginBase {
 	}
 
 	public function generateLevelDimension(string $name, int $dimension, ?int $seed = null, ?string $generator = null, array $options = []) : bool {
-		if(trim($name) === "" or $this->getServer()->isLevelGenerated($name." dim".$dimension)) {
+		if(trim($name) === "" or !$this->getServer()->isLevelGenerated($name) or $this->getServer()->isLevelGenerated($name." dim".$dimension)) {
 			return false;
 		}
 
