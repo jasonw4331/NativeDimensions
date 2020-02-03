@@ -15,7 +15,7 @@ use pocketmine\level\Level;
 use pocketmine\level\Position;
 use pocketmine\math\Vector3;
 use pocketmine\Player;
-use pocketmine\scheduler\Task;
+use pocketmine\scheduler\ClosureTask;
 use pocketmine\Server;
 
 class Portal extends Thin {
@@ -114,7 +114,6 @@ class Portal extends Thin {
 	public function place(Item $item, Block $block, Block $target, int $face, Vector3 $facePos, Player $player = null): bool{
 		if($player instanceof Player){
 			$this->meta = $player->getDirection() & 0x01;
-			var_dump($player->getDirection() & 0x01);
 		}
 		if(strpos($this->getLevel()->getFolderName(), " dim1") !== false)
 			return true;
@@ -151,7 +150,6 @@ class Portal extends Thin {
 				$worldName = $originLevel->getFolderName()." dim-1";
 				if(!Main::dimensionExists($originLevel, -1)) {
 					Main::getInstance()->generateLevelDimension($originLevel->getFolderName(), -1, $originLevel->getSeed());
-					echo "Generating World\n";
 					return;
 				}
 				$level = Server::getInstance()->getLevelByName($worldName); // 23.35 x 31.6 z
@@ -160,7 +158,6 @@ class Portal extends Thin {
 				$y = $this->y;
 			}
 			$validBlock = $this->getGenerationSpace($x, $y, $z, $level);
-			echo "Generating new Portal\n";
 			if($validBlock instanceof Position) {
 				$this->makePortal($validBlock);
 			}else {
@@ -168,32 +165,18 @@ class Portal extends Thin {
 			}
 		}elseif(!in_array($entity->getId(), Main::getTeleporting())){
 			if($entity instanceof Player) {
-				echo "Teleporting Entity\n";
 				Main::addTeleportingId($entity->getId());
 				if($entity->isCreative()) {
 					$entity->teleport($position);
 					return;
 				}
-				Main::getInstance()->getScheduler()->scheduleDelayedTask(new class($entity, $position) extends Task {
-					/** @var Entity */
-					protected $entity;
-					/** @var Vector3 */
-					protected $position;
-
-					public function __construct(Entity $entity, Position $position){
-						$this->position = $position;
-						$this->entity = $entity;
+				Main::getInstance()->getScheduler()->scheduleDelayedTask(new ClosureTask(function(int $currentTick) use($entity, $position) : void {
+					if(!$entity->getLevel()->getBlock($entity->floor()) instanceof Portal) {
+						return;
 					}
-
-					public function onRun(int $currentTick){
-						if(!$this->entity->getLevel()->getBlock($this->entity->floor()) instanceof Portal) {
-							return;
-						}
-						$this->entity->teleport($this->position);
-					}
-				}, 20 * 4);
+					$entity->teleport($position);
+				}), 20 * 4);
 			}elseif(!$entity instanceof Player) {
-				echo "Teleporting Entity\n";
 				$entity->teleport($position);
 			}
 		}
@@ -221,16 +204,13 @@ class Portal extends Thin {
 	public function getPair() : ?Position {
 		$currentLevel = $this->getLevel();
 		if(strpos($currentLevel->getFolderName(), " dim-1") !== false) {
-			echo "In Nether\n";
 			$level = Main::getDimensionBaseLevel($currentLevel);
 			$x = (int)ceil($this->x * 8);
 			$z = (int)ceil($this->z * 8);
 			//$y = $this->y;
 		}else {
-			echo "Not In Nether\n";
 			$worldName = $currentLevel->getFolderName()." dim-1";
 			if(!Main::dimensionExists($currentLevel, -1)) {
-				echo "Generating World\n";
 				Main::getInstance()->generateLevelDimension($currentLevel->getFolderName(), -1, $currentLevel->getSeed());
 				return null;
 			}
@@ -248,7 +228,6 @@ class Portal extends Thin {
 						for($j = 0; $j < 16; ++$j) {
 							$id = $chunk->getBlockId($i, $k, $j);
 							if($id === Block::PORTAL) {
-								echo $level->getFolderName(), "\n", ($chunk->getX() << 4) + $i,"\n", $k,"\n", ($chunk->getZ() << 4) + $j,"\nID: ", $id,"\n";
 								return new Position(($chunk->getX() << 4) + $i, $k, ($chunk->getZ() << 4) + $j, $level);
 							}
 						}
@@ -256,7 +235,6 @@ class Portal extends Thin {
 				}
 			}
 		}
-		echo "No portals found";
 		return null;
 	}
 

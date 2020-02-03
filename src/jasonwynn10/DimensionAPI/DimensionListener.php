@@ -17,7 +17,7 @@ use pocketmine\network\mcpe\protocol\PlayStatusPacket;
 use pocketmine\network\mcpe\protocol\StartGamePacket;
 use pocketmine\network\mcpe\protocol\types\DimensionIds;
 use pocketmine\Player;
-use pocketmine\scheduler\Task;
+use pocketmine\scheduler\ClosureTask;
 
 class DimensionListener implements Listener {
 	/** @var Main */
@@ -91,22 +91,9 @@ class DimensionListener implements Listener {
 
 		//$player->sendPlayStatus(PlayStatusPacket::PLAYER_SPAWN);
 
-		$this->plugin->getScheduler()->scheduleDelayedTask(new class($player) extends Task {
-			/** @var Player $player */
-			protected $player;
-
-			public function __construct(Player $player) {
-				$this->player = $player;
-			}
-
-			/**
-			 * @inheritDoc
-			 */
-			public function onRun(int $currentTick) {
-				//$this->player->sendPlayStatus(PlayStatusPacket::PLAYER_SPAWN);
-				Main::removeTeleportingId($this->player->getId());
-			}
-		}, 20);
+		$this->plugin->getScheduler()->scheduleDelayedTask(new ClosureTask(function(int $currentTick) use($player) : void {
+			Main::removeTeleportingId($player->getId());
+		}), 20);
 		// TODO: portal cooldown
 	}
 
