@@ -93,7 +93,7 @@ class DimensionListener implements Listener {
 
 		$this->plugin->getScheduler()->scheduleDelayedTask(new ClosureTask(function(int $currentTick) use($player) : void {
 			Main::removeTeleportingId($player->getId());
-		}), 20);
+		}), 20 * 10);
 		// TODO: portal cooldown
 	}
 

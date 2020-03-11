@@ -139,13 +139,16 @@ class EndPortal extends Solid {
 			$enderWorldName = $level->getFolderName()." dim1";
 			if(!Main::dimensionExists($level, 1)) {
 				Main::getInstance()->generateLevelDimension($level->getFolderName(), 1, $level->getSeed());
+				Main::getInstance()->getServer()->loadLevel($enderWorldName);
 				return;
 			}
 			$enderLevel = Server::getInstance()->getLevelByName($enderWorldName);
-			$entity->teleport(new Position(100, 49, 0, $enderLevel));
-			for($x = 100 - 2; $x <= 100 + 2; ++$x) {
-				for($z = 100 - 2; $z <= 100 + 2; ++$z) {
-					$enderLevel->setBlock(new Vector3($x, 48, $z), BlockFactory::get(BlockIds::OBSIDIAN), false, false);
+			if($enderLevel !== null) {
+				$entity->teleport(new Position(100, 49, 0, $enderLevel));
+				for($x = 100 - 2; $x <= 100 + 2; ++$x) {
+					for($z = 100 - 2; $z <= 100 + 2; ++$z) {
+						$enderLevel->setBlock(new Vector3($x, 48, $z), BlockFactory::get(BlockIds::OBSIDIAN), false, false);
+					}
 				}
 			}
 		}

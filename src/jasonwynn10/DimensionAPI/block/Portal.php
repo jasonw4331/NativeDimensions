@@ -150,6 +150,7 @@ class Portal extends Thin {
 				$worldName = $originLevel->getFolderName()." dim-1";
 				if(!Main::dimensionExists($originLevel, -1)) {
 					Main::getInstance()->generateLevelDimension($originLevel->getFolderName(), -1, $originLevel->getSeed());
+					Main::getInstance()->getServer()->loadLevel($worldName);
 					return;
 				}
 				$level = Server::getInstance()->getLevelByName($worldName); // 23.35 x 31.6 z
@@ -175,7 +176,7 @@ class Portal extends Thin {
 						return;
 					}
 					$entity->teleport($position);
-				}), 20 * 4);
+				}), 20 * 6);
 			}elseif(!$entity instanceof Player) {
 				$entity->teleport($position);
 			}
@@ -210,8 +211,9 @@ class Portal extends Thin {
 			//$y = $this->y;
 		}else {
 			$worldName = $currentLevel->getFolderName()." dim-1";
-			if(!Main::dimensionExists($currentLevel, -1)) {
+			if(!Main::dimensionExists($currentLevel, -1) or !Server::getInstance()->isLevelGenerated($worldName)) {
 				Main::getInstance()->generateLevelDimension($currentLevel->getFolderName(), -1, $currentLevel->getSeed());
+				Main::getInstance()->getServer()->loadLevel($worldName);
 				return null;
 			}
 			$level = Server::getInstance()->getLevelByName($worldName);
@@ -227,7 +229,7 @@ class Portal extends Thin {
 					for($i = 0; $i < 16; ++$i) {
 						for($j = 0; $j < 16; ++$j) {
 							$id = $chunk->getBlockId($i, $k, $j);
-							if($id === Block::PORTAL) {
+							if($id === Block::PORTAL and $chunk->getBlockId($i, $k-1, $j) !== Block::PORTAL) {
 								return new Position(($chunk->getX() << 4) + $i, $k, ($chunk->getZ() << 4) + $j, $level);
 							}
 						}

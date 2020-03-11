@@ -3,6 +3,7 @@ declare(strict_types=1);
 namespace jasonwynn10\DimensionAPI\provider;
 
 use pocketmine\level\format\io\region\Anvil;
+use pocketmine\math\Vector3;
 
 class AnvilDimension extends Anvil {
 
@@ -80,5 +81,11 @@ class AnvilDimension extends Anvil {
 		elseif($this->dimension > 0)
 			return 256;
 		return parent::getWorldHeight();
+	}
+
+	public function getSpawn() : Vector3 {
+		if($this->dimension > 0)
+			return new Vector3(100, 49, 0);
+		return parent::getSpawn();
 	}
 }

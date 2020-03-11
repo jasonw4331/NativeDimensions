@@ -87,10 +87,10 @@ class Main extends PluginBase {
 		}
 
 		$path = $this->getServer()->getDataPath() . "worlds/" . $name . "/";
-		/** @var LevelProvider $providerClass */
+		/** @var AnvilDimension $providerClass */
 		$providerClass::generate($path, $name, $seed, $generator, $options);
 
-		/** @see LevelProvider::__construct() */
+		/** @see AnvilDimension::__construct() */
 		$level = new Level($this->getServer(), $name." dim".$dimension, new $providerClass($path, $dimension));
 		$ref = new \ReflectionClass($this->getServer());
 		$prop = $ref->getProperty("levels");
