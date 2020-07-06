@@ -11,6 +11,7 @@ use pocketmine\event\server\DataPacketSendEvent;
 use pocketmine\network\mcpe\protocol\ChangeDimensionPacket;
 use pocketmine\network\mcpe\protocol\StartGamePacket;
 use pocketmine\network\mcpe\protocol\types\DimensionIds;
+use pocketmine\network\mcpe\protocol\types\SpawnSettings;
 use pocketmine\Player;
 use pocketmine\scheduler\ClosureTask;
 
@@ -27,12 +28,14 @@ class DimensionListener implements Listener {
 		$player = $event->getPlayer();
 		$packet = $event->getPacket();
 		if($packet instanceof StartGamePacket) {
+			$settings = $packet->spawnSettings;
 			if(strpos($player->getLevel()->getFolderName(), " dim-1") !== false)
-				$packet->dimension = DimensionIds::NETHER;
+				$dimension = DimensionIds::NETHER;
 			elseif(strpos($player->getLevel()->getFolderName(), " dim1") !== false)
-				$packet->dimension = DimensionIds::THE_END;
+				$dimension = DimensionIds::THE_END;
 			else
-				$packet->dimension = DimensionIds::OVERWORLD;
+				$dimension = DimensionIds::OVERWORLD;
+			$packet->spawnSettings = new SpawnSettings($settings->getBiomeType(), $settings->getBiomeName(), $dimension);
 		}
 	}
 

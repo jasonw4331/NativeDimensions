@@ -7,3 +7,4 @@ author: "jasonwynn10"
 load: STARTUP
 softdepend:
 - MultiWorld
+protocol: [407]
