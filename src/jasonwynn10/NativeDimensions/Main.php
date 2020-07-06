@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
-namespace jasonwynn10\DimensionAPI;
+namespace jasonwynn10\NativeDimensions;
 
-use jasonwynn10\DimensionAPI\block\EndPortal;
-use jasonwynn10\DimensionAPI\block\EndPortalFrame;
-use jasonwynn10\DimensionAPI\block\Obsidian;
-use jasonwynn10\DimensionAPI\block\Portal;
-use jasonwynn10\DimensionAPI\provider\AnvilDimension;
+use jasonwynn10\NativeDimensions\block\EndPortal;
+use jasonwynn10\NativeDimensions\block\EndPortalFrame;
+use jasonwynn10\NativeDimensions\block\Obsidian;
+use jasonwynn10\NativeDimensions\block\Portal;
+use jasonwynn10\NativeDimensions\provider\AnvilDimension;
 use pocketmine\block\BlockFactory;
 use pocketmine\event\level\LevelInitEvent;
 use pocketmine\event\level\LevelLoadEvent;
@@ -81,7 +81,7 @@ class Main extends PluginBase {
 				$generator = GeneratorManager::getGenerator("ender");
 		}
 
-		$providerClass = LevelProviderManager::getProviderByName("anvil_dimension");
+		$providerClass = LevelProviderManager::getProviderByName("anvil_dimension"); // TODO: remove hardcoding
 		if($providerClass === null){
 			throw new \InvalidStateException("Dimension world provider has not been registered");
 		}

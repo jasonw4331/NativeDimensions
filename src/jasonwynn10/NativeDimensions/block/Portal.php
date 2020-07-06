@@ -1,8 +1,8 @@
 <?php
 declare(strict_types = 1);
-namespace jasonwynn10\DimensionAPI\block;
+namespace jasonwynn10\NativeDimensions\block;
 
-use jasonwynn10\DimensionAPI\Main;
+use jasonwynn10\NativeDimensions\Main;
 use pocketmine\block\Air;
 use pocketmine\block\Block;
 use pocketmine\block\BlockFactory;
@@ -136,8 +136,6 @@ class Portal extends Thin {
 	 * @param Entity $entity
 	 */
 	public function onEntityCollide(Entity $entity): void{
-		if($this->getSide(Vector3::SIDE_DOWN)->getId() === Block::PORTAL)
-			return;
 		$originLevel = $entity->getLevel();
 		$position = $this->getPair();
 		if($position === null) {

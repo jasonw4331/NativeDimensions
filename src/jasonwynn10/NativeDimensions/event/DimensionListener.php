@@ -1,19 +1,14 @@
 <?php
 declare(strict_types=1);
-namespace jasonwynn10\DimensionAPI;
+namespace jasonwynn10\NativeDimensions\event;
 
-use jasonwynn10\DimensionAPI\provider\AnvilDimension;
+use jasonwynn10\NativeDimensions\Main;
 use pocketmine\event\entity\EntityTeleportEvent;
-use pocketmine\event\level\LevelLoadEvent;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerBedEnterEvent;
 use pocketmine\event\player\PlayerRespawnEvent;
 use pocketmine\event\server\DataPacketSendEvent;
-use pocketmine\level\format\io\region\Anvil;
-use pocketmine\level\generator\GeneratorManager;
-use pocketmine\level\generator\normal\Normal;
 use pocketmine\network\mcpe\protocol\ChangeDimensionPacket;
-use pocketmine\network\mcpe\protocol\PlayStatusPacket;
 use pocketmine\network\mcpe\protocol\StartGamePacket;
 use pocketmine\network\mcpe\protocol\types\DimensionIds;
 use pocketmine\Player;
@@ -26,23 +21,6 @@ class DimensionListener implements Listener {
 	public function __construct(Main $plugin) {
 		$plugin->getServer()->getPluginManager()->registerEvents($this, $plugin);
 		$this->plugin = $plugin;
-	}
-
-	/**
-	 * @param LevelLoadEvent $event
-	 *
-	 * @throws \ReflectionException
-	 */
-	public function onLevelLoad(LevelLoadEvent $event) : void {
-		$provider = $event->getLevel()->getProvider();
-		if($provider instanceof Anvil and !$provider instanceof AnvilDimension) {
-			if($this->plugin->dimensionExists($event->getLevel(), -1))
-				$this->plugin->generateLevelDimension($event->getLevel()->getFolderName(), -1, $event->getLevel()->getSeed());
-			if(GeneratorManager::getGenerator("ender") !== Normal::class) {
-				if($this->plugin->dimensionExists($event->getLevel(), 1))
-					$this->plugin->generateLevelDimension($event->getLevel()->getFolderName(), 1, $event->getLevel()->getSeed());
-			}
-		}
 	}
 
 	public function onDataPacket(DataPacketSendEvent $event) {

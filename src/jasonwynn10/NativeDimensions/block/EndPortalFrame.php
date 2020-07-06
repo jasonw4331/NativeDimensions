@@ -33,7 +33,7 @@
 
 declare(strict_types = 1);
 
-namespace jasonwynn10\DimensionAPI\block;
+namespace jasonwynn10\NativeDimensions\block;
 
 use pocketmine\block\Block;
 use pocketmine\block\EndPortalFrame as PMEndPortalFrame;

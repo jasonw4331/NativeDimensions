@@ -33,9 +33,9 @@
 
 declare(strict_types = 1);
 
-namespace jasonwynn10\DimensionAPI\block;
+namespace jasonwynn10\NativeDimensions\block;
 
-use jasonwynn10\DimensionAPI\Main;
+use jasonwynn10\NativeDimensions\Main;
 use pocketmine\block\Block;
 use pocketmine\block\BlockFactory;
 use pocketmine\block\BlockIds;

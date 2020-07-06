@@ -1,6 +1,6 @@
 <?php
 declare(strict_types=1);
-namespace jasonwynn10\DimensionAPI\provider;
+namespace jasonwynn10\NativeDimensions\provider;
 
 use pocketmine\level\format\io\region\Anvil;
 use pocketmine\math\Vector3;
