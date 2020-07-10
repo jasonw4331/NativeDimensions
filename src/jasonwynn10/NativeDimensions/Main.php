@@ -7,11 +7,14 @@ use jasonwynn10\NativeDimensions\block\EndPortalFrame;
 use jasonwynn10\NativeDimensions\block\Obsidian;
 use jasonwynn10\NativeDimensions\block\Portal;
 use jasonwynn10\NativeDimensions\event\DimensionListener;
-use jasonwynn10\NativeDimensions\provider\AnvilDimension;
+use jasonwynn10\NativeDimensions\provider\EnderAnvilProvider;
+use jasonwynn10\NativeDimensions\provider\NetherAnvilProvider;
 use pocketmine\block\BlockFactory;
 use pocketmine\event\level\LevelInitEvent;
 use pocketmine\event\level\LevelLoadEvent;
+use pocketmine\level\format\io\leveldb\LevelDB;
 use pocketmine\level\format\io\LevelProviderManager;
+use pocketmine\level\format\io\region\Anvil;
 use pocketmine\level\generator\Generator;
 use pocketmine\level\generator\GeneratorManager;
 use pocketmine\level\generator\normal\Normal;
@@ -49,7 +52,8 @@ class Main extends PluginBase {
 
 	public function onLoad() {
 		self::$instance = $this;
-		LevelProviderManager::addProvider(AnvilDimension::class);
+		LevelProviderManager::addProvider(NetherAnvilProvider::class);
+		LevelProviderManager::addProvider(EnderAnvilProvider::class);
 		//LevelProviderManager::addProvider(LevelDBDimensionProvider::class); // TODO
 	}
 
@@ -81,20 +85,28 @@ class Main extends PluginBase {
 				$generator = GeneratorManager::getGenerator("ender");
 		}
 
-		$providerClass = LevelProviderManager::getProviderByName("anvil_dimension"); // TODO: remove hardcoding
+		if($dimension > 0) {
+			/** @var NetherAnvilProvider|null $providerClass */
+			$providerClass = LevelProviderManager::getProviderByName("nether_dimension");
+		}else{
+			/** @var EnderAnvilProvider|null $providerClass */
+			$providerClass = LevelProviderManager::getProviderByName("end_dimension");
+		}
+
 		if($providerClass === null){
 			throw new \InvalidStateException("Dimension world provider has not been registered");
 		}
 
 		$path = $this->getServer()->getDataPath() . "worlds/" . $name . "/";
-		/** @var AnvilDimension $providerClass */
+
 		$providerClass::generate($path, $name, $seed, $generator, $options);
 
-		/** @see AnvilDimension::__construct() */
-		$level = new Level($this->getServer(), $name." dim".$dimension, new $providerClass($path, $dimension));
+		/** @see Anvil::__construct() */
+		$level = new Level($this->getServer(), $name." dim".$dimension, new $providerClass($path));
 		$ref = new \ReflectionClass($this->getServer());
 		$prop = $ref->getProperty("levels");
 		$prop->setAccessible(true);
+		/** @var Level[] $levels */
 		$levels = $prop->getValue($this->getServer());
 		$levels[$level->getId()] = $level;
 		$prop->setValue($this->getServer(), $levels);
@@ -133,7 +145,11 @@ class Main extends PluginBase {
 	}
 
 	public static function dimensionExists(Level $level, int $dimension) : bool {
-		return AnvilDimension::isValid($level->getProvider()->getPath(), $dimension); // TODO: levelDB provider
+		if($level->getProvider() instanceof LevelDB)
+			return false; // TODO: levelDB provider
+		if($dimension > 0)
+			return EnderAnvilProvider::isValid($level->getProvider()->getPath());
+		return NetherAnvilProvider::isValid($level->getProvider()->getPath());
 	}
 
 	public static function getDimensionBaseLevel(Level $level) : ?Level {
