@@ -154,8 +154,8 @@ class Main extends PluginBase {
 
 	public static function getDimensionBaseLevel(Level $level) : ?Level {
 		if(strpos($level->getFolderName(), " dim") !== false) {
-			$overworldName = preg_replace('/([a-zA-Z0-9\s]*)(\sdim-?\d)/', '${1}', $level->getFolderName());
-			return Server::getInstance()->getLevelByName($overworldName);
+			$overWorldName = preg_replace('/([a-zA-Z0-9\s]*)(\sdim-?\d)/', '${1}', $level->getFolderName());
+			return Server::getInstance()->getLevelByName($overWorldName);
 		}
 		return null;
 	}
