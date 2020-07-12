@@ -8,7 +8,9 @@ use jasonwynn10\NativeDimensions\block\Obsidian;
 use jasonwynn10\NativeDimensions\block\Portal;
 use jasonwynn10\NativeDimensions\event\DimensionListener;
 use jasonwynn10\NativeDimensions\provider\EnderAnvilProvider;
+use jasonwynn10\NativeDimensions\provider\EnderLevelDBProvider;
 use jasonwynn10\NativeDimensions\provider\NetherAnvilProvider;
+use jasonwynn10\NativeDimensions\provider\NetherLevelDBProvider;
 use pocketmine\block\BlockFactory;
 use pocketmine\event\level\LevelInitEvent;
 use pocketmine\event\level\LevelLoadEvent;
@@ -54,7 +56,8 @@ class Main extends PluginBase {
 		self::$instance = $this;
 		LevelProviderManager::addProvider(NetherAnvilProvider::class);
 		LevelProviderManager::addProvider(EnderAnvilProvider::class);
-		//LevelProviderManager::addProvider(LevelDBDimensionProvider::class); // TODO
+		LevelProviderManager::addProvider(NetherLevelDBProvider::class);
+		LevelProviderManager::addProvider(EnderLevelDBProvider::class);
 	}
 
 	public function onEnable() {
