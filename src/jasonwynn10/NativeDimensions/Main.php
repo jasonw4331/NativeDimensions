@@ -147,9 +147,10 @@ class Main extends PluginBase {
 	public static function dimensionExists(Level $level, int $dimension) : bool {
 		if($level->getProvider() instanceof LevelDB)
 			return false; // TODO: levelDB provider
+		$baseLevel = self::getDimensionBaseLevel($level) ?? $level;
 		if($dimension > 0)
-			return EnderAnvilProvider::isValid($level->getProvider()->getPath());
-		return NetherAnvilProvider::isValid($level->getProvider()->getPath());
+			return EnderAnvilProvider::isValid($baseLevel->getProvider()->getPath());
+		return NetherAnvilProvider::isValid($baseLevel->getProvider()->getPath());
 	}
 
 	public static function getDimensionBaseLevel(Level $level) : ?Level {
