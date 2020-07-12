@@ -3,10 +3,11 @@ declare(strict_types=1);
 
 namespace jasonwynn10\NativeDimensions\provider;
 
+use pocketmine\level\format\io\leveldb\LevelDB;
 use pocketmine\nbt\tag\IntTag;
 use pocketmine\utils\Binary;
 
-class NetherLevelDBProvider extends \pocketmine\level\format\io\leveldb\LevelDB {
+class NetherLevelDBProvider extends LevelDB {
 
 	protected function fixLevelData() : void{
 		if($this->levelData->hasTag("NetherScale", IntTag::class))
