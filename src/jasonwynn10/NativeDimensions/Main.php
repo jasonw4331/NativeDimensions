@@ -19,6 +19,7 @@ use pocketmine\level\format\io\LevelProviderManager;
 use pocketmine\level\format\io\region\Anvil;
 use pocketmine\level\generator\Generator;
 use pocketmine\level\generator\GeneratorManager;
+use pocketmine\level\generator\hell\Nether;
 use pocketmine\level\generator\normal\Normal;
 use pocketmine\level\Level;
 use pocketmine\plugin\PluginBase;
@@ -83,9 +84,14 @@ class Main extends PluginBase {
 
 		if($generator === null or !class_exists($generator, true) or !is_subclass_of($generator, Generator::class)){
 			if($dimension < 0)
-				$generator = GeneratorManager::getGenerator("hell"); // default to hell because this is a dimension
+				/** @var Nether $generator */
+				$generator = GeneratorManager::getGenerator("hell");
 			elseif($dimension > 0)
-				$generator = GeneratorManager::getGenerator("ender");
+				/** @var Generator $generator */
+				$generator = GeneratorManager::getGenerator("ender"); // might return normal if not registered
+			else
+				/** @var Normal $generator */
+				$generator = GeneratorManager::getGenerator("default");
 		}
 
 		$levelProvider = $this->getServer()->getLevelByName($name)->getProvider();
