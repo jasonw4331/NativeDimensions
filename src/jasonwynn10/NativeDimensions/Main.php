@@ -124,7 +124,10 @@ class Main extends PluginBase {
 
 		$path = $this->getServer()->getDataPath() . "worlds/" . $name . "/";
 
-		$providerClass::generate($path, $name, $seed, $generator, $options);
+		if($providerClass instanceof Anvil)
+			$providerClass::generate($path."dim" . $dimension . "/", $name, $seed, $generator, $options);
+		// if($providerClass instanceof LevelDB)
+		// 	$providerClass::generate($path, $name, $seed, $generator, $options);
 
 		/** @see Anvil::__construct() */
 		$level = new Level($this->getServer(), $name." dim".$dimension, new $providerClass($path));
