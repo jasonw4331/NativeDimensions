@@ -67,6 +67,7 @@ class Main extends PluginBase {
 			BlockFactory::registerBlock(new EndPortalFrame(), true);
 			BlockFactory::registerBlock(new EndPortal(), true);
 		}
+		BlockFactory::registerBlock(new Fire(), true);
 		BlockFactory::registerBlock(new Obsidian(), true);
 		BlockFactory::registerBlock(new Portal(), true);
 	}
