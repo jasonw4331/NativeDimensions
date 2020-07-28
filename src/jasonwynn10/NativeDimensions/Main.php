@@ -108,7 +108,7 @@ class Main extends PluginBase {
 		// }else
 		if($levelProvider instanceof Anvil) {
 			if($dimension < 0)
-				/** @var NetherLevelDBProvider $providerClass */
+				/** @var NetherAnvilProvider $providerClass */
 				$providerClass = NetherAnvilProvider::class;
 			elseif($dimension > 0)
 				/** @var EnderAnvilProvider $providerClass */
