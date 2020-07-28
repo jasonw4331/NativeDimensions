@@ -16,37 +16,23 @@ class Fire extends PMFire {
 				continue;
 			}
 			$minWidth = 2;
-			if($this->testDirectionForObsidian(Vector3::SIDE_NORTH, $this, $widthA) and $this->testDirectionForObsidian(Vector3::SIDE_SOUTH, $this, $widthB)) {
+			if($this->testDirectionForObsidian(Vector3::SIDE_NORTH, $this, $widthA) and $this->testDirectionForObsidian(Vector3::SIDE_SOUTH, $this, $widthB) and $widthA + $widthB - 1 > $minWidth) {
 				$totalWidth = $widthA + $widthB - 1;
-				if($totalWidth < $minWidth) {
-					parent::onNearbyBlockChange();
-					return; // portal cannot be made
-				}
 				$direction = Vector3::SIDE_NORTH;
-			}elseif($this->testDirectionForObsidian(Vector3::SIDE_EAST, $this, $widthA) and $this->testDirectionForObsidian(Vector3::SIDE_WEST, $this, $widthB)) {
+			}elseif($this->testDirectionForObsidian(Vector3::SIDE_EAST, $this, $widthA) and $this->testDirectionForObsidian(Vector3::SIDE_WEST, $this, $widthB) and $widthA + $widthB - 1 > $minWidth) {
 				$totalWidth = $widthA + $widthB - 1;
-				if($totalWidth < $minWidth) {
-					parent::onNearbyBlockChange();
-					return; // portal cannot be made
-				}
 				$direction = Vector3::SIDE_EAST;
-				// found portal width
 			}else{
 				parent::onNearbyBlockChange();
-				return; // portal cannot be made
+				return;
 			}
 
 			$minHeight = 3;
-			if($this->testDirectionForObsidian(Vector3::SIDE_UP, $this, $heightA) and $this->testDirectionForObsidian(Vector3::SIDE_DOWN, $this, $heightB)) {
+			if($this->testDirectionForObsidian(Vector3::SIDE_UP, $this, $heightA) and $this->testDirectionForObsidian(Vector3::SIDE_DOWN, $this, $heightB) and $heightA + $heightB - 1 > $minHeight) {
 				$totalHeight = $heightA + $heightB - 1;
-				if($totalHeight < $minHeight) {
-					parent::onNearbyBlockChange();
-					return; // portal cannot be made
-				}
-				// found portal height
 			}else{
 				parent::onNearbyBlockChange();
-				return; // portal cannot be made
+				return;
 			}
 
 			$this->testDirectionForObsidian($direction, $this, $horizblocks);
