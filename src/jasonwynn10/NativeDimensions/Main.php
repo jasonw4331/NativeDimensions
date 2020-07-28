@@ -4,6 +4,7 @@ namespace jasonwynn10\NativeDimensions;
 
 use jasonwynn10\NativeDimensions\block\EndPortal;
 use jasonwynn10\NativeDimensions\block\EndPortalFrame;
+use jasonwynn10\NativeDimensions\block\Fire;
 use jasonwynn10\NativeDimensions\block\Obsidian;
 use jasonwynn10\NativeDimensions\block\Portal;
 use jasonwynn10\NativeDimensions\event\DimensionListener;
