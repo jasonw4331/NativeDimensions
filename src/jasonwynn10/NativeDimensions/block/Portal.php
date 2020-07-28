@@ -132,9 +132,6 @@ class Portal extends Thin {
 		return [];
 	}
 
-	/**
-	 * @param Entity $entity
-	 */
 	public function onEntityCollide(Entity $entity): void{
 		$originLevel = $entity->getLevel();
 		$position = $this->getPair();
@@ -151,7 +148,7 @@ class Portal extends Thin {
 					Main::getInstance()->getServer()->loadLevel($worldName);
 					return;
 				}
-				$level = Server::getInstance()->getLevelByName($worldName); // 23.35 x 31.6 z
+				$level = Server::getInstance()->getLevelByName($worldName);
 				$x = $this->x / 8;
 				$z = $this->z / 8;
 				$y = $this->y;

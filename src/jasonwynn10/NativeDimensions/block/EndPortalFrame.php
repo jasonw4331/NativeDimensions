@@ -49,15 +49,6 @@ class EndPortalFrame extends PMEndPortalFrame {
 
 	// Code below is ported from ClearSky (Big Thanks to XenialDan)
 
-	/**
-	 * @param Item $item
-	 * @param Block $block
-	 * @param Block $target
-	 * @param int $face
-	 * @param Vector3 $facePos
-	 * @param Player|null $player
-	 * @return bool
-	 */
 	public function place(Item $item, Block $block, Block $target, int $face, Vector3 $facePos, Player $player = null): bool{
 		$faces = [
 			0 => 3,
@@ -71,11 +62,6 @@ class EndPortalFrame extends PMEndPortalFrame {
 		return true;
 	}
 
-	/**
-	 * @param Item $item
-	 * @param Player|null $player
-	 * @return bool
-	 */
 	public function onActivate(Item $item, Player $player = null): bool{
 		if(($this->getDamage() & 0x04) === 0 && $player instanceof Player && $item->getId() === Item::ENDER_EYE){
 			$this->setDamage($this->getDamage() + 4);
@@ -92,9 +78,6 @@ class EndPortalFrame extends PMEndPortalFrame {
 		return false;
 	}
 
-	/**
-	 * @return array
-	 */
 	public function isValidPortal(): array{
 		// TODO: Portal Checks
 		return [
