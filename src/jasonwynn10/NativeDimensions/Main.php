@@ -57,8 +57,8 @@ class Main extends PluginBase {
 		self::$instance = $this;
 		LevelProviderManager::addProvider(NetherAnvilProvider::class);
 		LevelProviderManager::addProvider(EnderAnvilProvider::class);
-		LevelProviderManager::addProvider(NetherLevelDBProvider::class);
-		LevelProviderManager::addProvider(EnderLevelDBProvider::class);
+		//LevelProviderManager::addProvider(NetherLevelDBProvider::class);
+		//LevelProviderManager::addProvider(EnderLevelDBProvider::class);
 	}
 
 	public function onEnable() {
@@ -95,17 +95,18 @@ class Main extends PluginBase {
 		}
 
 		$levelProvider = $this->getServer()->getLevelByName($name)->getProvider();
-		if($levelProvider instanceof LevelDB) {
-			if($dimension < 0)
-				/** @var NetherLevelDBProvider $providerClass */
-				$providerClass = NetherLevelDBProvider::class;
-			elseif($dimension > 0)
-				/** @var EnderLevelDBProvider $providerClass */
-				$providerClass = EnderLevelDBProvider::class;
-			else
-				/** @var LevelDB $providerClass */
-				$providerClass = LevelDB::class;
-		}elseif($levelProvider instanceof Anvil) {
+		// if($levelProvider instanceof LevelDB) {
+		// 	if($dimension < 0)
+		// 		/** @var NetherLevelDBProvider $providerClass */
+		// 		$providerClass = NetherLevelDBProvider::class;
+		// 	elseif($dimension > 0)
+		// 		/** @var EnderLevelDBProvider $providerClass */
+		// 		$providerClass = EnderLevelDBProvider::class;
+		// 	else
+		// 		/** @var LevelDB $providerClass */
+		// 		$providerClass = LevelDB::class;
+		// }else
+		if($levelProvider instanceof Anvil) {
 			if($dimension < 0)
 				/** @var NetherLevelDBProvider $providerClass */
 				$providerClass = NetherAnvilProvider::class;
@@ -171,13 +172,14 @@ class Main extends PluginBase {
 	public static function dimensionExists(Level $level, int $dimension) : bool {
 		$baseLevel = self::getDimensionBaseLevel($level) ?? $level;
 		$provider = $baseLevel->getProvider();
-		if($provider instanceof LevelDB) {
-			if($dimension < 0)
-				return NetherLevelDBProvider::isValid($baseLevel->getProvider()->getPath());
-			if($dimension > 0)
-				return EnderLevelDBProvider::isValid($baseLevel->getProvider()->getPath());
-			return LevelDB::isValid($baseLevel->getProvider()->getPath());
-		}elseif($provider instanceof Anvil) {
+		// if($provider instanceof LevelDB) {
+		// 	if($dimension < 0)
+		// 		return NetherLevelDBProvider::isValid($baseLevel->getProvider()->getPath());
+		// 	if($dimension > 0)
+		// 		return EnderLevelDBProvider::isValid($baseLevel->getProvider()->getPath());
+		// 	return LevelDB::isValid($baseLevel->getProvider()->getPath());
+		// }else
+		if($provider instanceof Anvil) {
 			if($dimension < 0)
 				return NetherAnvilProvider::isValid($baseLevel->getProvider()->getPath());
 			if($dimension > 0)
