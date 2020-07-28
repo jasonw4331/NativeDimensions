@@ -2,6 +2,7 @@
 declare(strict_types=1);
 namespace jasonwynn10\NativeDimensions\block;
 
+use pocketmine\block\Air;
 use pocketmine\block\BlockFactory;
 use pocketmine\block\BlockIds;
 use pocketmine\block\Fire as PMFire;
@@ -16,21 +17,40 @@ class Fire extends PMFire {
 				continue;
 			}
 			$minWidth = 2;
-			if($this->testDirectionForObsidian(Vector3::SIDE_NORTH, $this, $widthA) and $this->testDirectionForObsidian(Vector3::SIDE_SOUTH, $this, $widthB) and $widthA + $widthB - 1 > $minWidth) {
+			if($this->testDirectionForObsidian(Vector3::SIDE_NORTH, $this, $widthA) and $this->testDirectionForObsidian(Vector3::SIDE_SOUTH, $this, $widthB)) {
 				$totalWidth = $widthA + $widthB - 1;
+				if($totalWidth < $minWidth) {
+					parent::onNearbyBlockChange();
+					return; // portal cannot be made
+				}
 				$direction = Vector3::SIDE_NORTH;
-			}elseif($this->testDirectionForObsidian(Vector3::SIDE_EAST, $this, $widthA) and $this->testDirectionForObsidian(Vector3::SIDE_WEST, $this, $widthB) and $widthA + $widthB - 1 > $minWidth) {
+				echo "Completed 1\n";
+			}elseif($this->testDirectionForObsidian(Vector3::SIDE_EAST, $this, $widthA) and $this->testDirectionForObsidian(Vector3::SIDE_WEST, $this, $widthB)) {
 				$totalWidth = $widthA + $widthB - 1;
+				if($totalWidth < $minWidth) {
+					echo "Returned 2\n";
+					parent::onNearbyBlockChange();
+					return;
+				}
 				$direction = Vector3::SIDE_EAST;
+				echo "Completed 3\n";
 			}else{
+				echo "Returned 4\n";
 				parent::onNearbyBlockChange();
 				return;
 			}
 
 			$minHeight = 3;
-			if($this->testDirectionForObsidian(Vector3::SIDE_UP, $this, $heightA) and $this->testDirectionForObsidian(Vector3::SIDE_DOWN, $this, $heightB) and $heightA + $heightB - 1 > $minHeight) {
+			if($this->testDirectionForObsidian(Vector3::SIDE_UP, $this, $heightA) and $this->testDirectionForObsidian(Vector3::SIDE_DOWN, $this, $heightB)) {
 				$totalHeight = $heightA + $heightB - 1;
+				if($totalHeight < $minHeight) {
+					echo "Returned 5\n";
+					parent::onNearbyBlockChange();
+					return; // portal cannot be made
+				}
+				echo "Completed 6\n";
 			}else{
+				echo "Returned 7\n";
 				parent::onNearbyBlockChange();
 				return;
 			}
@@ -60,6 +80,8 @@ class Fire extends PMFire {
 			if($testPos->getLevelNonNull()->getBlock($testPos, true, false) instanceof \pocketmine\block\Obsidian) {
 				$distance = $i;
 				return true;
+			}elseif(!$testPos->getLevelNonNull()->getBlock($testPos, true, false) instanceof Air) {
+				return false;
 			}
 		}
 		return false;
