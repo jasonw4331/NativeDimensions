@@ -74,15 +74,13 @@ class Main extends PluginBase {
 	}
 
 	public function generateLevelDimension(string $name, int $dimension, ?int $seed = null, ?string $generator = null, array $options = []) : bool {
-		if(trim($name) === "" or !$this->getServer()->isLevelGenerated($name) or $this->getServer()->isLevelGenerated($name." dim".$dimension)) {
+		if(trim($name) === "" or !$this->getServer()->isLevelGenerated($name) or $this->getServer()->isLevelGenerated($name." dim".$dimension))
 			return false;
-		}
 
 		$seed = $seed ?? random_int(INT32_MIN, INT32_MAX);
 
-		if(!isset($options["preset"])){
+		if(!isset($options["preset"]))
 			$options["preset"] = $this->getServer()->getConfigString("generator-settings", "");
-		}
 
 		if($generator === null or !class_exists($generator, true) or !is_subclass_of($generator, Generator::class)){
 			if($dimension < 0)
