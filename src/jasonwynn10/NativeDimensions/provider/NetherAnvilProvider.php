@@ -27,13 +27,13 @@ class NetherAnvilProvider extends \pocketmine\level\format\io\region\Anvil {
 		return $isValid;
 	}
 
-	public static function generate(string $path, string $name, int $seed, string $generator, array $options = [], int $dimension = -1){
+	public static function generate(string $path, string $name, int $seed, string $generator, array $options = []){
 		if(!file_exists($path)){
 			mkdir($path, 0777, true);
 		}
 
-		if(!file_exists($path . "/dim-1/region")){
-			mkdir($path . "/dim-1/region", 0777);
+		if(!file_exists($path . "/region")){
+			mkdir($path . "/region", 0777);
 		}
 	}
 

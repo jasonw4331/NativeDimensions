@@ -9,6 +9,10 @@ use pocketmine\utils\Binary;
 
 class NetherLevelDBProvider extends LevelDB {
 
+	public function getName() : string {
+		return parent::getName()." dim-1";
+	}
+
 	protected function fixLevelData() : void{
 		if($this->levelData->hasTag("NetherScale", IntTag::class))
 			$this->levelData->setInt("NetherScale", 8);
