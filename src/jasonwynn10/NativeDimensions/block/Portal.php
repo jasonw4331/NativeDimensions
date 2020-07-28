@@ -144,8 +144,8 @@ class Portal extends Thin {
 			}else {
 				$worldName = $originLevel->getFolderName()." dim-1";
 				if(!Main::dimensionExists($originLevel, -1)) {
-					Main::getInstance()->generateLevelDimension($originLevel->getFolderName(), -1, $originLevel->getSeed());
-					Main::getInstance()->getServer()->loadLevel($worldName);
+					if(!Main::getInstance()->generateLevelDimension($originLevel->getFolderName(), -1, $originLevel->getSeed()))
+						Main::getInstance()->getServer()->loadLevel($worldName);
 					return;
 				}
 				$level = Server::getInstance()->getLevelByName($worldName);
