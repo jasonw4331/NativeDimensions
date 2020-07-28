@@ -12,6 +12,6 @@ class EnderLevelDBProvider extends LevelDB {
 	}
 
 	public static function chunkIndex(int $chunkX, int $chunkZ) : string{
-		return Binary::writeLInt($chunkX) . Binary::writeLInt($chunkZ); // TODO: remake index for end
+		return Binary::writeLInt(1) . Binary::writeLInt($chunkX) . Binary::writeLInt($chunkZ);
 	}
 }
