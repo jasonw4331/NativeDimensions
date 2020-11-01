@@ -21,6 +21,6 @@ class NetherLevelDBProvider extends LevelDB {
 	}
 
 	public static function chunkIndex(int $chunkX, int $chunkZ) : string{
-		return Binary::writeLInt(-1) . Binary::writeLInt($chunkX) . Binary::writeLInt($chunkZ);
+		return Binary::writeLInt($chunkX) . Binary::writeLInt($chunkZ) . Binary::writeLInt(1);
 	}
 }
