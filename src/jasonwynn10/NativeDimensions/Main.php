@@ -8,10 +8,9 @@ use jasonwynn10\NativeDimensions\block\Fire;
 use jasonwynn10\NativeDimensions\block\Obsidian;
 use jasonwynn10\NativeDimensions\block\Portal;
 use jasonwynn10\NativeDimensions\event\DimensionListener;
+use jasonwynn10\NativeDimensions\provider\DimensionLevelDBProvider;
 use jasonwynn10\NativeDimensions\provider\EnderAnvilProvider;
-use jasonwynn10\NativeDimensions\provider\EnderLevelDBProvider;
 use jasonwynn10\NativeDimensions\provider\NetherAnvilProvider;
-use jasonwynn10\NativeDimensions\provider\NetherLevelDBProvider;
 use pocketmine\block\BlockFactory;
 use pocketmine\event\level\LevelInitEvent;
 use pocketmine\event\level\LevelLoadEvent;
@@ -58,8 +57,15 @@ class Main extends PluginBase {
 		self::$instance = $this;
 		LevelProviderManager::addProvider(NetherAnvilProvider::class);
 		LevelProviderManager::addProvider(EnderAnvilProvider::class);
-		//LevelProviderManager::addProvider(NetherLevelDBProvider::class);
-		//LevelProviderManager::addProvider(EnderLevelDBProvider::class);
+
+		$ref = new \ReflectionClass(LevelProviderManager::class);
+		$prop = $ref->getProperty('providers');
+		$prop->setAccessible(true);
+		$providers = $prop->getValue(LevelProviderManager::class);
+		$providers[strtolower(LevelDB::getProviderName())] = DimensionLevelDBProvider::class;
+		$prop->setValue($providers);
+
+		LevelProviderManager::addProvider(DimensionLevelDBProvider::class);
 	}
 
 	public function onEnable() {
@@ -95,18 +101,10 @@ class Main extends PluginBase {
 		}
 
 		$levelProvider = $this->getServer()->getLevelByName($name)->getProvider();
-		// if($levelProvider instanceof LevelDB) {
-		// 	if($dimension < 0)
-		// 		/** @var NetherLevelDBProvider $providerClass */
-		// 		$providerClass = NetherLevelDBProvider::class;
-		// 	elseif($dimension > 0)
-		// 		/** @var EnderLevelDBProvider $providerClass */
-		// 		$providerClass = EnderLevelDBProvider::class;
-		// 	else
-		// 		/** @var LevelDB $providerClass */
-		// 		$providerClass = LevelDB::class;
-		// }else
-		if($levelProvider instanceof Anvil) {
+		if($levelProvider instanceof LevelDB) {
+			/** @var DimensionLevelDBProvider $providerClass */
+			$providerClass = DimensionLevelDBProvider::class;
+		}elseif($levelProvider instanceof Anvil) {
 			if($dimension < 0)
 				/** @var NetherAnvilProvider $providerClass */
 				$providerClass = NetherAnvilProvider::class;
@@ -126,11 +124,11 @@ class Main extends PluginBase {
 
 		if($providerClass instanceof Anvil)
 			$providerClass::generate($path."dim" . $dimension . "/", $name, $seed, $generator, $options);
-		// if($providerClass instanceof LevelDB)
-		// 	$providerClass::generate($path, $name, $seed, $generator, $options);
+		if($providerClass instanceof DimensionLevelDBProvider)
+			$providerClass::generate($path, $name, $seed, $generator, $options, $dimension < 0 ? 1 : ($dimension > 1 ? 2 : 0));
 
 		/** @see Anvil::__construct() */
-		$level = new Level($this->getServer(), $name." dim".$dimension, new $providerClass($path));
+		$level = new Level($this->getServer(), $name." dim".$dimension, new $providerClass($path, $dimension < 0 ? 1 : ($dimension > 1 ? 2 : 0)));
 		$ref = new \ReflectionClass($this->getServer());
 		$prop = $ref->getProperty("levels");
 		$prop->setAccessible(true);
@@ -175,14 +173,9 @@ class Main extends PluginBase {
 	public static function dimensionExists(Level $level, int $dimension) : bool {
 		$baseLevel = self::getDimensionBaseLevel($level) ?? $level;
 		$provider = $baseLevel->getProvider();
-		// if($provider instanceof LevelDB) {
-		// 	if($dimension < 0)
-		// 		return NetherLevelDBProvider::isValid($baseLevel->getProvider()->getPath());
-		// 	if($dimension > 0)
-		// 		return EnderLevelDBProvider::isValid($baseLevel->getProvider()->getPath());
-		// 	return LevelDB::isValid($baseLevel->getProvider()->getPath());
-		// }else
-		if($provider instanceof Anvil) {
+		if($provider instanceof LevelDB) {
+			return DimensionLevelDBProvider::isValid($baseLevel->getProvider()->getPath());
+		}elseif($provider instanceof Anvil) {
 			if($dimension < 0)
 				return NetherAnvilProvider::isValid($baseLevel->getProvider()->getPath());
 			if($dimension > 0)
