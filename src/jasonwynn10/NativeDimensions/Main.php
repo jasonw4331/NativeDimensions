@@ -126,10 +126,10 @@ class Main extends PluginBase {
 		if($providerClass instanceof SubAnvilProvider)
 			$providerClass::generate($path."dim" . $dimension . "/", $name, $seed, $generator, $options, $dimension);
 		if($providerClass instanceof DimensionLevelDBProvider)
-			$providerClass::generate($path, $name, $seed, $generator, $options, $dimension < 0 ? 1 : ($dimension > 1 ? 2 : 0));
+			$providerClass::generate($path, $name, $seed, $generator, $options, $dimension < 0 ? 1 : ($dimension > 0 ? 2 : 0));
 
 		/** @see Anvil::__construct() */
-		$level = new Level($this->getServer(), $name." dim".$dimension, new $providerClass($path, $dimension < 0 ? 1 : ($dimension > 1 ? 2 : 0)));
+		$level = new Level($this->getServer(), $name." dim".$dimension, new $providerClass($path, $dimension < 0 ? 1 : ($dimension > 0 ? 2 : 0)));
 		$ref = new \ReflectionClass($this->getServer());
 		$prop = $ref->getProperty("levels");
 		$prop->setAccessible(true);
