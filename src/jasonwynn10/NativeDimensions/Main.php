@@ -102,20 +102,17 @@ class Main extends PluginBase {
 		}
 
 		$levelProvider = $this->getServer()->getLevelByName($name)->getProvider();
+		$providerClass = null;
 		if($levelProvider instanceof LevelDB) {
-			/** @var DimensionLevelDBProvider $providerClass */
 			$providerClass = DimensionLevelDBProvider::class;
 		}elseif($levelProvider instanceof Anvil) {
 			if($dimension < 0)
-				/** @var NetherAnvilProvider $providerClass */
 				$providerClass = NetherAnvilProvider::class;
 			elseif($dimension > 0)
-				/** @var EnderAnvilProvider $providerClass */
 				$providerClass = EnderAnvilProvider::class;
-			else
-				/** @var Anvil $providerClass */
-				$providerClass = Anvil::class;
 		}
+
+		// TODO: allow plugins to register custom dimension providers
 
 		if($providerClass === null){
 			throw new \InvalidStateException("Dimension world provider has not been registered");
