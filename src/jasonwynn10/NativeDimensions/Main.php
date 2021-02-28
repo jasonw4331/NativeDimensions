@@ -11,6 +11,7 @@ use jasonwynn10\NativeDimensions\event\DimensionListener;
 use jasonwynn10\NativeDimensions\provider\DimensionLevelDBProvider;
 use jasonwynn10\NativeDimensions\provider\EnderAnvilProvider;
 use jasonwynn10\NativeDimensions\provider\NetherAnvilProvider;
+use jasonwynn10\NativeDimensions\provider\SubAnvilProvider;
 use pocketmine\block\BlockFactory;
 use pocketmine\event\level\LevelInitEvent;
 use pocketmine\event\level\LevelLoadEvent;
@@ -122,8 +123,8 @@ class Main extends PluginBase {
 
 		$path = $this->getServer()->getDataPath() . "worlds/" . $name . "/";
 
-		if($providerClass instanceof Anvil)
-			$providerClass::generate($path."dim" . $dimension . "/", $name, $seed, $generator, $options);
+		if($providerClass instanceof SubAnvilProvider)
+			$providerClass::generate($path."dim" . $dimension . "/", $name, $seed, $generator, $options, $dimension);
 		if($providerClass instanceof DimensionLevelDBProvider)
 			$providerClass::generate($path, $name, $seed, $generator, $options, $dimension < 0 ? 1 : ($dimension > 1 ? 2 : 0));
 

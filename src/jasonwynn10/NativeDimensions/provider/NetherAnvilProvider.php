@@ -2,7 +2,7 @@
 declare(strict_types=1);
 namespace jasonwynn10\NativeDimensions\provider;
 
-class NetherAnvilProvider extends \pocketmine\level\format\io\region\Anvil {
+class NetherAnvilProvider extends SubAnvilProvider {
 
 	protected function pathToRegion(int $regionX, int $regionZ) : string{
 		return $this->path . "/dim-1/region/r.$regionX.$regionZ." . static::REGION_FILE_EXTENSION;
@@ -25,16 +25,6 @@ class NetherAnvilProvider extends \pocketmine\level\format\io\region\Anvil {
 		}
 
 		return $isValid;
-	}
-
-	public static function generate(string $path, string $name, int $seed, string $generator, array $options = []){
-		if(!file_exists($path)){
-			mkdir($path, 0777, true);
-		}
-
-		if(!file_exists($path . "/region")){
-			mkdir($path . "/region", 0777);
-		}
 	}
 
 	public function getName() : string {

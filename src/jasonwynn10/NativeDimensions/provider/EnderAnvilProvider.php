@@ -4,7 +4,7 @@ namespace jasonwynn10\NativeDimensions\provider;
 
 use pocketmine\math\Vector3;
 
-class EnderAnvilProvider extends \pocketmine\level\format\io\region\Anvil {
+class EnderAnvilProvider extends SubAnvilProvider {
 
 	protected function pathToRegion(int $regionX, int $regionZ) : string{
 		return $this->path . "/dim1/region/r.$regionX.$regionZ." . static::REGION_FILE_EXTENSION;
@@ -27,16 +27,6 @@ class EnderAnvilProvider extends \pocketmine\level\format\io\region\Anvil {
 		}
 
 		return $isValid;
-	}
-
-	public static function generate(string $path, string $name, int $seed, string $generator, array $options = []){
-		if(!file_exists($path)){
-			mkdir($path, 0777, true);
-		}
-
-		if(!file_exists($path . "/region")){
-			mkdir($path . "/region", 0777);
-		}
 	}
 
 	public function getName() : string {
