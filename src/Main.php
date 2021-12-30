@@ -71,13 +71,13 @@ class Main extends PluginBase {
 
 	public function onEnable() {
 		new DimensionListener($this);
-		if(GeneratorManager::getGenerator("ender") !== Normal::class) {
-			BlockFactory::registerBlock(new EndPortalFrame(), true);
-			BlockFactory::registerBlock(new EndPortal(), true);
+		$factory = BlockFactory::getInstance();
+		if(GeneratorManager::getInstance()->getGenerator("ender") !== null) {
+			$factory->register(new EndPortal(new BID(Ids::END_PORTAL, 0), "End Portal Frame", BlockBreakInfo::indestructible()));
 		}
-		BlockFactory::registerBlock(new Fire(), true);
-		BlockFactory::registerBlock(new Obsidian(), true);
-		BlockFactory::registerBlock(new Portal(), true);
+		$factory->register(new Fire(new BID(Ids::FIRE, 0), "Fire Block", BlockBreakInfo::instant()), true);
+		$factory->register(new Obsidian(new BID(Ids::OBSIDIAN, 0), "Obsidian", new BlockBreakInfo(35.0 /* 50 in PC */, BlockToolType::PICKAXE, ToolTier::DIAMOND()->getHarvestLevel(), 6000.0)), true);
+		$factory->register(new Portal(new BID(Ids::PORTAL, 0), "Nether Portal", BlockBreakInfo::indestructible(0.0)), true);
 	}
 
 	public function generateLevelDimension(string $name, int $dimension, ?int $seed = null, ?string $generator = null, array $options = []) : bool {

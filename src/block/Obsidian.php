@@ -35,14 +35,15 @@ declare(strict_types=1);
 
 namespace jasonwynn10\NativeDimensions\block;
 
-use pocketmine\block\Obsidian as PMObsidian;
+use pocketmine\block\NetherPortal;
+use pocketmine\block\Opaque;
 
-class Obsidian extends PMObsidian {
+class Obsidian extends Opaque {
 
 	public function getAffectedBlocks() : array {
 		$return = [$this];
-		foreach($this->getAllSides() as $side => $block) {
-			if($block instanceof Portal)
+		foreach($this->getAllSides() as $block) {
+			if($block instanceof NetherPortal)
 				$return[] = $block;
 		}
 		return $return;
