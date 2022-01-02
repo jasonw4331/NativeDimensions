@@ -3,6 +3,7 @@ declare(strict_types=1);
 namespace jasonwynn10\NativeDimensions\event;
 
 use jasonwynn10\NativeDimensions\Main;
+use jasonwynn10\NativeDimensions\world\DimensionalWorld;
 use pocketmine\event\entity\EntityTeleportEvent;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerBedEnterEvent;
@@ -12,8 +13,9 @@ use pocketmine\network\mcpe\protocol\ChangeDimensionPacket;
 use pocketmine\network\mcpe\protocol\StartGamePacket;
 use pocketmine\network\mcpe\protocol\types\DimensionIds;
 use pocketmine\network\mcpe\protocol\types\SpawnSettings;
-use pocketmine\Player;
+use pocketmine\player\Player;
 use pocketmine\scheduler\ClosureTask;
+use pocketmine\utils\AssumptionFailedError;
 
 class DimensionListener implements Listener {
 	/** @var Main */
@@ -25,28 +27,35 @@ class DimensionListener implements Listener {
 	}
 
 	public function onDataPacket(DataPacketSendEvent $event) {
-		$player = $event->getPlayer();
-		$packet = $event->getPacket();
-		if($packet instanceof StartGamePacket) {
-			$settings = $packet->spawnSettings;
-			if(strpos($player->getLevel()->getFolderName(), " dim-1") !== false)
-				$dimension = DimensionIds::NETHER;
-			elseif(strpos($player->getLevel()->getFolderName(), " dim1") !== false)
-				$dimension = DimensionIds::THE_END;
-			else
-				$dimension = DimensionIds::OVERWORLD;
-			$packet->spawnSettings = new SpawnSettings($settings->getBiomeType(), $settings->getBiomeName(), $dimension);
+		foreach($event->getPackets() as $pk) {
+			if($pk instanceof StartGamePacket) {
+				foreach($event->getTargets() as $session) {
+					/** @var DimensionalWorld $world */
+					$world = $session->getPlayer()->getWorld();
+					$settings = $pk->levelSettings->spawnSettings;
+					if($world->getOverworld() === $world)
+						$dimension = DimensionIds::OVERWORLD;
+					elseif($world->getNether() === $world)
+						$dimension = DimensionIds::NETHER;
+					elseif($world->getEnd() === $world)
+						$dimension = DimensionIds::THE_END;
+					else
+						throw new AssumptionFailedError("Unable to identify player dimension");
+					$pk->levelSettings->spawnSettings = new SpawnSettings($settings->getBiomeType(), $settings->getBiomeName(), $dimension);
+				}
+			}
 		}
 	}
 
 	public function onRespawn(PlayerRespawnEvent $event) : void {
 		$player = $event->getPlayer();
 		if(!$player->isAlive()) {
-			$level = $event->getRespawnPosition()->getLevel();
-			$overworldLevel = Main::getDimensionBaseLevel($level);
-			if($overworldLevel !== null) {
-				$event->setRespawnPosition($event->getRespawnPosition()->setLevel($overworldLevel));
-			}
+			/** @var DimensionalWorld $world */
+			$world = $event->getRespawnPosition()->getWorld();
+			$overworld = $world->getOverworld();
+			$respawn = $event->getRespawnPosition();
+			$respawn->world = $overworld;
+			$event->setRespawnPosition($respawn);
 		}
 	}
 
@@ -54,25 +63,26 @@ class DimensionListener implements Listener {
 		$player = $event->getEntity();
 		if(!$player instanceof Player)
 			return;
-		$level = $event->getTo()->getLevel();
-		if($level === null or $level->getFolderName() === $event->getFrom()->getLevel()->getFolderName())
+		/** @var DimensionalWorld $world */
+		$world = $event->getTo()->getWorld();
+		if($world === null or $world->getFolderName() === $event->getFrom()->getWorld()->getFolderName())
 			return;
 		$pk = new ChangeDimensionPacket();
-		if(strpos($level->getFolderName(), " dim-1") !== false) {
-			$pk->dimension = DimensionIds::NETHER;
-			// TODO: save nether portal connections for 300 ticks after use
-		}elseif(strpos($level->getFolderName(), " dim1") !== false) {
-			$pk->dimension = DimensionIds::THE_END;
-		}else{
+		if($world->getOverworld() === $world)
 			$pk->dimension = DimensionIds::OVERWORLD;
-		}
+		elseif($world->getNether() === $world)
+			$pk->dimension = DimensionIds::NETHER;
+		elseif($world->getEnd() === $world)
+			$pk->dimension = DimensionIds::THE_END;
+		else
+			throw new AssumptionFailedError("Unable to identify player dimension");
 		$pk->position = $event->getTo();
 		$pk->respawn = false;
 		//$player->sendDataPacket($pk);
 
 		//$player->sendPlayStatus(PlayStatusPacket::PLAYER_SPAWN);
 
-		$this->plugin->getScheduler()->scheduleDelayedTask(new ClosureTask(function(int $currentTick) use($player) : void {
+		$this->plugin->getScheduler()->scheduleDelayedTask(new ClosureTask(function() use($player) : void {
 			Main::removeTeleportingId($player->getId());
 		}), 20 * 10);
 		// TODO: portal cooldown
@@ -82,12 +92,11 @@ class DimensionListener implements Listener {
 	 * @param PlayerBedEnterEvent $event
 	 */
 	public function onSleep(PlayerBedEnterEvent $event) : void {
-		$pos = $event->getBed()->asPosition();
-		if($pos->isValid()) {
-			$level = $pos->getLevel();
-			$overworld = Main::getDimensionBaseLevel($level);
-			if($overworld !== null)
-				$event->setCancelled();
+		$pos = $event->getBed()->getPosition();
+		/** @var DimensionalWorld $world */
+		$world = $pos->getWorld();
+		if($world->getOverworld() !== $world) {
+			$event->cancel();
 			// TODO: blow up bed
 		}
 	}
