@@ -1,6 +1,6 @@
 <?php
 declare(strict_types=1);
-namespace jasonwynn10\NativeDimensions\provider;
+namespace jasonwynn10\NativeDimensions\world\provider;
 
 use jasonwynn10\NativeDimensions\world\data\FakeWorldData;
 use pocketmine\world\format\io\exception\CorruptedChunkException;
