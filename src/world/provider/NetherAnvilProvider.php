@@ -2,11 +2,8 @@
 declare(strict_types=1);
 namespace jasonwynn10\NativeDimensions\world\provider;
 
-use jasonwynn10\NativeDimensions\world\data\FakeWorldData;
 use pocketmine\world\format\io\exception\CorruptedChunkException;
 use pocketmine\world\format\io\region\Anvil;
-use pocketmine\world\format\io\WorldData;
-use pocketmine\world\WorldException;
 use Webmozart\PathUtil\Path;
 
 class NetherAnvilProvider extends Anvil {
