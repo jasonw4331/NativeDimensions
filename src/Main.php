@@ -39,7 +39,7 @@ class Main extends PluginBase {
 		$ref = new \ReflectionClass($server);
 		$prop = $ref->getProperty('worldManager');
 		$prop->setAccessible(true);
-		$prop->setValue(new DimensionalWorldManager($server, $server->getDataPath()));
+		$prop->setValue($server, new DimensionalWorldManager($server, $server->getDataPath()));
 	}
 
 	public function onEnable() : void {
