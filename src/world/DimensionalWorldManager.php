@@ -177,7 +177,7 @@ class DimensionalWorldManager extends WorldManager {
 		$providerClass = array_shift($providers);
 
 		try{
-			$provider = $providerClass->fromPath($path, DimensionIds::OVERWORLD);
+			$overworld = $providerClass->fromPath($path, DimensionIds::OVERWORLD);
 		}catch(CorruptedWorldException $e){
 			$this->server->getLogger()->error($this->server->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_loadError(
 				$name,
@@ -192,41 +192,47 @@ class DimensionalWorldManager extends WorldManager {
 			return false;
 		}
 
-		$generatorEntry = GeneratorManager::getInstance()->getGenerator($provider->getWorldData()->getGenerator());
+		$generatorEntry = GeneratorManager::getInstance()->getGenerator($overworld->getWorldData()->getGenerator());
 		if($generatorEntry === null){
 			$this->server->getLogger()->error($this->server->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_loadError(
 				$name,
-				KnownTranslationFactory::pocketmine_level_unknownGenerator($provider->getWorldData()->getGenerator())
+				KnownTranslationFactory::pocketmine_level_unknownGenerator($overworld->getWorldData()->getGenerator())
 			)));
 			return false;
 		}
 		try{
-			$generatorEntry->validateGeneratorOptions($provider->getWorldData()->getGeneratorOptions());
+			$generatorEntry->validateGeneratorOptions($overworld->getWorldData()->getGeneratorOptions());
 		}catch(InvalidGeneratorOptionsException $e){
 			$this->server->getLogger()->error($this->server->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_loadError(
 				$name,
 				KnownTranslationFactory::pocketmine_level_invalidGeneratorOptions(
-					$provider->getWorldData()->getGeneratorOptions(),
-					$provider->getWorldData()->getGenerator(),
+					$overworld->getWorldData()->getGeneratorOptions(),
+					$overworld->getWorldData()->getGenerator(),
 					$e->getMessage()
 				)
 			)));
 			return false;
 		}
-		if(!($provider instanceof WritableWorldProvider)){
+		if(!($overworld instanceof WritableWorldProvider)){
 			if(!$autoUpgrade){
 				throw new UnsupportedWorldFormatException("World \"$name\" is in an unsupported format and needs to be upgraded");
 			}
 			$this->server->getLogger()->notice($this->server->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_conversion_start($name)));
 
-			$converter = new DimensionalFormatConverter([$provider], $this->providerManager->getDefault(), Path::join($this->server->getDataPath(), "backups", "worlds"), $this->server->getLogger());
-			/** @var DimensionLevelDBProvider $provider */
-			$provider = $converter->execute();
+			$converter = new DimensionalFormatConverter([
+				$overworld,
+				$providerClass->fromPath($path, DimensionIds::NETHER),
+				$providerClass->fromPath($path, DimensionIds::THE_END)
+			], $this->providerManager->getDefault(), Path::join($this->server->getDataPath(), "backups", "worlds"), $this->server->getLogger());
+			[$overworld, $nether, $end] = $converter->execute();
 
 			$this->server->getLogger()->notice($this->server->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_conversion_finish($name, $converter->getBackupPath())));
+		}else{
+			$nether = $providerClass->fromPath($path, DimensionIds::NETHER);
+			$end = $providerClass->fromPath($path, DimensionIds::THE_END);
 		}
 
-		$world = new DimensionalWorld($this->server, $name, $provider, $this->server->getAsyncPool());
+		$world = new DimensionalWorld($this->server, $name, $overworld, $this->server->getAsyncPool());
 
 		$this->worlds[$world->getId()] = $world;
 		$world->setAutoSave($this->autoSave);
@@ -234,113 +240,15 @@ class DimensionalWorldManager extends WorldManager {
 		(new WorldLoadEvent($world))->call();
 
 		// Nether Dimension
-		try{
-			$provider = $providerClass->fromPath($path, 1, $provider->getDatabase());
-		}catch(CorruptedWorldException $e){
-			$this->server->getLogger()->error($this->server->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_loadError(
-				$name,
-				KnownTranslationFactory::pocketmine_level_corrupted($e->getMessage())
-			)));
-			return false;
-		}catch(UnsupportedWorldFormatException $e){
-			$this->server->getLogger()->error($this->server->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_loadError(
-				$name,
-				KnownTranslationFactory::pocketmine_level_unsupportedFormat($e->getMessage())
-			)));
-			return false;
-		}
-
-		$generatorEntry = GeneratorManager::getInstance()->getGenerator($provider->getWorldData()->getGenerator());
-		if($generatorEntry === null){
-			$this->server->getLogger()->error($this->server->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_loadError(
-				$name,
-				KnownTranslationFactory::pocketmine_level_unknownGenerator($provider->getWorldData()->getGenerator())
-			)));
-			return false;
-		}
-		try{
-			$generatorEntry->validateGeneratorOptions($provider->getWorldData()->getGeneratorOptions());
-		}catch(InvalidGeneratorOptionsException $e){
-			$this->server->getLogger()->error($this->server->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_loadError(
-				$name,
-				KnownTranslationFactory::pocketmine_level_invalidGeneratorOptions(
-					$provider->getWorldData()->getGeneratorOptions(),
-					$provider->getWorldData()->getGenerator(),
-					$e->getMessage()
-				)
-			)));
-			return false;
-		}
-		if(!($provider instanceof WritableWorldProvider)){
-			if(!$autoUpgrade){
-				throw new UnsupportedWorldFormatException("World \"$name\" is in an unsupported format and needs to be upgraded");
-			}
-			$this->server->getLogger()->notice($this->server->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_conversion_start($name)));
-
-			$converter = new DimensionalFormatConverter($provider, $this->providerManager->getDefault(), Path::join($this->server->getDataPath(), "backups", "worlds"), $this->server->getLogger());
-			$provider = $converter->execute();
-
-			$this->server->getLogger()->notice($this->server->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_conversion_finish($name, $converter->getBackupPath())));
-		}
-
-		$world = new DimensionalWorld($this->server, $name, $provider, $this->server->getAsyncPool());
+		$world = new DimensionalWorld($this->server, $name, $nether, $this->server->getAsyncPool());
 
 		$this->worlds[$world->getId()] = $world;
 		$world->setAutoSave($this->autoSave);
 
 		(new WorldLoadEvent($world))->call();
 
-		// End dimension
-		try{
-			$provider = $providerClass->fromPath($path, 2, $provider->getDatabase(), $provider->getWorldData());
-		}catch(CorruptedWorldException $e){
-			$this->server->getLogger()->error($this->server->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_loadError(
-				$name,
-				KnownTranslationFactory::pocketmine_level_corrupted($e->getMessage())
-			)));
-			return false;
-		}catch(UnsupportedWorldFormatException $e){
-			$this->server->getLogger()->error($this->server->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_loadError(
-				$name,
-				KnownTranslationFactory::pocketmine_level_unsupportedFormat($e->getMessage())
-			)));
-			return false;
-		}
-
-		$generatorEntry = GeneratorManager::getInstance()->getGenerator($provider->getWorldData()->getGenerator());
-		if($generatorEntry === null){
-			$this->server->getLogger()->error($this->server->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_loadError(
-				$name,
-				KnownTranslationFactory::pocketmine_level_unknownGenerator($provider->getWorldData()->getGenerator())
-			)));
-			return false;
-		}
-		try{
-			$generatorEntry->validateGeneratorOptions($provider->getWorldData()->getGeneratorOptions());
-		}catch(InvalidGeneratorOptionsException $e){
-			$this->server->getLogger()->error($this->server->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_loadError(
-				$name,
-				KnownTranslationFactory::pocketmine_level_invalidGeneratorOptions(
-					$provider->getWorldData()->getGeneratorOptions(),
-					$provider->getWorldData()->getGenerator(),
-					$e->getMessage()
-				)
-			)));
-			return false;
-		}
-		if(!($provider instanceof WritableWorldProvider)){
-			if(!$autoUpgrade){
-				throw new UnsupportedWorldFormatException("World \"$name\" is in an unsupported format and needs to be upgraded");
-			}
-			$this->server->getLogger()->notice($this->server->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_conversion_start($name)));
-
-			$converter = new DimensionalFormatConverter($provider, $this->providerManager->getDefault(), Path::join($this->server->getDataPath(), "backups", "worlds"), $this->server->getLogger());
-			$provider = $converter->execute();
-
-			$this->server->getLogger()->notice($this->server->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_conversion_finish($name, $converter->getBackupPath())));
-		}
-
-		$world = new DimensionalWorld($this->server, $name, $provider, $this->server->getAsyncPool());
+		// Nether Dimension
+		$world = new DimensionalWorld($this->server, $name, $end, $this->server->getAsyncPool());
 
 		$this->worlds[$world->getId()] = $world;
 		$world->setAutoSave($this->autoSave);
