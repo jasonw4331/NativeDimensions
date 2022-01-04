@@ -135,7 +135,7 @@ class DimensionalFormatConverter {
 
 	private function convertTerrain(DimensionLevelDBProvider $new) : void{
 		$this->logger->info("Calculating chunk count");
-		$provider = $this->oldProviders[$new->dimensionId];
+		$provider = $this->oldProviders[$new->getDimensionId()];
 		$count = $provider->calculateChunkCount();
 		$this->logger->info("Discovered $count chunks");
 
