@@ -11,23 +11,6 @@ use Webmozart\PathUtil\Path;
 
 class EnderAnvilProvider extends Anvil {
 
-	public function __construct(string $path, ?WorldData $data = null){
-		if(!file_exists($path)){
-			throw new WorldException("World does not exist");
-		}
-
-		if(!$data instanceof WorldData) {
-			throw new WorldException("Cannot have dimension without overworld data");
-		}
-
-		$this->path = $path;
-		$this->worldData = $data;
-	}
-
-	protected function loadLevelData() : WorldData{
-		return $this->worldData ?? new FakeWorldData();
-	}
-
 	protected function pathToRegion(int $regionX, int $regionZ) : string{
 		return Path::join($this->path, "dim1", "region", "r.$regionX.$regionZ." . static::getRegionFileExtension());
 	}
