@@ -158,4 +158,11 @@ class DimensionalFormatConverter {
 		$total = microtime(true) - $start;
 		$this->logger->info("Converted $counter / $counter chunks in " . round($total, 3) . " seconds (" . floor($counter / $total) . " chunks/sec)");
 	}
+
+	/**
+	 * @return string
+	 */
+	public function getBackupPath() : string{
+		return $this->backupPath;
+	}
 }
