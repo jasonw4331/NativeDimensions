@@ -2,8 +2,8 @@
 declare(strict_types=1);
 namespace jasonwynn10\NativeDimensions\world\provider;
 
+use pocketmine\network\mcpe\protocol\types\DimensionIds;
 use pocketmine\utils\Utils;
-use pocketmine\world\format\io\ReadOnlyWorldProviderManagerEntry;
 use pocketmine\world\format\io\region\Anvil;
 use pocketmine\world\format\io\region\McRegion;
 use pocketmine\world\format\io\region\PMAnvil;
@@ -23,9 +23,13 @@ class DimensionalWorldProviderManager {
 		$this->default = $leveldb;
 		$this->addProvider($leveldb, "leveldb");
 
-		$this->addProvider(new ReadOnlyWorldProviderManagerEntry(\Closure::fromCallable([Anvil::class, 'isValid']), fn(string $path) => new Anvil($path)), "anvil");
-		$this->addProvider(new ReadOnlyWorldProviderManagerEntry(\Closure::fromCallable([NetherAnvilProvider::class, 'isValid']), fn(string $path) => new NetherAnvilProvider($path)), "nether");
-		$this->addProvider(new ReadOnlyWorldProviderManagerEntry(\Closure::fromCallable([EnderAnvilProvider::class, 'isValid']), fn(string $path) => new EnderAnvilProvider($path)), "ender");
+		$this->addProvider(new ReadOnlyWorldProviderManagerEntry(\Closure::fromCallable([Anvil::class, 'isValid']), function(string $path, int $dimension = 0) {
+			return match($dimension) {
+				DimensionIds::OVERWORLD => new Anvil($path),
+				DimensionIds::NETHER => new NetherAnvilProvider($path),
+				DimensionIds::THE_END => new EnderAnvilProvider($path),
+			};
+		}), "anvil");
 		$this->addProvider(new ReadOnlyWorldProviderManagerEntry(\Closure::fromCallable([McRegion::class, 'isValid']), fn(string $path) => new McRegion($path)), "mcregion");
 		$this->addProvider(new ReadOnlyWorldProviderManagerEntry(\Closure::fromCallable([PMAnvil::class, 'isValid']), fn(string $path) => new PMAnvil($path)), "pmanvil");
 	}
@@ -53,7 +57,7 @@ class DimensionalWorldProviderManager {
 	/**
 	 * Returns a WorldProvider class for this path, or null
 	 *
-	 * @return WorldProviderManagerEntry[]
+	 * @return ReadOnlyWorldProviderManagerEntry[]|RewritableWorldProviderManagerEntry[]
 	 * @phpstan-return array<string, ReadOnlyWorldProviderManagerEntry|RewritableWorldProviderManagerEntry>
 	 */
 	public function getMatchingProviders(string $path) : array{
