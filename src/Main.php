@@ -7,12 +7,7 @@ use jasonwynn10\NativeDimensions\block\Fire;
 use jasonwynn10\NativeDimensions\block\Obsidian;
 use jasonwynn10\NativeDimensions\block\Portal;
 use jasonwynn10\NativeDimensions\event\DimensionListener;
-use jasonwynn10\NativeDimensions\provider\DimensionLevelDBProvider;
-use jasonwynn10\NativeDimensions\provider\EnderAnvilProvider;
-use jasonwynn10\NativeDimensions\provider\NetherAnvilProvider;
 use jasonwynn10\NativeDimensions\world\DimensionalWorldManager;
-use jasonwynn10\NativeDimensions\world\provider\ReadOnlyWorldProviderManagerEntry;
-use jasonwynn10\NativeDimensions\world\provider\RewritableWorldProviderManagerEntry;
 use pocketmine\block\BlockBreakInfo;
 use pocketmine\block\BlockFactory;
 use pocketmine\block\BlockIdentifier as BID;
@@ -20,7 +15,6 @@ use pocketmine\block\BlockLegacyIds as Ids;
 use pocketmine\block\BlockToolType;
 use pocketmine\item\ToolTier;
 use pocketmine\plugin\PluginBase;
-use pocketmine\world\format\io\WorldData;
 use pocketmine\world\generator\GeneratorManager;
 
 class Main extends PluginBase {
@@ -45,7 +39,7 @@ class Main extends PluginBase {
 		$ref = new \ReflectionClass($server);
 		$prop = $ref->getProperty('worldManager');
 		$prop->setAccessible(true);
-		$prop->setValue(new DimensionalWorldManager($server, $server->getDataPath(), $oldManager->getProviderManager()));
+		$prop->setValue(new DimensionalWorldManager($server, $server->getDataPath()));
 	}
 
 	public function onEnable() : void {
