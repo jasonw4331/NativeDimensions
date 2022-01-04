@@ -35,11 +35,6 @@ class Main extends PluginBase {
 
 	public function onLoad() : void {
 		self::$instance = $this;
-		// register custom world providers
-		$providerManager = $this->getServer()->getWorldManager()->getProviderManager();
-		$providerManager->addProvider(new ReadOnlyWorldProviderManagerEntry(\Closure::fromCallable([NetherAnvilProvider::class, 'isValid']), fn(string $path, ?WorldData $data) => new NetherAnvilProvider($path, $data)), "nether");
-		$providerManager->addProvider(new ReadOnlyWorldProviderManagerEntry(\Closure::fromCallable([EnderAnvilProvider::class, 'isValid']), fn(string $path, ?WorldData $data) => new EnderAnvilProvider($path, $data)), "ender");
-		$providerManager->addProvider(new RewritableWorldProviderManagerEntry(\Closure::fromCallable([DimensionLevelDBProvider::class, 'isValid']), fn(string $path, int $dimension, ?\LevelDB $db) => new DimensionLevelDBProvider($path, $dimension, $db), \Closure::fromCallable([DimensionLevelDBProvider::class, 'generate'])), "leveldb", true);
 
 		$server = $this->getServer();
 		$oldManager = $server->getWorldManager();
