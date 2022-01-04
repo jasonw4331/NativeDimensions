@@ -34,7 +34,7 @@ class DimensionalWorldManager extends WorldManager {
 	private DimensionalWorldProviderManager $providerManager;
 
 	private array $worlds = [];
-	private ?DimensionalWorld $defaultWorld;
+	private ?World $defaultWorld = null;
 
 	private Server $server;
 
@@ -221,15 +221,15 @@ class DimensionalWorldManager extends WorldManager {
 
 			$converter = new DimensionalFormatConverter([
 				$overworld,
-				$providerClass->fromPath($path, DimensionIds::NETHER),
-				$providerClass->fromPath($path, DimensionIds::THE_END)
+				$providerClass->fromPath($path, DimensionIds::NETHER, $overworld->getDatabase()),
+				$providerClass->fromPath($path, DimensionIds::THE_END, $overworld->getDatabase())
 			], $this->providerManager->getDefault(), Path::join($this->server->getDataPath(), "backups", "worlds"), $this->server->getLogger());
 			[$overworld, $nether, $end] = $converter->execute();
 
 			$this->server->getLogger()->notice($this->server->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_conversion_finish($name, $converter->getBackupPath())));
 		}else{
-			$nether = $providerClass->fromPath($path, DimensionIds::NETHER);
-			$end = $providerClass->fromPath($path, DimensionIds::THE_END);
+			$nether = $providerClass->fromPath($path, DimensionIds::NETHER, $overworld->getDatabase());
+			$end = $providerClass->fromPath($path, DimensionIds::THE_END, $overworld->getDatabase());
 		}
 
 		$world = new DimensionalWorld($this->server, $name, $overworld, $this->server->getAsyncPool());
