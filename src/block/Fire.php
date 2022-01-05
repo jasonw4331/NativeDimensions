@@ -3,13 +3,20 @@ declare(strict_types=1);
 namespace jasonwynn10\NativeDimensions\block;
 
 use pocketmine\block\Air;
+use pocketmine\block\BlockBreakInfo;
 use pocketmine\block\BlockFactory;
+use pocketmine\block\BlockIdentifier as BID;
 use pocketmine\block\BlockLegacyIds;
+use pocketmine\block\BlockLegacyIds as Ids;
 use pocketmine\block\Fire as PMFire;
 use pocketmine\math\Facing;
 use pocketmine\world\Position;
 
 class Fire extends PMFire {
+
+	public function __construct(){
+		parent::__construct(new BID(Ids::FIRE, 0), "Fire Block", BlockBreakInfo::instant());
+	}
 
 	public function onNearbyBlockChange() : void {
 		foreach($this->getAllSides() as $block) {

@@ -8,13 +8,8 @@ use jasonwynn10\NativeDimensions\block\Obsidian;
 use jasonwynn10\NativeDimensions\block\Portal;
 use jasonwynn10\NativeDimensions\event\DimensionListener;
 use jasonwynn10\NativeDimensions\world\DimensionalWorldManager;
-use pocketmine\block\BlockBreakInfo;
 use pocketmine\block\BlockFactory;
-use pocketmine\block\BlockIdentifier as BID;
-use pocketmine\block\BlockLegacyIds as Ids;
-use pocketmine\block\BlockToolType;
 use pocketmine\item\StringToItemParser;
-use pocketmine\item\ToolTier;
 use pocketmine\plugin\PluginBase;
 use Webmozart\PathUtil\Path;
 
@@ -53,10 +48,10 @@ class Main extends PluginBase {
 		$factory = BlockFactory::getInstance();
 		$parser = StringToItemParser::getInstance();
 		foreach([
-			new EndPortal(new BID(Ids::END_PORTAL, 0), "End Portal", BlockBreakInfo::indestructible()),
-			new Fire(new BID(Ids::FIRE, 0), "Fire Block", BlockBreakInfo::instant()),
-			new Obsidian(new BID(Ids::OBSIDIAN, 0), "Obsidian", new BlockBreakInfo(35.0 /* 50 in PC */, BlockToolType::PICKAXE, ToolTier::DIAMOND()->getHarvestLevel(), 6000.0)),
-			new Portal(new BID(Ids::PORTAL, 0), "Nether Portal", BlockBreakInfo::indestructible(0.0))
+			new EndPortal(),
+			new Fire(),
+			new Obsidian(),
+			new Portal()
 		] as $block) {
 			$factory->register($block, true);
 			$parser->override($block->getName(), fn(string $input) => $block->asItem());

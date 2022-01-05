@@ -1,8 +1,10 @@
 <?php
 declare(strict_types=1);
-
 namespace jasonwynn10\NativeDimensions\block;
 
+use pocketmine\block\BlockBreakInfo;
+use pocketmine\block\BlockIdentifier as BID;
+use pocketmine\block\BlockLegacyIds as Ids;
 use pocketmine\block\BlockLegacyMetadata;
 use pocketmine\block\Opaque;
 use pocketmine\block\utils\BlockDataSerializer;
@@ -16,6 +18,10 @@ class EndPortal extends Opaque{
 	use HorizontalFacingTrait;
 
 	protected bool $eye = false;
+
+	public function __construct(){
+		parent::__construct(new BID(Ids::END_PORTAL, 0), "End Portal", BlockBreakInfo::indestructible());
+	}
 
 	protected function writeStateToMeta() : int{
 		return BlockDataSerializer::writeLegacyHorizontalFacing($this->facing) | ($this->eye ? BlockLegacyMetadata::END_PORTAL_FRAME_FLAG_EYE : 0);
