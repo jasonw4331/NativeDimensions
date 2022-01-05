@@ -291,16 +291,16 @@ class DimensionalWorldManager extends WorldManager {
 			$centerZ = $spawnLocation->getFloorZ() >> Chunk::COORD_BIT_SIZE;
 
 			$selected = iterator_to_array((new ChunkSelector())->selectChunks(8, $centerX, $centerZ));
-			$done = 0;
+			$overworldDone = 0;
 			$total = count($selected);
 			foreach($selected as $index){
 				World::getXZ($index, $chunkX, $chunkZ);
 				$world->orderChunkPopulation($chunkX, $chunkZ, null)->onCompletion(
-					static function() use ($world, &$done, $total) : void{
-						$oldProgress = (int) floor(($done / $total) * 100);
-						$newProgress = (int) floor((++$done / $total) * 100);
-						if(intdiv($oldProgress, 10) !== intdiv($newProgress, 10) || $done === $total || $done === 1){
-							$world->getLogger()->info($world->getServer()->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_spawnTerrainGenerationProgress(strval($done), strval($total), strval($newProgress))));
+					static function() use ($world, &$overworldDone, $total) : void{
+						$oldProgress = (int) floor(($overworldDone / $total) * 100);
+						$newProgress = (int) floor((++$overworldDone / $total) * 100);
+						if(intdiv($oldProgress, 10) !== intdiv($newProgress, 10) || $overworldDone === $total || $overworldDone === 1){
+							$world->getLogger()->info($world->getServer()->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_spawnTerrainGenerationProgress(strval($overworldDone), strval($total), strval($newProgress))));
 						}
 					},
 					static function() : void{
@@ -326,16 +326,16 @@ class DimensionalWorldManager extends WorldManager {
 			$centerZ = $spawnLocation->getFloorZ() >> Chunk::COORD_BIT_SIZE;
 
 			$selected = iterator_to_array((new ChunkSelector())->selectChunks(8, $centerX, $centerZ));
-			$done = 0;
+			$netherDone = 0;
 			$total = count($selected);
 			foreach($selected as $index){
 				World::getXZ($index, $chunkX, $chunkZ);
 				$world->orderChunkPopulation($chunkX, $chunkZ, null)->onCompletion(
-					static function() use ($world, &$done, $total) : void{
-						$oldProgress = (int) floor(($done / $total) * 100);
-						$newProgress = (int) floor((++$done / $total) * 100);
-						if(intdiv($oldProgress, 10) !== intdiv($newProgress, 10) || $done === $total || $done === 1){
-							$world->getLogger()->info($world->getServer()->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_spawnTerrainGenerationProgress(strval($done), strval($total), strval($newProgress))));
+					static function() use ($world, &$netherDone, $total) : void{
+						$oldProgress = (int) floor(($netherDone / $total) * 100);
+						$newProgress = (int) floor((++$netherDone / $total) * 100);
+						if(intdiv($oldProgress, 10) !== intdiv($newProgress, 10) || $netherDone === $total || $netherDone === 1){
+							$world->getLogger()->info($world->getServer()->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_spawnTerrainGenerationProgress(strval($netherDone), strval($total), strval($newProgress))));
 						}
 					},
 					static function() : void{
@@ -361,16 +361,16 @@ class DimensionalWorldManager extends WorldManager {
 			$centerZ = $spawnLocation->getFloorZ() >> Chunk::COORD_BIT_SIZE;
 
 			$selected = iterator_to_array((new ChunkSelector())->selectChunks(8, $centerX, $centerZ));
-			$done = 0;
+			$endDone = 0;
 			$total = count($selected);
 			foreach($selected as $index){
 				World::getXZ($index, $chunkX, $chunkZ);
 				$world->orderChunkPopulation($chunkX, $chunkZ, null)->onCompletion(
-					static function() use ($world, &$done, $total) : void{
-						$oldProgress = (int) floor(($done / $total) * 100);
-						$newProgress = (int) floor((++$done / $total) * 100);
-						if(intdiv($oldProgress, 10) !== intdiv($newProgress, 10) || $done === $total || $done === 1){
-							$world->getLogger()->info($world->getServer()->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_spawnTerrainGenerationProgress(strval($done), strval($total), strval($newProgress))));
+					static function() use ($world, &$endDone, $total) : void{
+						$oldProgress = (int) floor(($endDone / $total) * 100);
+						$newProgress = (int) floor((++$endDone / $total) * 100);
+						if(intdiv($oldProgress, 10) !== intdiv($newProgress, 10) || $endDone === $total || $endDone === 1){
+							$world->getLogger()->info($world->getServer()->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_spawnTerrainGenerationProgress(strval($endDone), strval($total), strval($newProgress))));
 						}
 					},
 					static function() : void{
