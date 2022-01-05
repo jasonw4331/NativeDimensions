@@ -12,4 +12,9 @@ class DimensionalBedrockWorldData extends BedrockWorldData {
 		}
 		parent::fix();
 	}
+
+	public function setGenerator(string $generatorName) {
+		$this->compoundTag->setString("generatorName", $generatorName);
+		$this->fix();
+	}
 }

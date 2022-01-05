@@ -11,6 +11,7 @@ use pocketmine\nbt\LittleEndianNbtSerializer;
 use pocketmine\nbt\NbtDataException;
 use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\nbt\TreeRoot;
+use pocketmine\network\mcpe\protocol\types\DimensionIds;
 use pocketmine\utils\Binary;
 use pocketmine\utils\BinaryDataException;
 use pocketmine\utils\BinaryStream;
@@ -83,7 +84,11 @@ class DimensionLevelDBProvider extends LevelDB {
 	}
 
 	protected function loadLevelData() : WorldData{
-		return new DimensionalBedrockWorldData(Path::join($this->getPath(), "level.dat"));
+		$data = new DimensionalBedrockWorldData(Path::join($this->getPath(), "level.dat"));
+		if($this->dimensionId > 0) {
+			$data->setGenerator($this->dimensionId === DimensionIds::NETHER ? "nether" : "ender");
+		}
+		return $data;
 	}
 
 	public function getWorldMinY() : int{
