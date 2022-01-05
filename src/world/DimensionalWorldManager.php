@@ -232,7 +232,7 @@ class DimensionalWorldManager extends WorldManager {
 			$end = $providerClass->fromPath($path, DimensionIds::THE_END, $overworld->getDatabase());
 		}
 
-		$world = new DimensionalWorld($this->server, $name, $overworld, $this->server->getAsyncPool());
+		$world = new DimensionalWorld($this->server, $name, $overworld, $this->server->getAsyncPool(), DimensionIds::OVERWORLD);
 
 		$this->worlds[$world->getId()] = $world;
 		$world->setAutoSave($this->autoSave);
@@ -240,7 +240,7 @@ class DimensionalWorldManager extends WorldManager {
 		(new WorldLoadEvent($world))->call();
 
 		// Nether Dimension
-		$world = new DimensionalWorld($this->server, $name, $nether, $this->server->getAsyncPool());
+		$world = new DimensionalWorld($this->server, $name . " nether", $nether, $this->server->getAsyncPool(), DimensionIds::NETHER);
 
 		$this->worlds[$world->getId()] = $world;
 		$world->setAutoSave($this->autoSave);
@@ -248,7 +248,7 @@ class DimensionalWorldManager extends WorldManager {
 		(new WorldLoadEvent($world))->call();
 
 		// Nether Dimension
-		$world = new DimensionalWorld($this->server, $name, $end, $this->server->getAsyncPool());
+		$world = new DimensionalWorld($this->server, $name . " end", $end, $this->server->getAsyncPool(), DimensionIds::THE_END);
 
 		$this->worlds[$world->getId()] = $world;
 		$world->setAutoSave($this->autoSave);
