@@ -21,4 +21,10 @@ class DimensionalBedrockWorldData extends BedrockWorldData {
 	public function setName(string $name) {
 		$this->compoundTag->setString("LevelName", $name);
 	}
+
+	public function save(int $dimension = 0) : void{
+		if($dimension !== 0)
+			return;
+		parent::save();
+	}
 }

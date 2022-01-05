@@ -128,7 +128,7 @@ class DimensionalFormatConverter {
 		$data->setSpawn($oldData->getSpawn());
 		$data->setTime($oldData->getTime());
 
-		$data->save();
+		$data->save(DimensionIds::OVERWORLD);
 		$this->logger->info("Finished converting manifest");
 		//TODO: add more properties as-needed
 	}

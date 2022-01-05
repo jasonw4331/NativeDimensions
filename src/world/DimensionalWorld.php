@@ -2,6 +2,7 @@
 declare(strict_types=1);
 namespace jasonwynn10\NativeDimensions\world;
 
+use pocketmine\event\world\WorldSaveEvent;
 use pocketmine\network\mcpe\protocol\types\DimensionIds;
 use pocketmine\scheduler\AsyncPool;
 use pocketmine\Server;
@@ -37,5 +38,20 @@ class DimensionalWorld extends World {
 
 	public function getDimensionId() : int {
 		return $this->dimensionId;
+	}
+
+	public function save(bool $force = false) : bool{
+
+		if(!$this->getAutoSave() and !$force){
+			return false;
+		}
+
+		(new WorldSaveEvent($this))->call();
+
+		$this->getProvider()->getWorldData()->setTime($this->getTime());
+		$this->saveChunks();
+		$this->getProvider()->getWorldData()->save($this->dimensionId);
+
+		return true;
 	}
 }
