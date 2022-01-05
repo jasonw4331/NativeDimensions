@@ -8,4 +8,3 @@ author: "jasonwynn10"
 load: STARTUP
 depend:
 - MultiWorld
-protocol: [407]
