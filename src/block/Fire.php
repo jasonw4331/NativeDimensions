@@ -4,11 +4,11 @@ namespace jasonwynn10\NativeDimensions\block;
 
 use pocketmine\block\Air;
 use pocketmine\block\BlockBreakInfo;
-use pocketmine\block\BlockFactory;
 use pocketmine\block\BlockIdentifier as BID;
 use pocketmine\block\BlockLegacyIds;
 use pocketmine\block\BlockLegacyIds as Ids;
 use pocketmine\block\Fire as PMFire;
+use pocketmine\math\Axis;
 use pocketmine\math\Facing;
 use pocketmine\world\Position;
 
@@ -63,9 +63,9 @@ class Fire extends PMFire {
 			for($j = 0; $j < $totalHeight; ++$j) {
 				for($k = 0; $k < $totalWidth; ++$k) {
 					if($direction == Facing::NORTH) {
-						$start->getWorld()->setBlock($start->add(0, -$j, $k), BlockFactory::getInstance()->get(BlockLegacyIds::PORTAL, 0), false);
+						$start->getWorld()->setBlock($start->add(0, -$j, $k), (new Portal())->setAxis(Axis::Z), false);
 					}else{
-						$start->getWorld()->setBlock($start->add(-$k, -$j, 0), BlockFactory::getInstance()->get(BlockLegacyIds::PORTAL, 0), false);
+						$start->getWorld()->setBlock($start->add(-$k, -$j, 0), (new Portal())->setAxis(Axis::X), false);
 					}
 				}
 			}
