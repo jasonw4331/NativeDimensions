@@ -13,6 +13,7 @@ use pocketmine\block\NetherPortal;
 use pocketmine\block\VanillaBlocks;
 use pocketmine\entity\Entity;
 use pocketmine\item\Item;
+use pocketmine\math\Axis;
 use pocketmine\math\Facing;
 use pocketmine\math\Vector3;
 use pocketmine\player\Player;
@@ -176,27 +177,27 @@ class Portal extends NetherPortal {
 		$xDirection = (bool)mt_rand(0,1);
 		if($xDirection) {
 			// portals
-			$world->setBlock($position, BlockFactory::getInstance()->get(BlockLegacyIds::PORTAL, 0), true);
-			$world->setBlock($position->getSide(Facing::UP), BlockFactory::getInstance()->get(BlockLegacyIds::PORTAL, 0), true);
-			$world->setBlock($position->getSide(Facing::UP, 2), BlockFactory::getInstance()->get(BlockLegacyIds::PORTAL, 0), true);
-			$world->setBlock($position->getSide(Facing::NORTH), BlockFactory::getInstance()->get(BlockLegacyIds::PORTAL, 0), true);
-			$world->setBlock($position->getSide(Facing::NORTH)->getSide(Facing::UP), BlockFactory::getInstance()->get(BlockLegacyIds::PORTAL, 0), true);
-			$world->setBlock($position->getSide(Facing::NORTH)->getSide(Facing::UP, 2), BlockFactory::getInstance()->get(BlockLegacyIds::PORTAL, 0), true);
+			$world->setBlock($position, (clone $this)->setAxis(Axis::X), true);
+			$world->setBlock($position->getSide(Facing::UP), (clone $this)->setAxis(Axis::X), true);
+			$world->setBlock($position->getSide(Facing::UP, 2), (clone $this)->setAxis(Axis::X), true);
+			$world->setBlock($position->getSide(Facing::NORTH), (clone $this)->setAxis(Axis::X), true);
+			$world->setBlock($position->getSide(Facing::NORTH)->getSide(Facing::UP), (clone $this)->setAxis(Axis::X), true);
+			$world->setBlock($position->getSide(Facing::NORTH)->getSide(Facing::UP, 2), (clone $this)->setAxis(Axis::X), true);
 			// obsidian
-			$world->setBlock($position->getSide(Facing::SOUTH), BlockFactory::getInstance()->get(BlockLegacyIds::OBSIDIAN, 0), true);
-			$world->setBlock($position->getSide(Facing::SOUTH)->getSide(Facing::DOWN), BlockFactory::getInstance()->get(BlockLegacyIds::OBSIDIAN, 0), true);
-			$world->setBlock($position->getSide(Facing::SOUTH)->getSide(Facing::UP), BlockFactory::getInstance()->get(BlockLegacyIds::OBSIDIAN, 0), true);
-			$world->setBlock($position->getSide(Facing::SOUTH)->getSide(Facing::UP, 2), BlockFactory::getInstance()->get(BlockLegacyIds::OBSIDIAN, 0), true);
-			$world->setBlock($position->getSide(Facing::SOUTH)->getSide(Facing::UP, 3), BlockFactory::getInstance()->get(BlockLegacyIds::OBSIDIAN, 0), true);
-			$world->setBlock($position->getSide(Facing::DOWN), BlockFactory::getInstance()->get(BlockLegacyIds::OBSIDIAN, 0), true);
-			$world->setBlock($position->getSide(Facing::DOWN)->getSide(Facing::NORTH), BlockFactory::getInstance()->get(BlockLegacyIds::OBSIDIAN, 0), true);
-			$world->setBlock($position->getSide(Facing::UP, 3), BlockFactory::getInstance()->get(BlockLegacyIds::OBSIDIAN, 0), true);
-			$world->setBlock($position->getSide(Facing::UP, 3)->getSide(Facing::NORTH), BlockFactory::getInstance()->get(BlockLegacyIds::OBSIDIAN, 0), true);
-			$world->setBlock($position->getSide(Facing::NORTH, 2), BlockFactory::getInstance()->get(BlockLegacyIds::OBSIDIAN, 0), true);
-			$world->setBlock($position->getSide(Facing::NORTH, 2)->getSide(Facing::DOWN), BlockFactory::getInstance()->get(BlockLegacyIds::OBSIDIAN, 0), true);
-			$world->setBlock($position->getSide(Facing::NORTH, 2)->getSide(Facing::UP), BlockFactory::getInstance()->get(BlockLegacyIds::OBSIDIAN, 0), true);
-			$world->setBlock($position->getSide(Facing::NORTH, 2)->getSide(Facing::UP, 2), BlockFactory::getInstance()->get(BlockLegacyIds::OBSIDIAN, 0), true);
-			$world->setBlock($position->getSide(Facing::NORTH, 2)->getSide(Facing::UP, 3), BlockFactory::getInstance()->get(BlockLegacyIds::OBSIDIAN, 0), true);
+			$world->setBlock($position->getSide(Facing::SOUTH), new Obsidian(), true);
+			$world->setBlock($position->getSide(Facing::SOUTH)->getSide(Facing::DOWN), new Obsidian(), true);
+			$world->setBlock($position->getSide(Facing::SOUTH)->getSide(Facing::UP), new Obsidian(), true);
+			$world->setBlock($position->getSide(Facing::SOUTH)->getSide(Facing::UP, 2), new Obsidian(), true);
+			$world->setBlock($position->getSide(Facing::SOUTH)->getSide(Facing::UP, 3), new Obsidian(), true);
+			$world->setBlock($position->getSide(Facing::DOWN), new Obsidian(), true);
+			$world->setBlock($position->getSide(Facing::DOWN)->getSide(Facing::NORTH), new Obsidian(), true);
+			$world->setBlock($position->getSide(Facing::UP, 3), new Obsidian(), true);
+			$world->setBlock($position->getSide(Facing::UP, 3)->getSide(Facing::NORTH), new Obsidian(), true);
+			$world->setBlock($position->getSide(Facing::NORTH, 2), new Obsidian(), true);
+			$world->setBlock($position->getSide(Facing::NORTH, 2)->getSide(Facing::DOWN), new Obsidian(), true);
+			$world->setBlock($position->getSide(Facing::NORTH, 2)->getSide(Facing::UP), new Obsidian(), true);
+			$world->setBlock($position->getSide(Facing::NORTH, 2)->getSide(Facing::UP, 2), new Obsidian(), true);
+			$world->setBlock($position->getSide(Facing::NORTH, 2)->getSide(Facing::UP, 3), new Obsidian(), true);
 			// air
 			$world->setBlock($position->getSide(Facing::EAST), VanillaBlocks::AIR(), true);
 			$world->setBlock($position->getSide(Facing::UP)->getSide(Facing::EAST), VanillaBlocks::AIR(), true);
@@ -212,27 +213,27 @@ class Portal extends NetherPortal {
 			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::UP, 2)->getSide(Facing::WEST), VanillaBlocks::AIR(), true);
 		}else{
 			// portals
-			$world->setBlock($position, BlockFactory::getInstance()->get(BlockLegacyIds::PORTAL, 1), true);
-			$world->setBlock($position->getSide(Facing::UP), BlockFactory::getInstance()->get(BlockLegacyIds::PORTAL, 1), true);
-			$world->setBlock($position->getSide(Facing::UP, 2), BlockFactory::getInstance()->get(BlockLegacyIds::PORTAL, 1), true);
-			$world->setBlock($position->getSide(Facing::EAST), BlockFactory::getInstance()->get(BlockLegacyIds::PORTAL, 1), true);
-			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::UP), BlockFactory::getInstance()->get(BlockLegacyIds::PORTAL, 1), true);
-			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::UP, 2), BlockFactory::getInstance()->get(BlockLegacyIds::PORTAL, 1), true);
+			$world->setBlock($position, (clone $this)->setAxis(Axis::Z), true);
+			$world->setBlock($position->getSide(Facing::UP), (clone $this)->setAxis(Axis::Z), true);
+			$world->setBlock($position->getSide(Facing::UP, 2), (clone $this)->setAxis(Axis::Z), true);
+			$world->setBlock($position->getSide(Facing::EAST), (clone $this)->setAxis(Axis::Z), true);
+			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::UP), (clone $this)->setAxis(Axis::Z), true);
+			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::UP, 2), (clone $this)->setAxis(Axis::Z), true);
 			// obsidian
-			$world->setBlock($position->getSide(Facing::WEST), BlockFactory::getInstance()->get(BlockLegacyIds::OBSIDIAN, 0), true);
-			$world->setBlock($position->getSide(Facing::WEST)->getSide(Facing::DOWN), BlockFactory::getInstance()->get(BlockLegacyIds::OBSIDIAN, 0), true);
-			$world->setBlock($position->getSide(Facing::WEST)->getSide(Facing::UP), BlockFactory::getInstance()->get(BlockLegacyIds::OBSIDIAN, 0), true);
-			$world->setBlock($position->getSide(Facing::WEST)->getSide(Facing::UP, 2), BlockFactory::getInstance()->get(BlockLegacyIds::OBSIDIAN, 0), true);
-			$world->setBlock($position->getSide(Facing::WEST)->getSide(Facing::UP, 3), BlockFactory::getInstance()->get(BlockLegacyIds::OBSIDIAN, 0), true);
-			$world->setBlock($position->getSide(Facing::DOWN), BlockFactory::getInstance()->get(BlockLegacyIds::OBSIDIAN, 0), true);
-			$world->setBlock($position->getSide(Facing::DOWN)->getSide(Facing::EAST), BlockFactory::getInstance()->get(BlockLegacyIds::OBSIDIAN, 0), true);
-			$world->setBlock($position->getSide(Facing::UP, 3), BlockFactory::getInstance()->get(BlockLegacyIds::OBSIDIAN, 0), true);
-			$world->setBlock($position->getSide(Facing::UP, 3)->getSide(Facing::EAST), BlockFactory::getInstance()->get(BlockLegacyIds::OBSIDIAN, 0), true);
-			$world->setBlock($position->getSide(Facing::EAST, 2), BlockFactory::getInstance()->get(BlockLegacyIds::OBSIDIAN, 0), true);
-			$world->setBlock($position->getSide(Facing::EAST, 2)->getSide(Facing::DOWN), BlockFactory::getInstance()->get(BlockLegacyIds::OBSIDIAN, 0), true);
-			$world->setBlock($position->getSide(Facing::EAST, 2)->getSide(Facing::UP), BlockFactory::getInstance()->get(BlockLegacyIds::OBSIDIAN, 0), true);
-			$world->setBlock($position->getSide(Facing::EAST, 2)->getSide(Facing::UP, 2), BlockFactory::getInstance()->get(BlockLegacyIds::OBSIDIAN, 0), true);
-			$world->setBlock($position->getSide(Facing::EAST, 2)->getSide(Facing::UP, 3), BlockFactory::getInstance()->get(BlockLegacyIds::OBSIDIAN, 0), true);
+			$world->setBlock($position->getSide(Facing::WEST), new Obsidian(), true);
+			$world->setBlock($position->getSide(Facing::WEST)->getSide(Facing::DOWN), new Obsidian(), true);
+			$world->setBlock($position->getSide(Facing::WEST)->getSide(Facing::UP), new Obsidian(), true);
+			$world->setBlock($position->getSide(Facing::WEST)->getSide(Facing::UP, 2), new Obsidian(), true);
+			$world->setBlock($position->getSide(Facing::WEST)->getSide(Facing::UP, 3), new Obsidian(), true);
+			$world->setBlock($position->getSide(Facing::DOWN), new Obsidian(), true);
+			$world->setBlock($position->getSide(Facing::DOWN)->getSide(Facing::EAST), new Obsidian(), true);
+			$world->setBlock($position->getSide(Facing::UP, 3), new Obsidian(), true);
+			$world->setBlock($position->getSide(Facing::UP, 3)->getSide(Facing::EAST), new Obsidian(), true);
+			$world->setBlock($position->getSide(Facing::EAST, 2), new Obsidian(), true);
+			$world->setBlock($position->getSide(Facing::EAST, 2)->getSide(Facing::DOWN), new Obsidian(), true);
+			$world->setBlock($position->getSide(Facing::EAST, 2)->getSide(Facing::UP), new Obsidian(), true);
+			$world->setBlock($position->getSide(Facing::EAST, 2)->getSide(Facing::UP, 2), new Obsidian(), true);
+			$world->setBlock($position->getSide(Facing::EAST, 2)->getSide(Facing::UP, 3), new Obsidian(), true);
 			// air
 			$world->setBlock($position->getSide(Facing::NORTH), VanillaBlocks::AIR(), true);
 			$world->setBlock($position->getSide(Facing::UP)->getSide(Facing::NORTH), VanillaBlocks::AIR(), true);
