@@ -13,9 +13,9 @@ use pocketmine\block\BlockFactory;
 use pocketmine\block\BlockIdentifier as BID;
 use pocketmine\block\BlockLegacyIds as Ids;
 use pocketmine\block\BlockToolType;
+use pocketmine\item\StringToItemParser;
 use pocketmine\item\ToolTier;
 use pocketmine\plugin\PluginBase;
-use pocketmine\world\generator\GeneratorManager;
 
 class Main extends PluginBase {
 	/** @var Main */
@@ -45,12 +45,16 @@ class Main extends PluginBase {
 	public function onEnable() : void {
 		new DimensionListener($this);
 		$factory = BlockFactory::getInstance();
-		if(GeneratorManager::getInstance()->getGenerator("ender") !== null) {
-			$factory->register(new EndPortal(new BID(Ids::END_PORTAL, 0), "End Portal", BlockBreakInfo::indestructible()));
+		$parser = StringToItemParser::getInstance();
+		foreach([
+			new EndPortal(new BID(Ids::END_PORTAL, 0), "End Portal", BlockBreakInfo::indestructible()),
+			new Fire(new BID(Ids::FIRE, 0), "Fire Block", BlockBreakInfo::instant()),
+			new Obsidian(new BID(Ids::OBSIDIAN, 0), "Obsidian", new BlockBreakInfo(35.0 /* 50 in PC */, BlockToolType::PICKAXE, ToolTier::DIAMOND()->getHarvestLevel(), 6000.0)),
+			new Portal(new BID(Ids::PORTAL, 0), "Nether Portal", BlockBreakInfo::indestructible(0.0))
+		] as $block) {
+			$factory->register($block, true);
+			$parser->override($block->getName(), fn(string $input) => $block->asItem());
 		}
-		$factory->register(new Fire(new BID(Ids::FIRE, 0), "Fire Block", BlockBreakInfo::instant()), true);
-		$factory->register(new Obsidian(new BID(Ids::OBSIDIAN, 0), "Obsidian", new BlockBreakInfo(35.0 /* 50 in PC */, BlockToolType::PICKAXE, ToolTier::DIAMOND()->getHarvestLevel(), 6000.0)), true);
-		$factory->register(new Portal(new BID(Ids::PORTAL, 0), "Nether Portal", BlockBreakInfo::indestructible(0.0)), true);
 	}
 
 	/**
