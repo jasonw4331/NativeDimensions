@@ -8,6 +8,7 @@ use pocketmine\network\mcpe\protocol\types\DimensionIds;
 use pocketmine\utils\Filesystem;
 use pocketmine\world\format\io\WorldData;
 use pocketmine\world\format\io\WorldProvider;
+use pocketmine\world\format\io\WritableWorldProvider;
 use pocketmine\world\generator\GeneratorManager;
 use pocketmine\world\generator\normal\Normal;
 use pocketmine\world\WorldCreationOptions;
@@ -51,7 +52,7 @@ class DimensionalFormatConverter {
 	}
 
 	/**
-	 * @return DimensionLevelDBProvider[]
+	 * @return WritableWorldProvider[]
 	 */
 	public function execute() : array{
 		[$overworld, $nether, $end] = $this->generateNew();

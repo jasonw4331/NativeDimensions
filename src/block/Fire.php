@@ -56,9 +56,9 @@ class Fire extends PMFire {
 			for($j = 0; $j < $totalHeight; ++$j) {
 				for($k = 0; $k < $totalWidth; ++$k) {
 					if($direction == Facing::NORTH) {
-						$start->getWorld()->setBlock($start->add(0, -$j, $k), BlockFactory::getInstance()->get(BlockLegacyIds::PORTAL), false);
+						$start->getWorld()->setBlock($start->add(0, -$j, $k), BlockFactory::getInstance()->get(BlockLegacyIds::PORTAL, 0), false);
 					}else{
-						$start->getWorld()->setBlock($start->add(-$k, -$j, 0), BlockFactory::getInstance()->get(BlockLegacyIds::PORTAL), false);
+						$start->getWorld()->setBlock($start->add(-$k, -$j, 0), BlockFactory::getInstance()->get(BlockLegacyIds::PORTAL, 0), false);
 					}
 				}
 			}
