@@ -65,7 +65,7 @@ class DimensionListener implements Listener {
 			return;
 		/** @var DimensionalWorld $world */
 		$world = $event->getTo()->getWorld();
-		if($world === null or $world->getFolderName() === $event->getFrom()->getWorld()->getFolderName())
+		if($world->getFolderName() === $event->getFrom()->getWorld()->getFolderName())
 			return;
 		$pk = new ChangeDimensionPacket();
 		if($world->getOverworld() === $world)
