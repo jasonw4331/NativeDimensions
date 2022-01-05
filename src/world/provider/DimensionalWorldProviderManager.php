@@ -60,7 +60,7 @@ class DimensionalWorldProviderManager {
 	 * Returns a WorldProvider class for this path, or null
 	 *
 	 * @return WorldProviderManagerEntry[]
-	 * @phpstan-return array<string, ReadOnlyWorldProviderManagerEntry|RewritableWorldProviderManagerEntry>
+	 * @phpstan-return array<string, WorldProviderManagerEntry>
 	 */
 	public function getMatchingProviders(string $path) : array{
 		$result = [];
