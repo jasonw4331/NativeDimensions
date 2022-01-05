@@ -76,11 +76,9 @@ class DimensionListener implements Listener {
 			$pk->dimension = DimensionIds::THE_END;
 		else
 			throw new AssumptionFailedError("Unable to identify player dimension");
-		$pk->position = $event->getTo();
+		$pk->position = $event->getTo()->asVector3();
 		$pk->respawn = false;
-		//$player->sendDataPacket($pk);
-
-		//$player->sendPlayStatus(PlayStatusPacket::PLAYER_SPAWN);
+		$player->getNetworkSession()->sendDataPacket($pk);
 
 		$this->plugin->getScheduler()->scheduleDelayedTask(new ClosureTask(function() use($player) : void {
 			Main::removeTeleportingId($player->getId());
