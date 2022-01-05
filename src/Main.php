@@ -16,6 +16,7 @@ use pocketmine\block\BlockToolType;
 use pocketmine\item\StringToItemParser;
 use pocketmine\item\ToolTier;
 use pocketmine\plugin\PluginBase;
+use Webmozart\PathUtil\Path;
 
 class Main extends PluginBase {
 	/** @var Main */
@@ -39,7 +40,7 @@ class Main extends PluginBase {
 		$ref = new \ReflectionClass($server);
 		$prop = $ref->getProperty('worldManager');
 		$prop->setAccessible(true);
-		$prop->setValue($server, new DimensionalWorldManager($server, $server->getDataPath()));
+		$prop->setValue($server, new DimensionalWorldManager($server, Path::join($server->getDataPath(), "worlds")));
 	}
 
 	public function onEnable() : void {
