@@ -221,8 +221,8 @@ class DimensionalWorldManager extends WorldManager {
 
 			$converter = new DimensionalFormatConverter([
 				$overworld,
-				$providerClass->fromPath($path, DimensionIds::NETHER, $overworld->getDatabase()),
-				$providerClass->fromPath($path, DimensionIds::THE_END, $overworld->getDatabase())
+				$providerClass->fromPath($path, DimensionIds::NETHER),
+				$providerClass->fromPath($path, DimensionIds::THE_END)
 			], $this->providerManager->getDefault(), Path::join($this->server->getDataPath(), "backups", "worlds"), $this->server->getLogger());
 			[$overworld, $nether, $end] = $converter->execute();
 
