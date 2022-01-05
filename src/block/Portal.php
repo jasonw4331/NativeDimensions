@@ -177,12 +177,12 @@ class Portal extends NetherPortal {
 		$xDirection = (bool)mt_rand(0,1);
 		if($xDirection) {
 			// portals
-			$world->setBlock($position, (clone $this)->setAxis(Axis::X), true);
-			$world->setBlock($position->getSide(Facing::UP), (clone $this)->setAxis(Axis::X), true);
-			$world->setBlock($position->getSide(Facing::UP, 2), (clone $this)->setAxis(Axis::X), true);
-			$world->setBlock($position->getSide(Facing::NORTH), (clone $this)->setAxis(Axis::X), true);
-			$world->setBlock($position->getSide(Facing::NORTH)->getSide(Facing::UP), (clone $this)->setAxis(Axis::X), true);
-			$world->setBlock($position->getSide(Facing::NORTH)->getSide(Facing::UP, 2), (clone $this)->setAxis(Axis::X), true);
+			$world->setBlock($position, (clone $this)->setAxis(Axis::Z), true);
+			$world->setBlock($position->getSide(Facing::UP), (clone $this)->setAxis(Axis::Z), true);
+			$world->setBlock($position->getSide(Facing::UP, 2), (clone $this)->setAxis(Axis::Z), true);
+			$world->setBlock($position->getSide(Facing::NORTH), (clone $this)->setAxis(Axis::Z), true);
+			$world->setBlock($position->getSide(Facing::NORTH)->getSide(Facing::UP), (clone $this)->setAxis(Axis::Z), true);
+			$world->setBlock($position->getSide(Facing::NORTH)->getSide(Facing::UP, 2), (clone $this)->setAxis(Axis::Z), true);
 			// obsidian
 			$world->setBlock($position->getSide(Facing::SOUTH), new Obsidian(), true);
 			$world->setBlock($position->getSide(Facing::SOUTH)->getSide(Facing::DOWN), new Obsidian(), true);
@@ -213,12 +213,12 @@ class Portal extends NetherPortal {
 			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::UP, 2)->getSide(Facing::WEST), VanillaBlocks::AIR(), true);
 		}else{
 			// portals
-			$world->setBlock($position, (clone $this)->setAxis(Axis::Z), true);
-			$world->setBlock($position->getSide(Facing::UP), (clone $this)->setAxis(Axis::Z), true);
-			$world->setBlock($position->getSide(Facing::UP, 2), (clone $this)->setAxis(Axis::Z), true);
-			$world->setBlock($position->getSide(Facing::EAST), (clone $this)->setAxis(Axis::Z), true);
-			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::UP), (clone $this)->setAxis(Axis::Z), true);
-			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::UP, 2), (clone $this)->setAxis(Axis::Z), true);
+			$world->setBlock($position, (clone $this)->setAxis(Axis::X), true);
+			$world->setBlock($position->getSide(Facing::UP), (clone $this)->setAxis(Axis::X), true);
+			$world->setBlock($position->getSide(Facing::UP, 2), (clone $this)->setAxis(Axis::X), true);
+			$world->setBlock($position->getSide(Facing::EAST), (clone $this)->setAxis(Axis::X), true);
+			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::UP), (clone $this)->setAxis(Axis::X), true);
+			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::UP, 2), (clone $this)->setAxis(Axis::X), true);
 			// obsidian
 			$world->setBlock($position->getSide(Facing::WEST), new Obsidian(), true);
 			$world->setBlock($position->getSide(Facing::WEST)->getSide(Facing::DOWN), new Obsidian(), true);
