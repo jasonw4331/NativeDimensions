@@ -87,6 +87,7 @@ class DimensionLevelDBProvider extends LevelDB {
 		$data = new DimensionalBedrockWorldData(Path::join($this->getPath(), "level.dat"));
 		if($this->dimensionId > 0) {
 			$data->setGenerator($this->dimensionId === DimensionIds::NETHER ? "nether" : "ender");
+			$data->setName($data->getName() . ($this->dimensionId === DimensionIds::NETHER ? " nether" : " end"));
 		}
 		return $data;
 	}

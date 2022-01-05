@@ -17,4 +17,8 @@ class DimensionalBedrockWorldData extends BedrockWorldData {
 		$this->compoundTag->setString("generatorName", $generatorName);
 		$this->fix();
 	}
+
+	public function setName(string $name) {
+		$this->compoundTag->setString("LevelName", $name);
+	}
 }
