@@ -31,16 +31,21 @@ class Main extends PluginBase {
 	public function onLoad() : void {
 		self::$instance = $this;
 
+		$this->getLogger()->debug("Unloading Worlds");
 		$server = $this->getServer();
 		$oldManager = $server->getWorldManager();
 		foreach($oldManager->getWorlds() as $world)
 			$oldManager->unloadWorld($world, true);
+		$this->getLogger()->debug("Worlds Successfully Unloaded");
 
 		// replace default world manager with one that supports dimensions
 		$ref = new \ReflectionClass($server);
 		$prop = $ref->getProperty('worldManager');
 		$prop->setAccessible(true);
 		$prop->setValue($server, new DimensionalWorldManager($server, Path::join($server->getDataPath(), "worlds")));
+
+		if($this->getServer()->getWorldManager() instanceof DimensionalWorldManager)
+			$this->getLogger()->debug("WorldManager Successfully swapped");
 	}
 
 	public function onEnable() : void {
