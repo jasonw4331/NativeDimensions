@@ -7,6 +7,7 @@ use pocketmine\utils\Utils;
 use pocketmine\world\format\io\region\Anvil;
 use pocketmine\world\format\io\region\McRegion;
 use pocketmine\world\format\io\region\PMAnvil;
+use pocketmine\world\format\io\WorldProviderManager;
 use pocketmine\world\format\io\WorldProviderManagerEntry;
 
 class DimensionalWorldProviderManager {
@@ -28,6 +29,7 @@ class DimensionalWorldProviderManager {
 				DimensionIds::OVERWORLD => new Anvil($path),
 				DimensionIds::NETHER => new NetherAnvilProvider($path),
 				DimensionIds::THE_END => new EnderAnvilProvider($path),
+				default => throw new \UnexpectedValueException("Invalid dimension Id")
 			};
 		}), "anvil");
 		$this->addProvider(new ReadOnlyWorldProviderManagerEntry(\Closure::fromCallable([McRegion::class, 'isValid']), fn(string $path) => new McRegion($path)), "mcregion");
@@ -57,7 +59,7 @@ class DimensionalWorldProviderManager {
 	/**
 	 * Returns a WorldProvider class for this path, or null
 	 *
-	 * @return ReadOnlyWorldProviderManagerEntry[]|RewritableWorldProviderManagerEntry[]
+	 * @return WorldProviderManagerEntry[]
 	 * @phpstan-return array<string, ReadOnlyWorldProviderManagerEntry|RewritableWorldProviderManagerEntry>
 	 */
 	public function getMatchingProviders(string $path) : array{
