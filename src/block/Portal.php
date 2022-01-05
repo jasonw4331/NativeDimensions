@@ -2,7 +2,6 @@
 declare(strict_types = 1);
 namespace jasonwynn10\NativeDimensions\block;
 
-use CortexPE\SynCORE\utils\Facing;
 use jasonwynn10\NativeDimensions\Main;
 use jasonwynn10\NativeDimensions\world\DimensionalWorld;
 use pocketmine\block\Air;
@@ -12,6 +11,7 @@ use pocketmine\block\NetherPortal;
 use pocketmine\block\VanillaBlocks;
 use pocketmine\entity\Entity;
 use pocketmine\item\Item;
+use pocketmine\math\Facing;
 use pocketmine\math\Vector3;
 use pocketmine\player\Player;
 use pocketmine\scheduler\ClosureTask;
