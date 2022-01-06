@@ -75,11 +75,13 @@ class Portal extends NetherPortal {
 	}
 
 	public function onEntityInside(Entity $entity): bool{
+		/** @var DimensionalWorld $world */
+		$world = $entity->getPosition()->getWorld();
+		if($world->getEnd() === $world)
+			return true;
+
 		if(!in_array($entity->getId(), Main::getTeleporting())){
 			Main::addTeleportingId($entity->getId());
-
-			/** @var DimensionalWorld $world */
-			$world = $entity->getPosition()->getWorld();
 
 			$position = $this->getPosition();
 			if($world->getOverworld() === $world) {
