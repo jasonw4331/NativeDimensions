@@ -8,12 +8,15 @@ use jasonwynn10\NativeDimensions\block\Obsidian;
 use jasonwynn10\NativeDimensions\block\Portal;
 use jasonwynn10\NativeDimensions\event\DimensionListener;
 use jasonwynn10\NativeDimensions\world\DimensionalWorldManager;
+use jasonwynn10\NativeDimensions\world\generator\ender\EnderGenerator;
+use jasonwynn10\NativeDimensions\world\generator\nether\NetherGenerator;
 use pocketmine\block\BlockFactory;
 use pocketmine\block\VanillaBlocks;
 use pocketmine\item\StringToItemParser;
 use pocketmine\math\Axis;
 use pocketmine\math\Facing;
 use pocketmine\plugin\PluginBase;
+use pocketmine\world\generator\GeneratorManager;
 use pocketmine\world\Position;
 use Webmozart\PathUtil\Path;
 
@@ -29,6 +32,9 @@ class Main extends PluginBase {
 
 	public function onLoad() : void {
 		self::$instance = $this;
+
+		GeneratorManager::getInstance()->addGenerator(NetherGenerator::class, 'nether', fn() => null, true);
+		GeneratorManager::getInstance()->addGenerator(EnderGenerator::class, 'ender', fn() => null, true);
 
 		$this->getLogger()->debug("Unloading Worlds");
 		$server = $this->getServer();
