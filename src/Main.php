@@ -179,7 +179,9 @@ class Main extends PluginBase {
 
 	public static function removeTeleportingId(int $id) : void {
 		$key = array_search($id, self::$teleporting);
-		if($key !== false)
+		if($key !== false) {
 			unset(self::$teleporting[$key]);
+			self::$instance->getLogger()->debug("Player can use a portal again");
+		}
 	}
 }

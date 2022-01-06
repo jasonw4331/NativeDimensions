@@ -58,6 +58,7 @@ class DimensionListener implements Listener {
 			$respawn = $event->getRespawnPosition();
 			$respawn->world = $overworld;
 			$event->setRespawnPosition($respawn);
+			Main::removeTeleportingId($player->getId());
 		}
 	}
 
@@ -70,7 +71,6 @@ class DimensionListener implements Listener {
 				return;
 			}
 			Main::removeTeleportingId($entity->getId());
-			$this->plugin->getLogger()->debug("Player can use a portal again");
 			throw new CancelTaskException();
 		}), 20 * 20, 20 * 10);
 
@@ -103,6 +103,7 @@ class DimensionListener implements Listener {
 			//$event->getEntity()->setRotation(); // TODO: player always spawns facing west
 			$event->setTo(Position::fromObject($portalPosition->floor()->add(0.5, 0, 0.5), $world));
 			$this->plugin->getScheduler()->scheduleDelayedTask(new ClosureTask(fn() => Main::makeEndSpawn($portalPosition)), 20);
+			$this->plugin->getLogger()->debug("Spawning End platform");
 			return;
 		}
 
