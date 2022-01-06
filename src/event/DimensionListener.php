@@ -99,8 +99,12 @@ class DimensionListener implements Listener {
 
 		$portalPosition = $event->getTo();
 
-		if($world->getEnd() === $world)
+		if($world->getEnd() === $world) {
+			//$event->getEntity()->setRotation(); // TODO: player always spawns facing west
+			$event->setTo(Position::fromObject($portalPosition->floor()->add(0.5, 0, 0.5), $world));
+			$this->plugin->getScheduler()->scheduleDelayedTask(new ClosureTask(fn() => Main::makeEndSpawn($portalPosition)), 20);
 			return;
+		}
 
 		if($portalPosition->getWorld()->getBlock($portalPosition) instanceof NetherPortal)
 			return;
