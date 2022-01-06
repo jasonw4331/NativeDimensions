@@ -44,19 +44,15 @@ class EndPortal extends Opaque{
 		if($world->getEnd() === $world)
 			return true;
 
-		if(!in_array($entity->getId(), Main::getTeleporting())){
-			Main::addTeleportingId($entity->getId());
-
-			if($world->getOverworld() === $world) {
-				$position = new Position(100, 50, 0, $world->getEnd());
-				$entity->getWorld()->getLogger()->debug("Teleporting to Nether");
-			}else {
-				$position = $entity instanceof Player ? ($entity->getSpawn() ?? $world->getOverworld()->getSafeSpawn()) : $world->getOverworld()->getSafeSpawn();
-				$entity->getWorld()->getLogger()->debug("Teleporting to Overworld");
-			}
-
-			$entity->teleport($position);
+		if($world->getOverworld() === $world) {
+			$position = new Position(100, 50, 0, $world->getEnd());
+			$entity->getWorld()->getLogger()->debug("Teleporting to The End");
+		}else {
+			$position = $entity instanceof Player ? ($entity->getSpawn() ?? $world->getOverworld()->getSafeSpawn()) : $world->getOverworld()->getSafeSpawn();
+			$entity->getWorld()->getLogger()->debug("Teleporting to Overworld");
 		}
+
+		$entity->teleport($position);
 		return true;
 	}
 
