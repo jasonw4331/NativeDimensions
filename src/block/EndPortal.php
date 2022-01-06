@@ -2,55 +2,36 @@
 declare(strict_types=1);
 namespace jasonwynn10\NativeDimensions\block;
 
-use jasonwynn10\NativeDimensions\Main;
 use jasonwynn10\NativeDimensions\world\DimensionalWorld;
 use pocketmine\block\BlockBreakInfo;
 use pocketmine\block\BlockIdentifier as BID;
 use pocketmine\block\BlockLegacyIds as Ids;
-use pocketmine\block\BlockLegacyMetadata;
 use pocketmine\block\Opaque;
-use pocketmine\block\utils\BlockDataSerializer;
 use pocketmine\block\utils\FacesOppositePlacingPlayerTrait;
 use pocketmine\block\utils\HorizontalFacingTrait;
 use pocketmine\entity\Entity;
 use pocketmine\math\AxisAlignedBB;
 use pocketmine\math\Facing;
 use pocketmine\player\Player;
-use pocketmine\scheduler\ClosureTask;
 use pocketmine\world\Position;
 
 class EndPortal extends Opaque{
 	use FacesOppositePlacingPlayerTrait;
 	use HorizontalFacingTrait;
 
-	protected bool $eye = false;
-
 	public function __construct(){
 		parent::__construct(new BID(Ids::END_PORTAL, 0), "End Portal", BlockBreakInfo::indestructible());
 	}
 
-	protected function writeStateToMeta() : int{
-		return BlockDataSerializer::writeLegacyHorizontalFacing($this->facing) | ($this->eye ? BlockLegacyMetadata::END_PORTAL_FRAME_FLAG_EYE : 0);
-	}
-
-	public function readStateFromData(int $id, int $stateMeta) : void{
-		$this->facing = BlockDataSerializer::readLegacyHorizontalFacing($stateMeta & 0x03);
-		$this->eye = ($stateMeta & BlockLegacyMetadata::END_PORTAL_FRAME_FLAG_EYE) !== 0;
-	}
-
-	public function getStateBitmask() : int{
-		return 0b111;
-	}
-
 	public function getLightLevel() : int{
-		return 1;
+		return 15;
 	}
 
 	/**
 	 * @return AxisAlignedBB[]
 	 */
 	protected function recalculateCollisionBoxes() : array{
-		return [AxisAlignedBB::one()->trim(Facing::UP, 5 / 16)];
+		return [AxisAlignedBB::one()->trim(Facing::UP, 1 / 4)];
 	}
 
 	public function hasEntityCollision() : bool{
