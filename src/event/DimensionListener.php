@@ -88,12 +88,23 @@ class DimensionListener implements Listener {
 		else
 			return; // players can still go to non-dimension worlds
 		$pk->position = $event->getTo()->asVector3();
-		$pk->respawn = false;
-		$player->getNetworkSession()->sendDataPacket($pk);
+		$pk->respawn = !$entity->isAlive();
+		$entity->getNetworkSession()->sendDataPacket($pk);
 
-		$this->plugin->getScheduler()->scheduleDelayedTask(new ClosureTask(function() use($player) : void {
-			Main::removeTeleportingId($player->getId());
-		}), 20 * 10);
+		if(!$entity->isAlive())
+			return;
+
+		$portalPosition = $event->getTo();
+
+		if($portalPosition->getWorld()->getBlock($portalPosition) instanceof NetherPortal)
+			return;
+
+		if($world->getEnd() === $world)
+			return;
+
+		$this->plugin->getScheduler()->scheduleDelayedTask(new ClosureTask(function() use($portalPosition) : void {
+			Main::makeNetherPortal($portalPosition);
+		}), 3);
 		// TODO: portal cooldown
 	}
 
