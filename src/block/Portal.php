@@ -77,7 +77,6 @@ class Portal extends NetherPortal {
 	public function onEntityInside(Entity $entity): bool{
 		if(!in_array($entity->getId(), Main::getTeleporting())){
 			Main::addTeleportingId($entity->getId());
-			$entity->getWorld()->getLogger()->debug("Portal Teleport initialised");
 
 			/** @var DimensionalWorld $world */
 			$world = $entity->getPosition()->getWorld();
@@ -85,12 +84,14 @@ class Portal extends NetherPortal {
 			$position = $this->getPosition();
 			if($world->getOverworld() === $world) {
 				$world = $world->getNether();
-				$x = $position->x * 8;
-				$z = $position->z * 8;
-			}else {
-				$world = $world->getOverworld();
 				$x = $position->x / 8;
 				$z = $position->z / 8;
+				$entity->getWorld()->getLogger()->debug("Teleporting to Nether");
+			}else {
+				$world = $world->getOverworld();
+				$x = $position->x * 8;
+				$z = $position->z * 8;
+				$entity->getWorld()->getLogger()->debug("Teleporting to Overworld");
 			}
 			$y = $position->y;
 
@@ -104,6 +105,7 @@ class Portal extends NetherPortal {
 					}
 					$entity->teleport($position);
 				}), 20 * 6);
+				return true;
 			}
 			$entity->teleport($position);
 		}
