@@ -104,7 +104,7 @@ class DimensionListener implements Listener {
 		if($world->getEnd() === $world)
 			return;
 
-		$this->plugin->getScheduler()->scheduleDelayedTask(new ClosureTask(fn() => Main::makeNetherPortal($portalPosition)), 3);
+		$this->plugin->getScheduler()->scheduleDelayedTask(new ClosureTask(fn() => Main::makeNetherPortal($portalPosition)), 20);
 		// TODO: portal cooldown
 	}
 
