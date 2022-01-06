@@ -63,13 +63,15 @@ class DimensionListener implements Listener {
 	public function onTeleport(EntityTeleportEvent $event) : void {
 		$entity = $event->getEntity();
 
-		$this->plugin->getScheduler()->scheduleRepeatingTask(new ClosureTask(function() use($entity) : void {
+		$this->plugin->getScheduler()->scheduleDelayedRepeatingTask(new ClosureTask(function() use($entity) : void {
 			if($entity->getPosition()->getWorld()->getBlock($entity->getPosition()->floor()) instanceof NetherPortal) {
+				$this->plugin->getLogger()->debug("Player has not left portal after teleport");
 				return;
 			}
 			Main::removeTeleportingId($entity->getId());
+			$this->plugin->getLogger()->debug("Player can use a portal again");
 			throw new CancelTaskException();
-		}), 20 * 10);
+		}), 20 * 20, 20 * 10);
 
 		if(!$entity instanceof Player)
 			return;

@@ -99,10 +99,6 @@ class Portal extends NetherPortal {
 
 			if($entity instanceof Player and !$entity->isCreative()) {
 				Main::getInstance()->getScheduler()->scheduleDelayedTask(new ClosureTask(function() use($entity, $position) : void {
-					if(!$entity->getPosition()->getWorld()->getBlock($entity->getPosition()->floor()) instanceof NetherPortal) {
-						Main::removeTeleportingId($entity->getId());
-						return;
-					}
 					$entity->teleport($position);
 				}), 20 * 6);
 				return true;
