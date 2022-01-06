@@ -17,6 +17,7 @@ use pocketmine\network\mcpe\protocol\types\SpawnSettings;
 use pocketmine\player\Player;
 use pocketmine\scheduler\CancelTaskException;
 use pocketmine\scheduler\ClosureTask;
+use pocketmine\world\Position;
 
 class DimensionListener implements Listener {
 	/** @var Main */
@@ -103,6 +104,8 @@ class DimensionListener implements Listener {
 
 		if($portalPosition->getWorld()->getBlock($portalPosition) instanceof NetherPortal)
 			return;
+
+		$event->setTo(Position::fromObject($portalPosition->ceil()->add(0.5, 0, 0.5), $world));
 
 		$this->plugin->getScheduler()->scheduleDelayedTask(new ClosureTask(fn() => Main::makeNetherPortal($portalPosition)), 20);
 		// TODO: portal cooldown
