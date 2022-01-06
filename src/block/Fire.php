@@ -5,7 +5,6 @@ namespace jasonwynn10\NativeDimensions\block;
 use pocketmine\block\Air;
 use pocketmine\block\BlockBreakInfo;
 use pocketmine\block\BlockIdentifier as BID;
-use pocketmine\block\BlockLegacyIds;
 use pocketmine\block\BlockLegacyIds as Ids;
 use pocketmine\block\Fire as PMFire;
 use pocketmine\math\Axis;
@@ -25,7 +24,7 @@ class Fire extends PMFire {
 			return;
 		}
 		foreach($this->getAllSides() as $block) {
-			if($block->getIdInfo()->getBlockId() !== BlockLegacyIds::OBSIDIAN) {
+			if($block->getIdInfo()->getBlockId() !== Ids::OBSIDIAN) {
 				continue;
 			}
 			$minWidth = 2;
