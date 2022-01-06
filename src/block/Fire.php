@@ -19,6 +19,11 @@ class Fire extends PMFire {
 	}
 
 	public function onNearbyBlockChange() : void {
+		$world = $this->getPosition()->getWorld();
+		if($world->getEnd() === $world) {
+			parent::onNearbyBlockChange();
+			return;
+		}
 		foreach($this->getAllSides() as $block) {
 			if($block->getIdInfo()->getBlockId() !== BlockLegacyIds::OBSIDIAN) {
 				continue;
