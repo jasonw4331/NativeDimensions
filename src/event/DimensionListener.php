@@ -4,6 +4,7 @@ namespace jasonwynn10\NativeDimensions\event;
 
 use jasonwynn10\NativeDimensions\Main;
 use jasonwynn10\NativeDimensions\world\DimensionalWorld;
+use pocketmine\block\NetherPortal;
 use pocketmine\event\entity\EntityTeleportEvent;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerBedEnterEvent;
@@ -14,6 +15,7 @@ use pocketmine\network\mcpe\protocol\StartGamePacket;
 use pocketmine\network\mcpe\protocol\types\DimensionIds;
 use pocketmine\network\mcpe\protocol\types\SpawnSettings;
 use pocketmine\player\Player;
+use pocketmine\scheduler\CancelTaskException;
 use pocketmine\scheduler\ClosureTask;
 
 class DimensionListener implements Listener {
@@ -59,9 +61,19 @@ class DimensionListener implements Listener {
 	}
 
 	public function onTeleport(EntityTeleportEvent $event) : void {
-		$player = $event->getEntity();
-		if(!$player instanceof Player)
+		$entity = $event->getEntity();
+
+		$this->plugin->getScheduler()->scheduleRepeatingTask(new ClosureTask(function() use($entity) : void {
+			if($entity->getPosition()->getWorld()->getBlock($entity->getPosition()->floor()) instanceof NetherPortal) {
+				return;
+			}
+			Main::removeTeleportingId($entity->getId());
+			throw new CancelTaskException();
+		}), 20 * 10);
+
+		if(!$entity instanceof Player)
 			return;
+
 		/** @var DimensionalWorld $world */
 		$world = $event->getTo()->getWorld();
 		if($world->getFolderName() === $event->getFrom()->getWorld()->getFolderName())
