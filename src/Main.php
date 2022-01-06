@@ -149,6 +149,22 @@ class Main extends PluginBase {
 		return true;
 	}
 
+	public static function makeEndSpawn(Position $center) : bool {
+		if(!$center->isValid())
+			return false;
+		$world = $center->getWorld();
+		$position = $center->floor();
+
+		for($x = $position->x - 2; $x < $position->x + 2; ++$x) {
+			for($z = $position->x - 2; $z < $position->x + 2; ++$z) {
+				$world->setBlockAt($x, $position->y - 1, $z, new Obsidian(), false);
+				for($y = 0; $y < 3; ++$y)
+					$world->setBlockAt($x, $position->y + $y, $z, new Obsidian(), false);
+			}
+		}
+		return true;
+	}
+
 	/**
 	 * @return int[]
 	 */
