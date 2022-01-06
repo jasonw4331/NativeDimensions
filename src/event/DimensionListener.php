@@ -98,10 +98,10 @@ class DimensionListener implements Listener {
 
 		$portalPosition = $event->getTo();
 
-		if($portalPosition->getWorld()->getBlock($portalPosition) instanceof NetherPortal)
+		if($world->getEnd() === $world)
 			return;
 
-		if($world->getEnd() === $world)
+		if($portalPosition->getWorld()->getBlock($portalPosition) instanceof NetherPortal)
 			return;
 
 		$this->plugin->getScheduler()->scheduleDelayedTask(new ClosureTask(fn() => Main::makeNetherPortal($portalPosition)), 20);
