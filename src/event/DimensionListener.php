@@ -15,7 +15,6 @@ use pocketmine\network\mcpe\protocol\types\DimensionIds;
 use pocketmine\network\mcpe\protocol\types\SpawnSettings;
 use pocketmine\player\Player;
 use pocketmine\scheduler\ClosureTask;
-use pocketmine\utils\AssumptionFailedError;
 
 class DimensionListener implements Listener {
 	/** @var Main */
@@ -40,7 +39,7 @@ class DimensionListener implements Listener {
 					elseif($world->getEnd() === $world)
 						$dimension = DimensionIds::THE_END;
 					else
-						throw new AssumptionFailedError("Unable to identify player dimension");
+						return; // players can still go to non-dimension worlds
 					$pk->levelSettings->spawnSettings = new SpawnSettings($settings->getBiomeType(), $settings->getBiomeName(), $dimension);
 				}
 			}
@@ -75,7 +74,7 @@ class DimensionListener implements Listener {
 		elseif($world->getEnd() === $world)
 			$pk->dimension = DimensionIds::THE_END;
 		else
-			throw new AssumptionFailedError("Unable to identify player dimension");
+			return; // players can still go to non-dimension worlds
 		$pk->position = $event->getTo()->asVector3();
 		$pk->respawn = false;
 		$player->getNetworkSession()->sendDataPacket($pk);
