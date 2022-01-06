@@ -75,13 +75,9 @@ class SoulSand implements Populator {
 				for($z = $minZ; $z < $maxZ; ++$z) {
 					$zsqr = ($position->getZ() - $z) * ($position->getZ() - $z);
 					if(($xsqr + $ysqr + $zsqr) < (pow(2, $random->nextRange(3, 6)))) {
-						/** @phpstan-ignore-next-line */
 						if($world->getBlockAt($x, $y, $z)->isSameType(VanillaBlocks::NETHERRACK())) {
-							/** @phpstan-ignore-next-line */
 							$world->setBlockAt($x, $y, $z, VanillaBlocks::SOUL_SAND());
-							/** @phpstan-ignore-next-line */
 							if($random->nextRange(0, 3) == 3 && $world->getBlockAt($x, $y + 1, $z)->isSameType(VanillaBlocks::AIR())) {
-								/** @phpstan-ignore-next-line */
 								$world->setBlockAt($x, $y + 1, $z, VanillaBlocks::NETHER_WART());
 							}
 						}

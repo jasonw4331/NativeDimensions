@@ -55,7 +55,6 @@ class EnderGenerator extends Generator {
 	public function generateChunk(ChunkManager $world, int $chunkX, int $chunkZ): void {
 		$this->random->setSeed(0xdeadbeef ^ ($chunkX << 8) ^ $chunkZ ^ $this->seed);
 
-		/** @phpstan-var Chunk $chunk */
 		$chunk = $world->getChunk($chunkX, $chunkZ);
 		$noise = $this->noiseBase->getFastNoise2D(16, 16, 2, $chunkX * 16, 0, $chunkZ * 16);
 
@@ -74,8 +73,7 @@ class EnderGenerator extends Generator {
 					continue;
 				}
 
-				// @phpstan-ignore-next-line
-				$noiseValue = (int)abs($noise[$x][$z] * self::NOISE_SIZE); // wtf
+				$noiseValue = (int)abs($noise[$x][$z] * self::NOISE_SIZE);
 				for($y = 0; $y < $noiseValue; ++$y) {
 					$chunk->setFullBlock($x, self::MAX_BASE_ISLAND_HEIGHT + $y, $z, $endStone);
 				}

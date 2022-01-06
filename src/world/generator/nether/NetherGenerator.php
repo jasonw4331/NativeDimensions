@@ -119,7 +119,7 @@ class NetherGenerator extends Generator {
 			$populator->populate($world, $chunkX, $chunkZ, $this->random);
 		}
 
-		$biome = BiomeRegistry::getInstance()->getBiome(BiomeIds::NETHER);
+		$biome = BiomeRegistry::getInstance()->getBiome(BiomeIds::HELL);
 		$biome->populateChunk($world, $chunkX, $chunkZ, $this->random);
 	}
 }

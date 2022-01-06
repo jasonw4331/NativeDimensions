@@ -70,7 +70,6 @@ class GlowstoneSphere implements Populator {
 					$zsqr = ($position->getZ() - $z) * ($position->getZ() - $z);
 					if(($xsqr + $ysqr + $zsqr) < (pow(2, $this->getRandomRadius($random)))) {
 						if($random->nextRange(0, 4) !== 0) {
-							/** @phpstan-ignore-next-line */
 							$world->setBlockAt($x, $y, $z, VanillaBlocks::GLOWSTONE());
 						}
 					}
