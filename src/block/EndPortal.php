@@ -48,7 +48,7 @@ class EndPortal extends Opaque{
 			$position = new Position(100, 50, 0, $world->getEnd());
 			$entity->getWorld()->getLogger()->debug("Teleporting to The End");
 		}else {
-			$position = $entity instanceof Player ? ($entity->getSpawn() ?? $world->getOverworld()->getSafeSpawn()) : $world->getOverworld()->getSafeSpawn();
+			$position = $entity instanceof Player ? $entity->getSpawn() : $world->getOverworld()->getSpawnLocation();
 			$entity->getWorld()->getLogger()->debug("Teleporting to Overworld");
 		}
 
