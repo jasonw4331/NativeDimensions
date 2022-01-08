@@ -109,7 +109,6 @@ class Main extends PluginBase {
 	}
 
 	private function registerHackToWorld(DimensionalWorld $world) : void{
-		$folder_name = $world->getFolderName();
 		if($world->getOverworld() === $world)
 			return;
 
