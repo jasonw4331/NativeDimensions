@@ -9,15 +9,17 @@ use pocketmine\event\entity\EntityTeleportEvent;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerBedEnterEvent;
 use pocketmine\event\player\PlayerRespawnEvent;
+use pocketmine\event\server\DataPacketReceiveEvent;
 use pocketmine\event\server\DataPacketSendEvent;
 use pocketmine\network\mcpe\protocol\ChangeDimensionPacket;
+use pocketmine\network\mcpe\protocol\PlayerActionPacket;
 use pocketmine\network\mcpe\protocol\StartGamePacket;
 use pocketmine\network\mcpe\protocol\types\DimensionIds;
+use pocketmine\network\mcpe\protocol\types\PlayerAction;
 use pocketmine\network\mcpe\protocol\types\SpawnSettings;
 use pocketmine\player\Player;
 use pocketmine\scheduler\CancelTaskException;
 use pocketmine\scheduler\ClosureTask;
-use pocketmine\world\Position;
 
 class DimensionListener implements Listener {
 	/** @var Main */
@@ -49,6 +51,43 @@ class DimensionListener implements Listener {
 		}
 	}
 
+	public function onReceivePacket(DataPacketReceiveEvent $event) {
+		$pk = $event->getPacket();
+		if($pk instanceof PlayerActionPacket and $pk->action === PlayerAction::DIMENSION_CHANGE_ACK) {
+			$player = $event->getOrigin()->getPlayer();
+
+			if(!in_array($player->getId(), Main::getTeleporting()))
+				return;
+
+			$this->plugin->getLogger()->debug("Valid Dimension ACK received");
+
+			$this->plugin->getScheduler()->scheduleDelayedRepeatingTask(new ClosureTask(function() use($player) : void {
+				if($player->getWorld()->getBlock($player->getPosition()) instanceof NetherPortal) {
+					$this->plugin->getLogger()->debug("Player has not left portal after teleport");
+					return;
+				}
+				Main::removeTeleportingId($player->getId());
+				throw new CancelTaskException();
+			}), 20 * 10, 20 * 5);
+
+			/** @var DimensionalWorld $world */
+			$world = $player->getWorld();
+
+			if($world->getEnd() === $world) {
+				//$player->setRotation(); // TODO: make player face west
+				$this->plugin->getLogger()->debug("Spawning End platform");
+				$this->plugin->getScheduler()->scheduleDelayedTask(new ClosureTask(fn() => Main::makeEndSpawn($player->getPosition())), 1);
+				return;
+			}
+
+			if($player->getWorld()->getBlock($player->getPosition()) instanceof NetherPortal)
+				return;
+
+			$this->plugin->getLogger()->debug("Spawning Nether Portal");
+			$this->plugin->getScheduler()->scheduleDelayedTask(new ClosureTask(fn() => Main::makeNetherPortal($player->getPosition())), 1);
+		}
+	}
+
 	public function onRespawn(PlayerRespawnEvent $event) : void {
 		$player = $event->getPlayer();
 		if(!$player->isAlive()) {
@@ -64,15 +103,6 @@ class DimensionListener implements Listener {
 
 	public function onTeleport(EntityTeleportEvent $event) : void {
 		$entity = $event->getEntity();
-
-		$this->plugin->getScheduler()->scheduleDelayedRepeatingTask(new ClosureTask(function() use($entity) : void {
-			if($entity->getPosition()->getWorld()->getBlock($entity->getPosition()->floor()) instanceof NetherPortal) {
-				$this->plugin->getLogger()->debug("Player has not left portal after teleport");
-				return;
-			}
-			Main::removeTeleportingId($entity->getId());
-			throw new CancelTaskException();
-		}), 20 * 20, 20 * 10);
 
 		if(!$entity instanceof Player)
 			return;
@@ -93,26 +123,6 @@ class DimensionListener implements Listener {
 		$pk->position = $event->getTo()->asVector3();
 		$pk->respawn = !$entity->isAlive();
 		$entity->getNetworkSession()->sendDataPacket($pk);
-
-		if(!$entity->isAlive())
-			return;
-
-		$portalPosition = $event->getTo();
-
-		if($world->getEnd() === $world) {
-			//$event->getEntity()->setRotation(); // TODO: player always spawns facing west
-			$event->setTo(Position::fromObject($portalPosition->floor()->add(0.5, 0, 0.5), $world));
-			$this->plugin->getScheduler()->scheduleDelayedTask(new ClosureTask(fn() => Main::makeEndSpawn($portalPosition)), 20);
-			$this->plugin->getLogger()->debug("Spawning End platform");
-			return;
-		}
-
-		if($portalPosition->getWorld()->getBlock($portalPosition) instanceof NetherPortal)
-			return;
-
-		$event->setTo(Position::fromObject($portalPosition->ceil()->add(0.5, 0, 0.5), $world));
-
-		$this->plugin->getScheduler()->scheduleDelayedTask(new ClosureTask(fn() => Main::makeNetherPortal($portalPosition)), 20);
 		// TODO: portal cooldown
 	}
 
