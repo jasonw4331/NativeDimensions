@@ -7,22 +7,34 @@ use jasonwynn10\NativeDimensions\block\Fire;
 use jasonwynn10\NativeDimensions\block\Obsidian;
 use jasonwynn10\NativeDimensions\block\Portal;
 use jasonwynn10\NativeDimensions\event\DimensionListener;
+use jasonwynn10\NativeDimensions\network\DimensionSpecificCompressor;
+use jasonwynn10\NativeDimensions\world\DimensionalWorld;
 use jasonwynn10\NativeDimensions\world\DimensionalWorldManager;
 use jasonwynn10\NativeDimensions\world\generator\ender\EnderGenerator;
 use jasonwynn10\NativeDimensions\world\generator\nether\NetherGenerator;
 use pocketmine\block\BlockFactory;
 use pocketmine\block\VanillaBlocks;
+use pocketmine\event\EventPriority;
+use pocketmine\event\player\PlayerLoginEvent;
+use pocketmine\event\world\WorldLoadEvent;
 use pocketmine\item\StringToItemParser;
 use pocketmine\math\Axis;
 use pocketmine\math\Facing;
+use pocketmine\network\mcpe\cache\ChunkCache;
+use pocketmine\network\mcpe\compression\Compressor;
+use pocketmine\network\mcpe\compression\ZlibCompressor;
 use pocketmine\plugin\PluginBase;
 use pocketmine\world\generator\GeneratorManager;
 use pocketmine\world\Position;
 use Webmozart\PathUtil\Path;
 
 class Main extends PluginBase {
-	/** @var Main */
-	private static $instance;
+
+	/** @var Compressor[] */
+	private array $known_compressors = [];
+
+	private static self $instance;
+
 	/** @var int[] $teleporting */
 	protected static $teleporting = [];
 
@@ -54,6 +66,22 @@ class Main extends PluginBase {
 	}
 
 	public function onEnable() : void {
+		$this->getServer()->getPluginManager()->registerEvent(PlayerLoginEvent::class, function(PlayerLoginEvent $event) : void{
+			$this->registerKnownCompressor($event->getPlayer()->getNetworkSession()->getCompressor());
+		}, EventPriority::LOWEST, $this);
+		$this->getServer()->getPluginManager()->registerEvent(WorldLoadEvent::class, function(WorldLoadEvent $event) : void{
+			/** @var DimensionalWorld $world */
+			$world = $event->getWorld();
+			$this->registerHackToWorld($world);
+		}, EventPriority::LOWEST, $this);
+
+		// register already-registered values
+		$this->registerKnownCompressor(ZlibCompressor::getInstance());
+		/** @var DimensionalWorld $world */
+		foreach($this->getServer()->getWorldManager()->getWorlds() as $world){
+			$this->registerHackToWorld($world);
+		}
+
 		new DimensionListener($this);
 		$factory = BlockFactory::getInstance();
 		$parser = StringToItemParser::getInstance();
@@ -65,6 +93,46 @@ class Main extends PluginBase {
 		] as $block) {
 			$factory->register($block, true);
 			$parser->override($block->getName(), fn(string $input) => $block->asItem());
+		}
+	}
+
+	private function registerKnownCompressor(Compressor $compressor) : void{
+		if(isset($this->known_compressors[$id = spl_object_id($compressor)])){
+			return;
+		}
+
+		$this->known_compressors[$id] = $compressor;
+		/** @var DimensionalWorld $world */
+		foreach($this->getServer()->getWorldManager()->getWorlds() as $world){
+			$this->registerHackToWorld($world);
+		}
+	}
+
+	private function registerHackToWorld(DimensionalWorld $world) : void{
+		$folder_name = $world->getFolderName();
+		if($world->getOverworld() === $world)
+			return;
+
+		static $_chunk_cache_instances = null;
+		if($_chunk_cache_instances === null){
+			$_chunk_cache_instances = new \ReflectionProperty(ChunkCache::class, "instances");
+			$_chunk_cache_instances->setAccessible(true);
+		}
+
+		static $_chunk_cache_compressor = null;
+		if($_chunk_cache_compressor === null){
+			$_chunk_cache_compressor = new \ReflectionProperty(ChunkCache::class, "compressor");
+			$_chunk_cache_compressor->setAccessible(true);
+		}
+
+		foreach($this->known_compressors as $compressor){
+			$chunk_cache = ChunkCache::getInstance($world, $compressor);
+			$compressor = $_chunk_cache_compressor->getValue($chunk_cache);
+			if($compressor instanceof DimensionSpecificCompressor){
+				continue;
+			}
+
+			$_chunk_cache_compressor->setValue(ChunkCache::getInstance($world, $compressor), new DimensionSpecificCompressor($compressor));
 		}
 	}
 
