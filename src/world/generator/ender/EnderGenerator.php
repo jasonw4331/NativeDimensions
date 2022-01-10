@@ -36,8 +36,8 @@ class EnderGenerator extends Generator {
 	public const MAX_BASE_ISLAND_HEIGHT = 55;
 	public const NOISE_SIZE = 12;
 
-	public const CENTER_X = 255;
-	public const CENTER_Z = 255;
+	public const CENTER_X = 100;
+	public const CENTER_Z = 0;
 	public const ISLAND_RADIUS = 100;
 
 	private Simplex $noiseBase;
