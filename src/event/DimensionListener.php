@@ -20,6 +20,7 @@ use pocketmine\network\mcpe\protocol\types\SpawnSettings;
 use pocketmine\player\Player;
 use pocketmine\scheduler\CancelTaskException;
 use pocketmine\scheduler\ClosureTask;
+use pocketmine\world\Position;
 
 class DimensionListener implements Listener {
 	/** @var Main */
@@ -70,16 +71,6 @@ class DimensionListener implements Listener {
 				throw new CancelTaskException();
 			}), 20 * 10, 20 * 5);
 
-			/** @var DimensionalWorld $world */
-			$world = $player->getWorld();
-
-			if($world->getEnd() === $world) {
-				//$player->setRotation(); // TODO: make player face west
-				$this->plugin->getLogger()->debug("Spawning End platform");
-				$this->plugin->getScheduler()->scheduleDelayedTask(new ClosureTask(fn() => Main::makeEndSpawn($player->getPosition())), 1);
-				return;
-			}
-
 			if($player->getWorld()->getBlock($player->getPosition()) instanceof NetherPortal)
 				return;
 
@@ -123,7 +114,14 @@ class DimensionListener implements Listener {
 		$pk->position = $event->getTo()->asVector3();
 		$pk->respawn = !$entity->isAlive();
 		$entity->getNetworkSession()->sendDataPacket($pk);
-		// TODO: portal cooldown
+
+		if($world->getEnd() === $world) {
+			//$player->setRotation(); // TODO: make player face west
+			$event->setTo(Position::fromObject($event->getTo()->add(0.5, 0, 0.5), $world));
+			$this->plugin->getLogger()->debug("Spawning End platform");
+			$this->plugin->getScheduler()->scheduleDelayedTask(new ClosureTask(fn() => Main::makeEndSpawn($world)), 1);
+			$this->plugin->getScheduler()->scheduleDelayedTask(new ClosureTask(fn() => Main::makeEndExit($world)), 1);
+		}
 	}
 
 	/**
