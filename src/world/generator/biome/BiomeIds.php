@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace jasonwynn10\NativeDimensions\world\generator\nether\biome;
+namespace jasonwynn10\NativeDimensions\world\generator\biome;
 
 use pocketmine\data\bedrock\BiomeIds as VanillaBiomeIds;
 
@@ -17,7 +17,7 @@ interface BiomeIds{
 	public const SWAMPLAND = VanillaBiomeIds::SWAMPLAND;
 	public const RIVER = VanillaBiomeIds::RIVER;
 	public const HELL = VanillaBiomeIds::HELL;
-	public const SKY = 9;
+	public const SKY = VanillaBiomeIds::THE_END;
 	public const FROZEN_OCEAN = VanillaBiomeIds::LEGACY_FROZEN_OCEAN;
 	public const FROZEN_RIVER = VanillaBiomeIds::FROZEN_RIVER;
 	public const ICE_PLAINS = VanillaBiomeIds::ICE_PLAINS;

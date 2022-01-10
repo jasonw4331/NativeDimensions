@@ -6,8 +6,7 @@ namespace jasonwynn10\NativeDimensions\world\generator\biomegrid;
 
 use jasonwynn10\NativeDimensions\world\generator\biomegrid\utils\MapLayerPair;
 use jasonwynn10\NativeDimensions\world\generator\Environment;
-use jasonwynn10\NativeDimensions\world\generator\nether\biome\BiomeIds;
-use jasonwynn10\NativeDimensions\world\generator\nether\WorldType;
+use jasonwynn10\NativeDimensions\world\generator\biome\BiomeIds;
 use pocketmine\utils\Random;
 
 abstract class MapLayer{

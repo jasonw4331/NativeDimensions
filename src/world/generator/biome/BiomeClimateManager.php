@@ -1,8 +1,6 @@
 <?php
-
 declare(strict_types=1);
-
-namespace jasonwynn10\NativeDimensions\world\generator\nether\biome;
+namespace jasonwynn10\NativeDimensions\world\generator\biome;
 
 use jasonwynn10\NativeDimensions\world\generator\noise\glowstone\SimplexOctaveGenerator;
 use pocketmine\utils\Random;
