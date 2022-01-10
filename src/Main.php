@@ -216,11 +216,9 @@ class Main extends PluginBase {
 		return true;
 	}
 
-	public static function makeEndSpawn(Position $center) : bool {
-		if(!$center->isValid())
-			return false;
-		$world = $center->getWorld();
-		$position = $center->floor();
+	public static function makeEndSpawn(DimensionalWorld $world) : bool {
+		$world = $world->getEnd();
+		$position = $world->getSpawnLocation();
 
 		for($x = $position->x - 2; $x < $position->x + 3; ++$x) {
 			for($z = $position->z - 2; $z < $position->z + 3; ++$z) {
