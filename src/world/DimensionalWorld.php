@@ -7,6 +7,7 @@ use pocketmine\network\mcpe\protocol\types\DimensionIds;
 use pocketmine\scheduler\AsyncPool;
 use pocketmine\Server;
 use pocketmine\world\format\io\WritableWorldProvider;
+use pocketmine\world\Position;
 use pocketmine\world\World;
 
 class DimensionalWorld extends World {
@@ -53,5 +54,9 @@ class DimensionalWorld extends World {
 		$this->getProvider()->getWorldData()->save($this->dimensionId);
 
 		return true;
+	}
+
+	public function getSpawnLocation() : Position{
+		return Position::fromObject($this->getProvider()->getWorldData()->getSpawn($this->dimensionId), $this);
 	}
 }
