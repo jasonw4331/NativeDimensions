@@ -230,6 +230,63 @@ class Main extends PluginBase {
 		return true;
 	}
 
+	public static function makeEndExit(DimensionalWorld $world) {
+		$world = $world->getEnd();
+		$position = new Position(0, 64, 0, $world);
+
+		$endPortal = new EndPortal();
+		$bedrock = VanillaBlocks::BEDROCK();
+		$endStone = VanillaBlocks::END_STONE();
+		$dragonEgg = VanillaBlocks::DRAGON_EGG();
+		$torch = VanillaBlocks::TORCH();
+
+		$world->setBlock($position->getSide(Facing::UP, 4), $dragonEgg, false);
+		for($h = 3; $h > 0; --$h) {
+			$world->setBlock($position->getSide(Facing::UP, $h), $bedrock, false);
+		}
+		$world->setBlock($position, $bedrock, false);
+		$world->setBlock($position->getSide(Facing::DOWN), $bedrock, false);
+		$world->setBlock($position->getSide(Facing::DOWN, 2), $endStone, false);
+
+		foreach(Facing::HORIZONTAL as $side) {
+			$world->setBlock($position->getSide(Facing::UP, 2)->getSide($side), $torch->setFacing($side), false);
+
+			$world->setBlock($position->getSide($side), $endPortal, false);
+			$world->setBlock($position->getSide($side)->getSide(Facing::rotateY($side, true)), $endPortal, false);
+
+			$world->setBlock($position->getSide(Facing::DOWN)->getSide($side), $bedrock, false);
+			$world->setBlock($position->getSide(Facing::DOWN)->getSide($side)->getSide(Facing::rotateY($side, true)), $bedrock, false);
+
+			$world->setBlock($position->getSide($side, 2)->getSide(Facing::rotateY($side, false), 2), $bedrock, false);
+			$world->setBlock($position->getSide($side, 2)->getSide(Facing::rotateY($side, false)), $endPortal, false);
+			$world->setBlock($position->getSide($side, 2), $endPortal, false);
+			$world->setBlock($position->getSide($side, 2)->getSide(Facing::rotateY($side, true)), $endPortal, false);
+			$world->setBlock($position->getSide($side, 2)->getSide(Facing::rotateY($side, true), 2), $bedrock, false);
+
+			$world->setBlock($position->getSide(Facing::DOWN)->getSide($side, 2)->getSide(Facing::rotateY($side, false)), $bedrock, false);
+			$world->setBlock($position->getSide(Facing::DOWN)->getSide($side, 2), $bedrock, false);
+			$world->setBlock($position->getSide(Facing::DOWN)->getSide($side, 2)->getSide(Facing::rotateY($side, true)), $bedrock, false);
+
+			$world->setBlock($position->getSide($side, 3)->getSide(Facing::rotateY($side, false)), $bedrock, false);
+			$world->setBlock($position->getSide($side, 3), $bedrock, false);
+			$world->setBlock($position->getSide($side, 3)->getSide(Facing::rotateY($side, true)), $bedrock, false);
+
+			$world->setBlock($position->getSide(Facing::DOWN, 2)->getSide($side)->getSide(Facing::rotateY($side, false)), $endStone, false);
+			$world->setBlock($position->getSide(Facing::DOWN, 2)->getSide($side), $endStone, false);
+			$world->setBlock($position->getSide(Facing::DOWN, 2)->getSide($side)->getSide(Facing::rotateY($side, true)), $endStone, false);
+
+			$world->setBlock($position->getSide(Facing::DOWN, 2)->getSide($side, 2)->getSide(Facing::rotateY($side, false), 2), $endStone, false);
+			$world->setBlock($position->getSide(Facing::DOWN, 2)->getSide($side, 2)->getSide(Facing::rotateY($side, false)), $endStone, false);
+			$world->setBlock($position->getSide(Facing::DOWN, 2)->getSide($side, 2), $endStone, false);
+			$world->setBlock($position->getSide(Facing::DOWN, 2)->getSide($side, 2)->getSide(Facing::rotateY($side, true)), $endStone, false);
+			$world->setBlock($position->getSide(Facing::DOWN, 2)->getSide($side, 2)->getSide(Facing::rotateY($side, true), 2), $endStone, false);
+
+			$world->setBlock($position->getSide(Facing::DOWN, 2)->getSide($side, 3)->getSide(Facing::rotateY($side, false)), $endStone, false);
+			$world->setBlock($position->getSide(Facing::DOWN, 2)->getSide($side, 3), $endStone, false);
+			$world->setBlock($position->getSide(Facing::DOWN, 2)->getSide($side, 3)->getSide(Facing::rotateY($side, true)), $endStone, false);
+		}
+	}
+
 	/**
 	 * @return int[]
 	 */
