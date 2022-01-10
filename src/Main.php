@@ -222,9 +222,9 @@ class Main extends PluginBase {
 
 		for($x = $position->x - 2; $x < $position->x + 3; ++$x) {
 			for($z = $position->z - 2; $z < $position->z + 3; ++$z) {
-				$world->setBlockAt($x, $position->y - 1, $z, VanillaBlocks::OBSIDIAN(), true);
+				$world->setBlockAt($x, $position->y - 1, $z, VanillaBlocks::OBSIDIAN(), false);
 				for($y = 0; $y < 3; ++$y)
-					$world->setBlockAt($x, $position->y + $y, $z, VanillaBlocks::AIR(), true);
+					$world->setBlockAt($x, $position->y + $y, $z, VanillaBlocks::AIR(), false);
 			}
 		}
 		return true;
