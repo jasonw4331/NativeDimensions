@@ -119,8 +119,8 @@ class DimensionListener implements Listener {
 			//$player->setRotation(); // TODO: make player face west
 			$event->setTo(Position::fromObject($event->getTo()->add(0.5, 0, 0.5), $world));
 			$this->plugin->getLogger()->debug("Spawning End platform");
-			$this->plugin->getScheduler()->scheduleDelayedTask(new ClosureTask(fn() => Main::makeEndSpawn($world)), 1);
-			$this->plugin->getScheduler()->scheduleDelayedTask(new ClosureTask(fn() => Main::makeEndExit($world)), 1);
+			$this->plugin->getScheduler()->scheduleDelayedTask(new ClosureTask(fn() => Main::makeEndSpawn($world)), 5);
+			$this->plugin->getScheduler()->scheduleDelayedTask(new ClosureTask(fn() => Main::makeEndExit($world)), 5);
 		}
 	}
 
