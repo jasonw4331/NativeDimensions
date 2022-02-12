@@ -78,9 +78,8 @@ class DimensionListener implements Listener {
 		if(!$player->isAlive()) {
 			/** @var DimensionalWorld $world */
 			$world = $event->getRespawnPosition()->getWorld();
-			$overworld = $world->getOverworld();
 			$respawn = $event->getRespawnPosition();
-			$respawn->world = $overworld;
+			$respawn->world = $world->getOverworld();
 			$event->setRespawnPosition($respawn);
 			Main::removeTeleportingId($player->getId());
 		}
