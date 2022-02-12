@@ -140,6 +140,7 @@ class Main extends PluginBase {
 			return false;
 		$world = $position->getWorld();
 		if(mt_rand(0,1) === 0) {
+			self::getInstance()->getLogger()->debug('Generating Z Axis Nether Portal');
 			// portal blocks
 			$world->setBlock($position, (new Portal())->setAxis(Axis::Z), true);
 			$world->setBlock($position->getSide(Facing::UP), (new Portal())->setAxis(Axis::Z), true);
@@ -176,6 +177,7 @@ class Main extends PluginBase {
 			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::UP)->getSide(Facing::WEST), VanillaBlocks::AIR(), true);
 			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::UP, 2)->getSide(Facing::WEST), VanillaBlocks::AIR(), true);
 		}else{
+			self::getInstance()->getLogger()->debug('Generating X Axis Nether Portal');
 			// portal blocks
 			$world->setBlock($position, (new Portal())->setAxis(Axis::X), true);
 			$world->setBlock($position->getSide(Facing::UP), (new Portal())->setAxis(Axis::X), true);
