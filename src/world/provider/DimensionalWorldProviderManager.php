@@ -12,8 +12,8 @@ use pocketmine\world\format\io\WorldProviderManagerEntry;
 
 class DimensionalWorldProviderManager {
 	/**
-	 * @var WorldProviderManagerEntry[]
-	 * @phpstan-var array<string, WorldProviderManagerEntry>
+	 * @var DimensionProviderManagerEntry[]
+	 * @phpstan-var array<string, DimensionProviderManagerEntry>
 	 */
 	protected array $providers = [];
 
@@ -47,7 +47,7 @@ class DimensionalWorldProviderManager {
 		$this->default = $class;
 	}
 
-	public function addProvider(WorldProviderManagerEntry $providerEntry, string $name, bool $overwrite = false) : void{
+	public function addProvider(DimensionProviderManagerEntry $providerEntry, string $name, bool $overwrite = false) : void{
 		$name = strtolower($name);
 		if(!$overwrite and isset($this->providers[$name])){
 			throw new \InvalidArgumentException("Alias \"$name\" is already assigned");
@@ -59,8 +59,8 @@ class DimensionalWorldProviderManager {
 	/**
 	 * Returns a WorldProvider class for this path, or null
 	 *
-	 * @return WorldProviderManagerEntry[]
-	 * @phpstan-return array<string, WorldProviderManagerEntry>
+	 * @return DimensionProviderManagerEntry[]
+	 * @phpstan-return array<string, DimensionProviderManagerEntry>
 	 */
 	public function getMatchingProviders(string $path) : array{
 		$result = [];
@@ -73,8 +73,8 @@ class DimensionalWorldProviderManager {
 	}
 
 	/**
-	 * @return WorldProviderManagerEntry[]
-	 * @phpstan-return array<string, WorldProviderManagerEntry>
+	 * @return DimensionProviderManagerEntry[]
+	 * @phpstan-return array<string, DimensionProviderManagerEntry>
 	 */
 	public function getAvailableProviders() : array{
 		return $this->providers;
@@ -83,7 +83,7 @@ class DimensionalWorldProviderManager {
 	/**
 	 * Returns a WorldProvider by name, or null if not found
 	 */
-	public function getProviderByName(string $name) : ?WorldProviderManagerEntry{
+	public function getProviderByName(string $name) : ?DimensionProviderManagerEntry{
 		return $this->providers[trim(strtolower($name))] ?? null;
 	}
 }

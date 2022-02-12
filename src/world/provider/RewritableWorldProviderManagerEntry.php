@@ -10,7 +10,7 @@ use pocketmine\world\WorldCreationOptions;
  * @phpstan-type FromPath \Closure(string $path, int $dimension, \LevelDB $db) : DimensionLevelDBProvider
  * @phpstan-type Generate \Closure(string $path, string $name, WorldCreationOptions $options) : void
  */
-final class RewritableWorldProviderManagerEntry extends WorldProviderManagerEntry{
+final class RewritableWorldProviderManagerEntry extends DimensionProviderManagerEntry{
 	/** @phpstan-var FromPath */
 	private \Closure $fromPath;
 	/** @phpstan-var Generate */

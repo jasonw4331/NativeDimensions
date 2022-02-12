@@ -8,7 +8,7 @@ use pocketmine\world\format\io\WorldProviderManagerEntry;
 /**
  * @phpstan-type FromPath \Closure(string $path, int $dimension) : WorldProvider
  */
-class ReadOnlyWorldProviderManagerEntry extends WorldProviderManagerEntry{
+class ReadOnlyWorldProviderManagerEntry extends DimensionProviderManagerEntry{
 
 	/** @phpstan-var FromPath */
 	private \Closure $fromPath;

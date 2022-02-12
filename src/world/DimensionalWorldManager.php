@@ -14,6 +14,7 @@ use pocketmine\network\mcpe\protocol\types\DimensionIds;
 use pocketmine\player\ChunkSelector;
 use pocketmine\Server;
 use pocketmine\timings\Timings;
+use pocketmine\utils\AssumptionFailedError;
 use pocketmine\world\format\Chunk;
 use pocketmine\world\format\io\exception\CorruptedWorldException;
 use pocketmine\world\format\io\exception\UnsupportedWorldFormatException;
@@ -50,7 +51,7 @@ class DimensionalWorldManager extends WorldManager {
 	}
 
 	public function getProviderManager() : WorldProviderManager{
-		throw new \BadMethodCallException("Use of pocketmine WorldProviderManager is disallowed");
+		throw new \BadMethodCallException("Use of pocketmine WorldProviderManager is disallowed through NativeDimensions");
 	}
 
 	public function getDimensionalProviderManager() : DimensionalWorldProviderManager{
@@ -227,9 +228,11 @@ class DimensionalWorldManager extends WorldManager {
 			[$overworld, $nether, $end] = $converter->execute();
 
 			$this->server->getLogger()->notice($this->server->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_conversion_finish($name, $converter->getBackupPath())));
-		}else{
+		}elseif($overworld instanceof DimensionLevelDBProvider){
 			$nether = $providerClass->fromPath($path, DimensionIds::NETHER, $overworld->getDatabase());
 			$end = $providerClass->fromPath($path, DimensionIds::THE_END, $overworld->getDatabase());
+		}else{
+			throw new AssumptionFailedError('WorldProvider is not a WritableWorldProvider');
 		}
 
 		$world = new DimensionalWorld($this->server, $name, $overworld, $this->server->getAsyncPool(), DimensionIds::OVERWORLD);
