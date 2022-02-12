@@ -70,12 +70,6 @@ class DimensionListener implements Listener {
 				Main::removeTeleportingId($player->getId());
 				throw new CancelTaskException();
 			}), 20 * 10, 20 * 5);
-
-			if($player->getWorld()->getBlock($player->getPosition()) instanceof NetherPortal)
-				return;
-
-			$this->plugin->getLogger()->debug("Spawning Nether Portal");
-			$this->plugin->getScheduler()->scheduleDelayedTask(new ClosureTask(fn() => Main::makeNetherPortal($player->getPosition())), 1);
 		}
 	}
 
@@ -89,38 +83,6 @@ class DimensionListener implements Listener {
 			$respawn->world = $overworld;
 			$event->setRespawnPosition($respawn);
 			Main::removeTeleportingId($player->getId());
-		}
-	}
-
-	public function onTeleport(EntityTeleportEvent $event) : void {
-		$entity = $event->getEntity();
-
-		if(!$entity instanceof Player)
-			return;
-
-		/** @var DimensionalWorld $world */
-		$world = $event->getTo()->getWorld();
-		if($world->getFolderName() === $event->getFrom()->getWorld()->getFolderName())
-			return;
-		$pk = new ChangeDimensionPacket();
-		if($world->getOverworld() === $world)
-			$pk->dimension = DimensionIds::OVERWORLD;
-		elseif($world->getNether() === $world)
-			$pk->dimension = DimensionIds::NETHER;
-		elseif($world->getEnd() === $world)
-			$pk->dimension = DimensionIds::THE_END;
-		else
-			return; // players can still go to non-dimension worlds
-		$pk->position = $event->getTo()->asVector3();
-		$pk->respawn = !$entity->isAlive();
-		$entity->getNetworkSession()->sendDataPacket($pk);
-
-		if($world->getEnd() === $world) {
-			//$player->setRotation(); // TODO: make player face west
-			$event->setTo(Position::fromObject($event->getTo()->add(0.5, 0, 0.5), $world));
-			$this->plugin->getLogger()->debug("Spawning End platform");
-			$this->plugin->getScheduler()->scheduleDelayedTask(new ClosureTask(fn() => Main::makeEndSpawn($world)), 5);
-			$this->plugin->getScheduler()->scheduleDelayedTask(new ClosureTask(fn() => Main::makeEndExit($world)), 5);
 		}
 	}
 
