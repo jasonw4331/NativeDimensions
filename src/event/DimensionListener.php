@@ -231,7 +231,8 @@ class DimensionListener implements Listener {
 		/** @var DimensionalWorld $world */
 		$world = $event->getRespawnPosition()->world;
 		if(!$player->isAlive()) {
-			$player->getNetworkSession()->sendDataPacket(ChangeDimensionPacket::create($world->getDimensionId(), $event->getRespawnPosition(), true)); // send immediately because the event is fired late
+			if($world->getDimensionId() !== $player->getWorld()->getDimensionId())
+				$player->getNetworkSession()->sendDataPacket(ChangeDimensionPacket::create($world->getDimensionId(), $event->getRespawnPosition(), true)); // send immediately because the event is fired late
 			Main::removeTeleportingId($player->getId());
 		}
 	}
