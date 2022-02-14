@@ -19,19 +19,19 @@ class DimensionalWorld extends World {
 		parent::__construct($server, $name, $provider, $workerPool);
 	}
 
-	public function getOverworld() : World {
+	public function getOverworld() : DimensionalWorld {
 		if($this->dimensionId === DimensionIds::OVERWORLD)
 			return $this;
 		return $this->getServer()->getWorldManager()->getWorld($this->getId() + (DimensionIds::OVERWORLD - $this->dimensionId));
 	}
 
-	public function getNether() : World {
+	public function getNether() : DimensionalWorld {
 		if($this->dimensionId === DimensionIds::NETHER)
 			return $this;
 		return $this->getServer()->getWorldManager()->getWorld($this->getId() + (DimensionIds::NETHER - $this->dimensionId));
 	}
 
-	public function getEnd() : World {
+	public function getEnd() : DimensionalWorld {
 		if($this->dimensionId === DimensionIds::THE_END)
 			return $this;
 		return $this->getServer()->getWorldManager()->getWorld($this->getId() + (DimensionIds::THE_END - $this->dimensionId));

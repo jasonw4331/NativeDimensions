@@ -8,6 +8,8 @@ use jasonwynn10\NativeDimensions\block\Obsidian;
 use jasonwynn10\NativeDimensions\block\Portal;
 use jasonwynn10\NativeDimensions\event\DimensionListener;
 use jasonwynn10\NativeDimensions\network\DimensionSpecificCompressor;
+use jasonwynn10\NativeDimensions\world\data\NetherPortalData;
+use jasonwynn10\NativeDimensions\world\data\NetherPortalMap;
 use jasonwynn10\NativeDimensions\world\DimensionalWorld;
 use jasonwynn10\NativeDimensions\world\DimensionalWorldManager;
 use jasonwynn10\NativeDimensions\world\generator\ender\EnderGenerator;
@@ -135,34 +137,41 @@ class Main extends PluginBase {
 		}
 	}
 
-	public static function makeNetherPortal(Position $position) : bool {
+	public static function makeNetherPortal(Position $position, int $axis) : bool {
 		if(!$position->isValid())
-			return false;
-		$world = $position->getWorld();
-		if(mt_rand(0,1) === 0) {
+			throw new \InvalidArgumentException("Position does not have a valid world");
+
+		if($axis !== Axis::X && $axis !== Axis::Z)
+			throw new \InvalidArgumentException("Axis must be X or Z only");
+
+		$portalBlock = (new Portal())->setAxis($axis);
+
+		/** @var DimensionalWorld $world */
+		$world = $position->world;
+		if($axis === Axis::Z){
 			self::getInstance()->getLogger()->debug('Generating Z Axis Nether Portal');
 			// portal blocks
-			$world->setBlock($position, (new Portal())->setAxis(Axis::Z), true);
-			$world->setBlock($position->getSide(Facing::UP), (new Portal())->setAxis(Axis::Z), true);
-			$world->setBlock($position->getSide(Facing::UP, 2), (new Portal())->setAxis(Axis::Z), true);
-			$world->setBlock($position->getSide(Facing::NORTH), (new Portal())->setAxis(Axis::Z), true);
-			$world->setBlock($position->getSide(Facing::NORTH)->getSide(Facing::UP), (new Portal())->setAxis(Axis::Z), true);
-			$world->setBlock($position->getSide(Facing::NORTH)->getSide(Facing::UP, 2), (new Portal())->setAxis(Axis::Z), true);
+			$world->setBlock($position, $portalBlock, true);
+			$world->setBlock($position->getSide(Facing::UP), $portalBlock, true);
+			$world->setBlock($position->getSide(Facing::UP, 2), $portalBlock, true);
+			$world->setBlock($position->getSide(Facing::NORTH), $portalBlock, true);
+			$world->setBlock($position->getSide(Facing::NORTH)->getSide(Facing::UP), $portalBlock, true);
+			$world->setBlock($position->getSide(Facing::NORTH)->getSide(Facing::UP, 2), $portalBlock, true);
 			// obsidian
-			$world->setBlock($position->getSide(Facing::SOUTH), new Obsidian(), true);
-			$world->setBlock($position->getSide(Facing::SOUTH)->getSide(Facing::DOWN), new Obsidian(), true);
-			$world->setBlock($position->getSide(Facing::SOUTH)->getSide(Facing::UP), new Obsidian(), true);
-			$world->setBlock($position->getSide(Facing::SOUTH)->getSide(Facing::UP, 2), new Obsidian(), true);
-			$world->setBlock($position->getSide(Facing::SOUTH)->getSide(Facing::UP, 3), new Obsidian(), true);
-			$world->setBlock($position->getSide(Facing::DOWN), new Obsidian(), true);
-			$world->setBlock($position->getSide(Facing::DOWN)->getSide(Facing::NORTH), new Obsidian(), true);
-			$world->setBlock($position->getSide(Facing::UP, 3), new Obsidian(), true);
-			$world->setBlock($position->getSide(Facing::UP, 3)->getSide(Facing::NORTH), new Obsidian(), true);
-			$world->setBlock($position->getSide(Facing::NORTH, 2), new Obsidian(), true);
-			$world->setBlock($position->getSide(Facing::NORTH, 2)->getSide(Facing::DOWN), new Obsidian(), true);
-			$world->setBlock($position->getSide(Facing::NORTH, 2)->getSide(Facing::UP), new Obsidian(), true);
-			$world->setBlock($position->getSide(Facing::NORTH, 2)->getSide(Facing::UP, 2), new Obsidian(), true);
-			$world->setBlock($position->getSide(Facing::NORTH, 2)->getSide(Facing::UP, 3), new Obsidian(), true);
+			$world->setBlock($position->getSide(Facing::SOUTH), VanillaBlocks::OBSIDIAN(), true);
+			$world->setBlock($position->getSide(Facing::SOUTH)->getSide(Facing::DOWN), VanillaBlocks::OBSIDIAN(), true);
+			$world->setBlock($position->getSide(Facing::SOUTH)->getSide(Facing::UP), VanillaBlocks::OBSIDIAN(), true);
+			$world->setBlock($position->getSide(Facing::SOUTH)->getSide(Facing::UP, 2), VanillaBlocks::OBSIDIAN(), true);
+			$world->setBlock($position->getSide(Facing::SOUTH)->getSide(Facing::UP, 3), VanillaBlocks::OBSIDIAN(), true);
+			$world->setBlock($position->getSide(Facing::DOWN), VanillaBlocks::OBSIDIAN(), true);
+			$world->setBlock($position->getSide(Facing::DOWN)->getSide(Facing::NORTH), VanillaBlocks::OBSIDIAN(), true);
+			$world->setBlock($position->getSide(Facing::UP, 3), VanillaBlocks::OBSIDIAN(), true);
+			$world->setBlock($position->getSide(Facing::UP, 3)->getSide(Facing::NORTH), VanillaBlocks::OBSIDIAN(), true);
+			$world->setBlock($position->getSide(Facing::NORTH, 2), VanillaBlocks::OBSIDIAN(), true);
+			$world->setBlock($position->getSide(Facing::NORTH, 2)->getSide(Facing::DOWN), VanillaBlocks::OBSIDIAN(), true);
+			$world->setBlock($position->getSide(Facing::NORTH, 2)->getSide(Facing::UP), VanillaBlocks::OBSIDIAN(), true);
+			$world->setBlock($position->getSide(Facing::NORTH, 2)->getSide(Facing::UP, 2), VanillaBlocks::OBSIDIAN(), true);
+			$world->setBlock($position->getSide(Facing::NORTH, 2)->getSide(Facing::UP, 3), VanillaBlocks::OBSIDIAN(), true);
 			// air
 			$world->setBlock($position->getSide(Facing::EAST), VanillaBlocks::AIR(), true);
 			$world->setBlock($position->getSide(Facing::UP)->getSide(Facing::EAST), VanillaBlocks::AIR(), true);
@@ -179,27 +188,27 @@ class Main extends PluginBase {
 		}else{
 			self::getInstance()->getLogger()->debug('Generating X Axis Nether Portal');
 			// portal blocks
-			$world->setBlock($position, (new Portal())->setAxis(Axis::X), true);
-			$world->setBlock($position->getSide(Facing::UP), (new Portal())->setAxis(Axis::X), true);
-			$world->setBlock($position->getSide(Facing::UP, 2), (new Portal())->setAxis(Axis::X), true);
-			$world->setBlock($position->getSide(Facing::EAST), (new Portal())->setAxis(Axis::X), true);
-			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::UP), (new Portal())->setAxis(Axis::X), true);
-			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::UP, 2), (new Portal())->setAxis(Axis::X), true);
+			$world->setBlock($position, $portalBlock, true);
+			$world->setBlock($position->getSide(Facing::UP), $portalBlock, true);
+			$world->setBlock($position->getSide(Facing::UP, 2), $portalBlock, true);
+			$world->setBlock($position->getSide(Facing::EAST), $portalBlock, true);
+			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::UP), $portalBlock, true);
+			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::UP, 2), $portalBlock, true);
 			// obsidian
-			$world->setBlock($position->getSide(Facing::WEST), new Obsidian(), true);
-			$world->setBlock($position->getSide(Facing::WEST)->getSide(Facing::DOWN), new Obsidian(), true);
-			$world->setBlock($position->getSide(Facing::WEST)->getSide(Facing::UP), new Obsidian(), true);
-			$world->setBlock($position->getSide(Facing::WEST)->getSide(Facing::UP, 2), new Obsidian(), true);
-			$world->setBlock($position->getSide(Facing::WEST)->getSide(Facing::UP, 3), new Obsidian(), true);
-			$world->setBlock($position->getSide(Facing::DOWN), new Obsidian(), true);
-			$world->setBlock($position->getSide(Facing::DOWN)->getSide(Facing::EAST), new Obsidian(), true);
-			$world->setBlock($position->getSide(Facing::UP, 3), new Obsidian(), true);
-			$world->setBlock($position->getSide(Facing::UP, 3)->getSide(Facing::EAST), new Obsidian(), true);
-			$world->setBlock($position->getSide(Facing::EAST, 2), new Obsidian(), true);
-			$world->setBlock($position->getSide(Facing::EAST, 2)->getSide(Facing::DOWN), new Obsidian(), true);
-			$world->setBlock($position->getSide(Facing::EAST, 2)->getSide(Facing::UP), new Obsidian(), true);
-			$world->setBlock($position->getSide(Facing::EAST, 2)->getSide(Facing::UP, 2), new Obsidian(), true);
-			$world->setBlock($position->getSide(Facing::EAST, 2)->getSide(Facing::UP, 3), new Obsidian(), true);
+			$world->setBlock($position->getSide(Facing::WEST), VanillaBlocks::OBSIDIAN(), true);
+			$world->setBlock($position->getSide(Facing::WEST)->getSide(Facing::DOWN), VanillaBlocks::OBSIDIAN(), true);
+			$world->setBlock($position->getSide(Facing::WEST)->getSide(Facing::UP), VanillaBlocks::OBSIDIAN(), true);
+			$world->setBlock($position->getSide(Facing::WEST)->getSide(Facing::UP, 2), VanillaBlocks::OBSIDIAN(), true);
+			$world->setBlock($position->getSide(Facing::WEST)->getSide(Facing::UP, 3), VanillaBlocks::OBSIDIAN(), true);
+			$world->setBlock($position->getSide(Facing::DOWN), VanillaBlocks::OBSIDIAN(), true);
+			$world->setBlock($position->getSide(Facing::DOWN)->getSide(Facing::EAST), VanillaBlocks::OBSIDIAN(), true);
+			$world->setBlock($position->getSide(Facing::UP, 3), VanillaBlocks::OBSIDIAN(), true);
+			$world->setBlock($position->getSide(Facing::UP, 3)->getSide(Facing::EAST), VanillaBlocks::OBSIDIAN(), true);
+			$world->setBlock($position->getSide(Facing::EAST, 2), VanillaBlocks::OBSIDIAN(), true);
+			$world->setBlock($position->getSide(Facing::EAST, 2)->getSide(Facing::DOWN), VanillaBlocks::OBSIDIAN(), true);
+			$world->setBlock($position->getSide(Facing::EAST, 2)->getSide(Facing::UP), VanillaBlocks::OBSIDIAN(), true);
+			$world->setBlock($position->getSide(Facing::EAST, 2)->getSide(Facing::UP, 2), VanillaBlocks::OBSIDIAN(), true);
+			$world->setBlock($position->getSide(Facing::EAST, 2)->getSide(Facing::UP, 3), VanillaBlocks::OBSIDIAN(), true);
 			// air
 			$world->setBlock($position->getSide(Facing::NORTH), VanillaBlocks::AIR(), true);
 			$world->setBlock($position->getSide(Facing::UP)->getSide(Facing::NORTH), VanillaBlocks::AIR(), true);
@@ -214,7 +223,7 @@ class Main extends PluginBase {
 			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::UP)->getSide(Facing::SOUTH), VanillaBlocks::AIR(), true);
 			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::UP, 2)->getSide(Facing::SOUTH), VanillaBlocks::AIR(), true);
 		}
-		// TODO: levelDB portal map
+		NetherPortalMap::getInstance()->addPortal($world, new NetherPortalData(2, $axis, $world->getDimensionId(), (int) floor($position->x), (int) floor($position->y), (int) floor($position->z)));
 		return true;
 	}
 
@@ -232,7 +241,7 @@ class Main extends PluginBase {
 		return true;
 	}
 
-	public static function makeEndExit(DimensionalWorld $world) {
+	public static function makeEndExit(DimensionalWorld $world) : void {
 		$world = $world->getEnd();
 		$position = new Position(0, 64, 0, $world);
 

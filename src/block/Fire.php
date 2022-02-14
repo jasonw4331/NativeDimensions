@@ -2,6 +2,9 @@
 declare(strict_types=1);
 namespace jasonwynn10\NativeDimensions\block;
 
+use jasonwynn10\NativeDimensions\world\data\NetherPortalData;
+use jasonwynn10\NativeDimensions\world\data\NetherPortalMap;
+use jasonwynn10\NativeDimensions\world\DimensionalWorld;
 use pocketmine\block\Air;
 use pocketmine\block\BlockBreakInfo;
 use pocketmine\block\BlockIdentifier as BID;
@@ -18,6 +21,7 @@ class Fire extends PMFire {
 	}
 
 	public function onNearbyBlockChange() : void {
+		/** @var DimensionalWorld $world */
 		$world = $this->getPosition()->getWorld();
 		if($world->getEnd() === $world) {
 			parent::onNearbyBlockChange();
@@ -73,13 +77,15 @@ class Fire extends PMFire {
 					}
 				}
 			}
+
+			NetherPortalMap::getInstance()->addPortal($world, new NetherPortalData($totalWidth, Facing::axis($direction), $world->getDimensionId(), (int) floor($start->x), (int) floor($start->y), (int) floor($start->z)));
 			return;
 		}
 		parent::onNearbyBlockChange();
 	}
 
 	private function testDirectionForObsidian(int $direction, Position $start, ?int &$distance = null) : bool {
-		for($i = 1; $i <= 23; ++$i) {
+		for($i = 1; $i < 24; ++$i) {
 			$testPos = $start->getSide($direction, $i);
 			if($testPos->getWorld()->getBlock($testPos, true, false) instanceof Obsidian) {
 				$distance = $i;

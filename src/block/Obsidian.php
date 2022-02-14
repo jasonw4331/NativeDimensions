@@ -6,7 +6,6 @@ use pocketmine\block\BlockBreakInfo;
 use pocketmine\block\BlockIdentifier as BID;
 use pocketmine\block\BlockLegacyIds as Ids;
 use pocketmine\block\BlockToolType;
-use pocketmine\block\NetherPortal;
 use pocketmine\block\Opaque;
 use pocketmine\item\ToolTier;
 
@@ -19,7 +18,7 @@ class Obsidian extends Opaque {
 	public function getAffectedBlocks() : array {
 		$return = [$this];
 		foreach($this->getAllSides() as $block) {
-			if($block instanceof NetherPortal)
+			if($block instanceof Portal)
 				$return[] = $block;
 		}
 		return $return;

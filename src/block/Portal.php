@@ -3,7 +3,10 @@ declare(strict_types = 1);
 namespace jasonwynn10\NativeDimensions\block;
 
 use jasonwynn10\NativeDimensions\Main;
+use jasonwynn10\NativeDimensions\world\data\NetherPortalData;
+use jasonwynn10\NativeDimensions\world\data\NetherPortalMap;
 use jasonwynn10\NativeDimensions\world\DimensionalWorld;
+use jasonwynn10\NativeDimensions\world\provider\DimensionLevelDBProvider;
 use pocketmine\block\BlockBreakInfo;
 use pocketmine\block\BlockIdentifier as BID;
 use pocketmine\block\BlockLegacyIds as Ids;
@@ -11,7 +14,9 @@ use pocketmine\block\NetherPortal;
 use pocketmine\block\VanillaBlocks;
 use pocketmine\entity\Entity;
 use pocketmine\item\Item;
+use pocketmine\math\Axis;
 use pocketmine\math\Facing;
+use pocketmine\math\Vector2;
 use pocketmine\math\Vector3;
 use pocketmine\network\mcpe\protocol\ChangeDimensionPacket;
 use pocketmine\network\mcpe\protocol\types\DimensionIds;
@@ -27,7 +32,7 @@ class Portal extends NetherPortal {
 	}
 
 	public function onBreak(Item $item, Player $player = null): bool{
-		$position = $this->getPosition();
+		$position = $this->position;
 		if($this->getSide(Facing::WEST) instanceof NetherPortal or
 			$this->getSide(Facing::EAST) instanceof NetherPortal
 		){//x direction
@@ -66,11 +71,10 @@ class Portal extends NetherPortal {
 			}
 		}
 
-		return parent::onBreak($item, $player);
-	}
+		/** @noinspection PhpParamsInspection */
+		NetherPortalMap::getInstance()->removePortal($position->world, $position->x, $position->y, $position->z);
 
-	public function onPostPlace() : void{
-		// TODO: levelDB portal mapping
+		return parent::onBreak($item, $player);
 	}
 
 	public function hasEntityCollision() : bool{
@@ -90,60 +94,115 @@ class Portal extends NetherPortal {
 		$position = $this->getPosition();
 		$y = $position->y;
 		if($world->getOverworld() === $world) {
-			// TODO: levelDB portal mapping
 			$x = $position->x / 8;
 			$z = $position->z / 8;
-			$world->getNether()->orderChunkPopulation($x >> Chunk::COORD_BIT_SIZE, $z >> Chunk::COORD_BIT_SIZE, null)->onCompletion(
-				function(Chunk $chunk) use($x, $y, $z, $world, $entity) {
-					$position = new Position($x + 0.5, $y, $z + 0.5, $world->getNether());
-					if(!$world->getNether()->getBlock($position) instanceof NetherPortal)
-						Main::makeNetherPortal($position);
-					$world->getLogger()->debug("Teleporting to the Nether");
-					if($entity instanceof Player) {
-						if(!$entity->isCreative()) {
-							Main::getInstance()->getScheduler()->scheduleDelayedTask(new ClosureTask(function() use($entity, $position) : void {
-								$entity->teleport($position);
-								$entity->getNetworkSession()->sendDataPacket(ChangeDimensionPacket::create(DimensionIds::NETHER, $entity->getPosition(), false));
-							}), 20 * 6);
-							return;
+			$portal = $this->findPortal($x, $z, $world->getNether());
+			if($portal === null) {
+				$world->getNether()->orderChunkPopulation($x >> Chunk::COORD_BIT_SIZE, $z >> Chunk::COORD_BIT_SIZE, null)->onCompletion(
+					function(Chunk $chunk) use($x, $y, $z, $world, $entity) {
+						$position = new Position($x + 0.5, $y, $z + 0.5, $world->getNether());
+						// TODO: ensure space available for placement
+						Main::makeNetherPortal($position, mt_rand(Axis::Z, Axis::X));
+						Main::getInstance()->getLogger()->debug("Teleporting to the Nether");
+						if($entity instanceof Player) {
+							if(!$entity->isCreative()) {
+								Main::getInstance()->getScheduler()->scheduleDelayedTask(new ClosureTask(function() use($entity, $position) : void {
+									$entity->teleport($position);
+									$entity->getNetworkSession()->sendDataPacket(ChangeDimensionPacket::create(DimensionIds::NETHER, $entity->getPosition(), false));
+								}), 20 * 6);
+								return;
+							}
+							$entity->getNetworkSession()->sendDataPacket(ChangeDimensionPacket::create(DimensionIds::NETHER, $entity->getPosition(), false));
 						}
-						$entity->getNetworkSession()->sendDataPacket(ChangeDimensionPacket::create(DimensionIds::NETHER, $entity->getPosition(), false));
+						$entity->teleport($position);
+					},
+					function() use ($entity) {
+						Main::getInstance()->getLogger()->debug("Failed to generate Nether chunks");
+						Main::removeTeleportingId($entity->getId());
 					}
-					$entity->teleport($position);
-				},
-				function() use ($entity) {
-					Main::getInstance()->getLogger()->debug("Failed to generate Nether chunks");
-					Main::removeTeleportingId($entity->getId());
+				);
+			}else{
+				Main::getInstance()->getLogger()->debug("Teleporting to the Nether");
+				$position = Position::fromObject($portal->getVector3()->floor()->add(0.5, 0, 0.5), $world->getNether());
+				if($entity instanceof Player) {
+					if(!$entity->isCreative()) {
+						Main::getInstance()->getScheduler()->scheduleDelayedTask(new ClosureTask(function() use($entity, $position) : void {
+							$entity->teleport($position);
+							$entity->getNetworkSession()->sendDataPacket(ChangeDimensionPacket::create(DimensionIds::NETHER, $entity->getPosition(), false));
+						}), 20 * 6);
+						return true;
+					}
+					$entity->getNetworkSession()->sendDataPacket(ChangeDimensionPacket::create(DimensionIds::NETHER, $entity->getPosition(), false));
 				}
-			);
+				$entity->teleport($position);
+			}
 		}elseif($world->getNether() === $world) {
-			// TODO: levelDB portal mapping
 			$x = $position->x * 8;
 			$z = $position->z * 8;
-			$world->getNether()->orderChunkPopulation($x >> Chunk::COORD_BIT_SIZE, $z >> Chunk::COORD_BIT_SIZE, null)->onCompletion(
-				function(Chunk $chunk) use($x, $y, $z, $world, $entity) {
-					$position = new Position($x + 0.5, $y, $z + 0.5, $world->getOverworld());
-					if(!$world->getOverworld()->getBlock($position) instanceof NetherPortal)
-						Main::makeNetherPortal($position);
-					$world->getLogger()->debug("Teleporting to the Overworld");
-					if($entity instanceof Player) {
-						if(!$entity->isCreative()) {
-							Main::getInstance()->getScheduler()->scheduleDelayedTask(new ClosureTask(function() use($entity, $position) : void {
-								$entity->teleport($position);
-								$entity->getNetworkSession()->sendDataPacket(ChangeDimensionPacket::create(DimensionIds::OVERWORLD, $entity->getPosition(), false));
-							}), 20 * 6);
-							return;
+			$portal = $this->findPortal($x, $z, $world->getOverworld());
+			if($portal === null) {
+				$world->getNether()->orderChunkPopulation($x >> Chunk::COORD_BIT_SIZE, $z >> Chunk::COORD_BIT_SIZE, null)->onCompletion(
+					function(Chunk $chunk) use($x, $y, $z, $world, $entity) {
+						$position = new Position($x + 0.5, $y, $z + 0.5, $world->getOverworld());
+						// TODO: ensure space available for placement
+						Main::makeNetherPortal($position, mt_rand(Axis::Z, Axis::X));
+						Main::getInstance()->getLogger()->debug("Teleporting to the Overworld");
+						if($entity instanceof Player) {
+							if(!$entity->isCreative()) {
+								Main::getInstance()->getScheduler()->scheduleDelayedTask(new ClosureTask(function() use($entity, $position) : void {
+									$entity->teleport($position);
+									$entity->getNetworkSession()->sendDataPacket(ChangeDimensionPacket::create(DimensionIds::OVERWORLD, $entity->getPosition(), false));
+								}), 20 * 6);
+								return;
+							}
+							$entity->getNetworkSession()->sendDataPacket(ChangeDimensionPacket::create(DimensionIds::OVERWORLD, $entity->getPosition(), false));
 						}
-						$entity->getNetworkSession()->sendDataPacket(ChangeDimensionPacket::create(DimensionIds::OVERWORLD, $entity->getPosition(), false));
+						$entity->teleport($position);
+					},
+					function() use ($entity) {
+						Main::getInstance()->getLogger()->debug("Failed to generate Overworld chunks");
+						Main::removeTeleportingId($entity->getId());
 					}
-					$entity->teleport($position);
-				},
-				function() use ($entity) {
-					Main::getInstance()->getLogger()->debug("Failed to generate Overworld chunks");
-					Main::removeTeleportingId($entity->getId());
+				);
+			}else{
+				Main::getInstance()->getLogger()->debug("Teleporting to the Overworld");
+				$position = Position::fromObject($portal->getVector3()->floor()->add(0.5, 0, 0.5), $world->getOverworld());
+				if($entity instanceof Player) {
+					if(!$entity->isCreative()) {
+						Main::getInstance()->getScheduler()->scheduleDelayedTask(new ClosureTask(function() use($entity, $position) : void {
+							$entity->teleport($position);
+							$entity->getNetworkSession()->sendDataPacket(ChangeDimensionPacket::create(DimensionIds::OVERWORLD, $entity->getPosition(), false));
+						}), 20 * 6);
+						return true;
+					}
+					$entity->getNetworkSession()->sendDataPacket(ChangeDimensionPacket::create(DimensionIds::OVERWORLD, $entity->getPosition(), false));
 				}
-			);
+				$entity->teleport($position);
+			}
 		}
 		return true;
+	}
+
+	private function findPortal(int|float $x, int|float $z, DimensionalWorld $world) : ?NetherPortalData {
+		$provider = $world->getProvider();
+		if(!$provider instanceof DimensionLevelDBProvider) // TODO: better provider support
+			return null;
+
+		$v2 = new Vector2($x, $z);
+		$maxDistance = $world->getDimensionId() === DimensionIds::NETHER ? 33 : 257;
+		$portals = NetherPortalMap::getInstance()->getPortals($world);
+		foreach($portals as $portal) {
+			Main::getInstance()->getLogger()->debug('Testing '.$portal->getVector3()->__toString().' against '.$v2->__toString());
+			$vec = $portal->getVector3()->floor();
+			if(
+				$portal->getDimensionId() === $world->getDimensionId() and
+				$v2->floor()->distance(new Vector2($vec->x, $vec->z)) < $maxDistance
+			) {
+				Main::getInstance()->getLogger()->debug('Found Nearby Portal in '.$world->getDisplayName());
+				return $portal;
+			}
+		}
+		Main::getInstance()->getLogger()->debug('No Nearby Portals found in '.$world->getDisplayName());
+		return null;
 	}
 }
