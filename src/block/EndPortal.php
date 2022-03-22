@@ -49,10 +49,13 @@ class EndPortal extends Opaque{
 		/** @var DimensionalWorld $world */
 		$world = $entity->getPosition()->getWorld();
 
+		if(Main::isPortalDisabled($world))
+			return true;
+
 		Main::addTeleportingId($entity->getId());
-		if($world->getOverworld() === $world) {
+		if($world->getOverworld() === $world){
 			$world->getEnd()->orderChunkPopulation(100 >> Chunk::COORD_BIT_SIZE, 0 >> Chunk::COORD_BIT_SIZE, null)->onCompletion(
-				function(Chunk $chunk) use($world, $entity) {
+				function(Chunk $chunk) use ($world, $entity){
 					Main::makeEndSpawn($world->getEnd());
 					Main::getInstance()->getLogger()->debug("Teleporting to The End");
 					$entity->teleport(new Position(100, 50, 0, $world->getEnd()));
