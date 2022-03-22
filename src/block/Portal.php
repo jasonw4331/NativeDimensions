@@ -78,18 +78,22 @@ class Portal extends NetherPortal {
 	}
 
 	public function onEntityInside(Entity $entity): bool{
-		/** @var DimensionalWorld $world */
-		$world = $entity->getPosition()->getWorld();
-		if($world->getEnd() === $world)
+		if(in_array($entity->getId(), Main::getTeleporting()))
 			return true;
 
-		if(in_array($entity->getId(), Main::getTeleporting()))
+		/** @var DimensionalWorld $world */
+		$world = $entity->getPosition()->getWorld();
+
+		if(Main::isPortalDisabled($world))
+			return true;
+
+		if($world->getEnd() === $world)
 			return true;
 
 		Main::addTeleportingId($entity->getId());
 		$position = $this->getPosition();
 		$y = $position->y;
-		if($world->getOverworld() === $world) {
+		if($world->getOverworld() === $world){
 			// TODO: levelDB portal mapping
 			$x = $position->x / 8;
 			$z = $position->z / 8;

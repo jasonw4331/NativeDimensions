@@ -48,11 +48,18 @@ class Main extends PluginBase {
 		GeneratorManager::getInstance()->addGenerator(NetherGenerator::class, 'nether', fn() => null, true);
 		GeneratorManager::getInstance()->addGenerator(EnderGenerator::class, 'ender', fn() => null, true);
 
+		$config = $this->getConfig();
+		if(count($config->get('Portal Disabled Worlds', [])) === 0)
+			$config->set('Portal Disabled Worlds', []);
+
 		$this->getLogger()->debug("Unloading Worlds");
 		$server = $this->getServer();
 		$oldManager = $server->getWorldManager();
-		foreach($oldManager->getWorlds() as $world)
+		$worlds = [];
+		foreach($oldManager->getWorlds() as $world){
 			$oldManager->unloadWorld($world, true);
+			$worlds[] = $world->getFolderName();
+		}
 		$this->getLogger()->debug("Worlds Successfully Unloaded");
 
 		// replace default world manager with one that supports dimensions
@@ -63,6 +70,9 @@ class Main extends PluginBase {
 
 		if($this->getServer()->getWorldManager() instanceof DimensionalWorldManager)
 			$this->getLogger()->debug("WorldManager Successfully swapped");
+
+		foreach($worlds as $worldName)
+			$server->getWorldManager()->loadWorld($worldName);
 	}
 
 	public function onEnable() : void {
@@ -301,11 +311,19 @@ class Main extends PluginBase {
 			self::$teleporting[] = $id;
 	}
 
-	public static function removeTeleportingId(int $id) : void {
+	public static function removeTeleportingId(int $id) : void{
 		$key = array_search($id, self::$teleporting);
-		if($key !== false) {
+		if($key !== false){
 			unset(self::$teleporting[$key]);
 			self::$instance->getLogger()->debug("Player can use a portal again");
 		}
+	}
+
+	public static function isPortalDisabled(DimensionalWorld $world) : bool{
+		foreach(((array) self::$instance->getConfig()->get('Portal Disabled Worlds', [])) as $worldName){
+			if(str_contains($world->getFolderName(), $worldName))
+				return true;
+		}
+		return false;
 	}
 }
