@@ -30,28 +30,32 @@ use pocketmine\world\generator\GeneratorManager;
 use pocketmine\world\Position;
 use Webmozart\PathUtil\Path;
 
-class Main extends PluginBase {
-
-	/** @var Compressor[] */
-	private array $known_compressors = [];
+class Main extends PluginBase{
 
 	private static self $instance;
 
 	/** @var int[] $teleporting */
-	protected static $teleporting = [];
+	protected static array $teleporting = [];
 
-	public static function getInstance() : Main {
+	/** @var string[] $disabledWorlds */
+	private static array $disabledWorlds = [];
+
+	/** @var Compressor[] $knownCompressors */
+	private array $knownCompressors = [];
+
+	public static function getInstance() : Main{
 		return self::$instance;
 	}
 
-	public function onLoad() : void {
+	public function onLoad() : void{
 		self::$instance = $this;
 
 		GeneratorManager::getInstance()->addGenerator(NetherGenerator::class, 'nether', fn() => null, true);
 		GeneratorManager::getInstance()->addGenerator(EnderGenerator::class, 'ender', fn() => null, true);
 
 		$config = $this->getConfig();
-		if(count($config->get('Portal Disabled Worlds', [])) === 0)
+		self::$disabledWorlds = (array) $config->get('Portal Disabled Worlds', []);
+		if(count(self::$disabledWorlds) === 0)
 			$config->set('Portal Disabled Worlds', []);
 
 		$this->getLogger()->debug("Unloading Worlds");
@@ -109,11 +113,11 @@ class Main extends PluginBase {
 	}
 
 	private function registerKnownCompressor(Compressor $compressor) : void{
-		if(isset($this->known_compressors[$id = spl_object_id($compressor)])){
+		if(isset($this->knownCompressors[$id = spl_object_id($compressor)])){
 			return;
 		}
 
-		$this->known_compressors[$id] = $compressor;
+		$this->knownCompressors[$id] = $compressor;
 		/** @var DimensionalWorld $world */
 		foreach($this->getServer()->getWorldManager()->getWorlds() as $world){
 			$this->registerHackToWorld($world);
@@ -136,7 +140,7 @@ class Main extends PluginBase {
 			$_chunk_cache_compressor->setAccessible(true);
 		}
 
-		foreach($this->known_compressors as $compressor){
+		foreach($this->knownCompressors as $compressor){
 			$chunk_cache = ChunkCache::getInstance($world, $compressor);
 			$compressor = $_chunk_cache_compressor->getValue($chunk_cache);
 			if($compressor instanceof DimensionSpecificCompressor){
@@ -159,7 +163,7 @@ class Main extends PluginBase {
 		/** @var DimensionalWorld $world */
 		$world = $position->world;
 		if($axis === Axis::Z){
-			self::getInstance()->getLogger()->debug('Generating Z Axis Nether Portal');
+			self::$instance->getLogger()->debug('Generating Z Axis Nether Portal');
 			// portal blocks
 			$world->setBlock($position, $portalBlock, true);
 			$world->setBlock($position->getSide(Facing::UP), $portalBlock, true);
@@ -196,7 +200,7 @@ class Main extends PluginBase {
 			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::UP)->getSide(Facing::WEST), VanillaBlocks::AIR(), true);
 			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::UP, 2)->getSide(Facing::WEST), VanillaBlocks::AIR(), true);
 		}else{
-			self::getInstance()->getLogger()->debug('Generating X Axis Nether Portal');
+			self::$instance->getLogger()->debug('Generating X Axis Nether Portal');
 			// portal blocks
 			$world->setBlock($position, $portalBlock, true);
 			$world->setBlock($position->getSide(Facing::UP), $portalBlock, true);
@@ -329,7 +333,7 @@ class Main extends PluginBase {
 	}
 
 	public static function isPortalDisabled(DimensionalWorld $world) : bool{
-		foreach(((array) self::$instance->getConfig()->get('Portal Disabled Worlds', [])) as $worldName){
+		foreach(self::$disabledWorlds as $worldName){
 			if(str_contains($world->getFolderName(), $worldName))
 				return true;
 		}
