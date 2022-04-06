@@ -123,26 +123,92 @@ class DimensionalWorldManager extends WorldManager {
 			return false;
 		}
 
-		$this->server->getLogger()->info($this->server->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_unloading($world->getDisplayName())));
-		try{
-			$safeSpawn = $this->defaultWorld?->getSafeSpawn();
-		}catch(WorldException $e){
-			$safeSpawn = null;
-		}
-		foreach($world->getPlayers() as $player){
-			if($world === $this->defaultWorld or $safeSpawn === null){
-				$player->disconnect("Forced default world unload");
-			}else{
-				$player->teleport($safeSpawn);
+		if($world instanceof DimensionalWorld) {
+			$end = $world->getEnd();
+			$this->server->getLogger()->info($this->server->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_unloading($end->getDisplayName())));
+			try{
+				$safeSpawn = $this->defaultWorld?->getSafeSpawn();
+			}catch(WorldException $e){
+				$safeSpawn = null;
 			}
+			foreach($end->getPlayers() as $player){
+				if($end === $this->defaultWorld or $safeSpawn === null){
+					$player->disconnect("Forced default world unload");
+				}else{
+					$player->teleport($safeSpawn);
+				}
+			}
+
+			if($end === $this->defaultWorld){
+				$this->defaultWorld = null;
+			}
+			unset($this->worlds[$end->getId()]);
+			$end->onUnload();
+
+			$nether = $world->getNether();
+			$this->server->getLogger()->info($this->server->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_unloading($nether->getDisplayName())));
+			try{
+				$safeSpawn = $this->defaultWorld?->getSafeSpawn();
+			}catch(WorldException $e){
+				$safeSpawn = null;
+			}
+			foreach($nether->getPlayers() as $player){
+				if($nether === $this->defaultWorld or $safeSpawn === null){
+					$player->disconnect("Forced default world unload");
+				}else{
+					$player->teleport($safeSpawn);
+				}
+			}
+
+			if($nether === $this->defaultWorld){
+				$this->defaultWorld = null;
+			}
+			unset($this->worlds[$nether->getId()]);
+			$nether->onUnload();
+
+			$overworld = $world->getOverworld();
+			$this->server->getLogger()->info($this->server->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_unloading($overworld->getDisplayName())));
+			try{
+				$safeSpawn = $this->defaultWorld?->getSafeSpawn();
+			}catch(WorldException $e){
+				$safeSpawn = null;
+			}
+			foreach($overworld->getPlayers() as $player){
+				if($overworld === $this->defaultWorld or $safeSpawn === null){
+					$player->disconnect("Forced default world unload");
+				}else{
+					$player->teleport($safeSpawn);
+				}
+			}
+
+			if($overworld === $this->defaultWorld){
+				$this->defaultWorld = null;
+			}
+			unset($this->worlds[$overworld->getId()]);
+			$overworld->onUnload();
+		}else{
+			$this->server->getLogger()->info($this->server->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_unloading($world->getDisplayName())));
+			try{
+				$safeSpawn = $this->defaultWorld?->getSafeSpawn();
+			}catch(WorldException $e){
+				$safeSpawn = null;
+			}
+			foreach($world->getPlayers() as $player){
+				if($world === $this->defaultWorld or $safeSpawn === null){
+					$player->disconnect("Forced default world unload");
+				}else{
+					$player->teleport($safeSpawn);
+				}
+			}
+
+			if($world === $this->defaultWorld){
+				$this->defaultWorld = null;
+			}
+			unset($this->worlds[$world->getId()]);
+
+			$world->onUnload();
 		}
 
-		if($world === $this->defaultWorld){
-			$this->defaultWorld = null;
-		}
-		unset($this->worlds[$world->getId()]);
-
-		$world->onUnload();
 		return true;
 	}
 
