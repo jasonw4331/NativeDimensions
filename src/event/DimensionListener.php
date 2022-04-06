@@ -51,6 +51,9 @@ class DimensionListener implements Listener {
 	}
 
 	private static function initTimings(DimensionalWorld $world){
+		if(isset(self::$syncPortalsLoadTimer[$world->getId()]))
+			return;
+
 		self::$syncPortalsLoadTimer[$world->getId()] = new TimingsHandler(Timings::INCLUDED_BY_OTHER_TIMINGS_PREFIX . "{$world->getFolderName()} - Portals Load", Timings::$worldLoad);
 		self::$syncPortalsSaveTimer[$world->getId()] = new TimingsHandler(Timings::INCLUDED_BY_OTHER_TIMINGS_PREFIX . "{$world->getFolderName()} - Portals Save", Timings::$worldSave);
 		self::$syncPortalLocateTimer[$world->getId()] = new TimingsHandler(Timings::INCLUDED_BY_OTHER_TIMINGS_PREFIX . "{$world->getFolderName()} - Portal Locate", Timings::$worldLoad);
@@ -142,6 +145,8 @@ class DimensionListener implements Listener {
 	public function onChunkLoad(ChunkLoadEvent $event) {
 		/** @var DimensionalWorld $world */
 		$world = $event->getWorld();
+
+		self::initTimings($world);
 
 		self::$syncPortalLocateTimer[$world->getId()]->startTiming();
 
