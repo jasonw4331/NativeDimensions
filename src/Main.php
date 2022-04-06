@@ -14,6 +14,7 @@ use jasonwynn10\NativeDimensions\world\DimensionalWorld;
 use jasonwynn10\NativeDimensions\world\DimensionalWorldManager;
 use jasonwynn10\NativeDimensions\world\generator\ender\EnderGenerator;
 use jasonwynn10\NativeDimensions\world\generator\nether\NetherGenerator;
+use pocketmine\block\Air;
 use pocketmine\block\BlockFactory;
 use pocketmine\block\VanillaBlocks;
 use pocketmine\event\EventPriority;
@@ -151,7 +152,118 @@ class Main extends PluginBase{
 		}
 	}
 
-	public static function makeNetherPortal(Position $position, int $axis) : bool {
+	public static function generateValidPortalCoords(Position $position, DimensionalWorld $world) : Position {
+		// searching for a 3x4x4 area of air
+		for($y = 0; $y <= max($world->getMaxY() - $position->y, $position->y - $world->getMinY()); $y += 4){
+			for($x = $position->x - 8; $x <= $position->x + 8; $x += 3){
+				for($z = $position->z - 8; $z <= $position->z + 8; $z += 3){
+					if($position->y + $y < $world->getMaxY()) {
+						$centerBlock = $world->getBlockAt((int)$x, (int)($position->y + $y), (int)$z);
+						if($centerBlock instanceof Air) {
+							foreach(Facing::HORIZONTAL as $side) {
+								for($i = 1; $i <= 4; ++$i) {
+									for($j = 0; $j <= 4; ++$j) {
+										$block = $centerBlock->getSide($side, $i)->getSide(Facing::UP, $j);
+										if(!$block instanceof Air) {
+											continue 3;
+										}
+										$block = $centerBlock->getSide(Facing::rotateY($side, true), 1)->getSide(Facing::UP, $j);
+										if(!$block instanceof Air) {
+											continue 3;
+										}
+										$block = $centerBlock->getSide(Facing::rotateY($side, false), 1)->getSide(Facing::UP, $j);
+										if(!$block instanceof Air) {
+											continue 3;
+										}
+									}
+								}
+								return new Position($x, $position->y + $y, $z, $world); // found a valid position
+							}
+						}
+					}
+					if($position->y - $y > $world->getMinY()) {
+						$centerBlock = $world->getBlockAt($x, $position->y - $y, $z);
+						if($centerBlock instanceof Air) {
+							foreach(Facing::HORIZONTAL as $side) {
+								for($i = 1; $i <= 4; ++$i) {
+									for($j = 0; $j <= 4; ++$j) {
+										$block = $centerBlock->getSide($side, $i)->getSide(Facing::UP, $j);
+										if(!$block instanceof Air) {
+											continue 3;
+										}
+										$block = $centerBlock->getSide(Facing::rotateY($side, true), 1)->getSide(Facing::UP, $j);
+										if(!$block instanceof Air) {
+											continue 3;
+										}
+										$block = $centerBlock->getSide(Facing::rotateY($side, false), 1)->getSide(Facing::UP, $j);
+										if(!$block instanceof Air) {
+											continue 3;
+										}
+									}
+								}
+								return new Position($x, $position->y - $y, $z, $world); // found a valid position
+							}
+						}
+					}
+				}
+			}
+		}
+		// first check failed entirely. now we look for a 1x4x4 area instead
+		for($y = 0; $y <= max($world->getMaxY() - $position->y, $position->y - $world->getMinY()); $y += 4){
+			for($x = $position->x - 8; $x <= $position->x + 8; $x += 3){
+				for($z = $position->z - 8; $z <= $position->z + 8; $z += 3){
+					if($position->y + $y < $world->getMaxY()) {
+						$centerBlock = $world->getBlockAt($x, $position->y + $y, $z);
+						if($centerBlock instanceof Air) {
+							foreach(Facing::HORIZONTAL as $side) {
+								for($i = 1; $i <= 4; ++$i) {
+									$block = $centerBlock->getSide($side, $i);
+									if(!$block instanceof Air) {
+										continue 3;
+									}
+									$block = $centerBlock->getSide(Facing::rotateY($side, true), 1);
+									if(!$block instanceof Air) {
+										continue 3;
+									}
+									$block = $centerBlock->getSide(Facing::rotateY($side, false), 1);
+									if(!$block instanceof Air) {
+										continue 3;
+									}
+								}
+								return new Position($x, $position->y + $y, $z, $world); // found a valid position
+							}
+						}
+					}
+					if($position->y - $y > $world->getMinY()) {
+						$centerBlock = $world->getBlockAt($x, $position->y - $y, $z);
+						if($centerBlock instanceof Air) {
+							foreach(Facing::HORIZONTAL as $side) {
+								for($i = 1; $i <= 4; ++$i) {
+									$block = $centerBlock->getSide($side, $i);
+									if(!$block instanceof Air) {
+										continue 3;
+									}
+									$block = $centerBlock->getSide(Facing::rotateY($side, true), 1);
+									if(!$block instanceof Air) {
+										continue 3;
+									}
+									$block = $centerBlock->getSide(Facing::rotateY($side, false), 1);
+									if(!$block instanceof Air) {
+										continue 3;
+									}
+								}
+								return new Position($x, $position->y - $y, $z, $world); // found a valid position
+							}
+						}
+					}
+				}
+			}
+		}
+
+		return $position;
+	}
+
+	public static function makeNetherPortal(Position $position, int $axis, bool $floating) : bool {
 		if(!$position->isValid())
 			throw new \InvalidArgumentException("Position does not have a valid world");
 

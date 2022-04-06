@@ -105,8 +105,8 @@ class Portal extends NetherPortal {
 				$world->getNether()->orderChunkPopulation($x >> Chunk::COORD_BIT_SIZE, $z >> Chunk::COORD_BIT_SIZE, null)->onCompletion(
 					function(Chunk $chunk) use($x, $y, $z, $world, $entity) {
 						$position = new Position($x + 0.5, $y, $z + 0.5, $world->getNether());
-						// TODO: ensure space available for placement
-						Main::makeNetherPortal($position, mt_rand(Axis::Z, Axis::X));
+						$coords = Main::generateValidPortalCoords($position, $world->getNether());
+						Main::makeNetherPortal($coords, mt_rand(Axis::Z, Axis::X), $position->equals($coords));
 						Main::getInstance()->getLogger()->debug("Teleporting to the Nether");
 						if($entity instanceof Player) {
 							if(!$entity->isCreative()) {
@@ -145,11 +145,11 @@ class Portal extends NetherPortal {
 			$z = $position->z * 8;
 			$portal = $this->findPortal($x, $z, $world->getOverworld());
 			if($portal === null) {
-				$world->getNether()->orderChunkPopulation($x >> Chunk::COORD_BIT_SIZE, $z >> Chunk::COORD_BIT_SIZE, null)->onCompletion(
+				$world->getOverworld()->orderChunkPopulation($x >> Chunk::COORD_BIT_SIZE, $z >> Chunk::COORD_BIT_SIZE, null)->onCompletion(
 					function(Chunk $chunk) use($x, $y, $z, $world, $entity) {
 						$position = new Position($x + 0.5, $y, $z + 0.5, $world->getOverworld());
-						// TODO: ensure space available for placement
-						Main::makeNetherPortal($position, mt_rand(Axis::Z, Axis::X));
+						$coords = Main::generateValidPortalCoords($position, $world->getOverworld());
+						Main::makeNetherPortal($coords, mt_rand(Axis::Z, Axis::X), $position->equals($coords));
 						Main::getInstance()->getLogger()->debug("Teleporting to the Overworld");
 						if($entity instanceof Player) {
 							if(!$entity->isCreative()) {
