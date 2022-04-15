@@ -124,7 +124,7 @@ class Portal extends NetherPortal {
 			// TODO: levelDB portal mapping
 			$x = $position->x * 8;
 			$z = $position->z * 8;
-			$world->getNether()->orderChunkPopulation($x >> Chunk::COORD_BIT_SIZE, $z >> Chunk::COORD_BIT_SIZE, null)->onCompletion(
+			$world->getOverworld()->orderChunkPopulation($x >> Chunk::COORD_BIT_SIZE, $z >> Chunk::COORD_BIT_SIZE, null)->onCompletion(
 				function(Chunk $chunk) use($x, $y, $z, $world, $entity) {
 					$position = new Position($x + 0.5, $y, $z + 0.5, $world->getOverworld());
 					if(!$world->getOverworld()->getBlock($position) instanceof NetherPortal)
