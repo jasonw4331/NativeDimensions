@@ -2,22 +2,27 @@
 declare(strict_types=1);
 namespace jasonwynn10\NativeDimensions\event;
 
+use jasonwynn10\NativeDimensions\block\Obsidian;
+use jasonwynn10\NativeDimensions\block\Portal;
 use jasonwynn10\NativeDimensions\Main;
 use jasonwynn10\NativeDimensions\world\DimensionalWorld;
+use pocketmine\block\Air;
+use pocketmine\block\Fire;
 use pocketmine\block\NetherPortal;
-use pocketmine\event\entity\EntityTeleportEvent;
+use pocketmine\block\VanillaBlocks;
+use pocketmine\event\block\BlockUpdateEvent;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerBedEnterEvent;
 use pocketmine\event\player\PlayerRespawnEvent;
 use pocketmine\event\server\DataPacketReceiveEvent;
 use pocketmine\event\server\DataPacketSendEvent;
-use pocketmine\network\mcpe\protocol\ChangeDimensionPacket;
+use pocketmine\math\Axis;
+use pocketmine\math\Facing;
 use pocketmine\network\mcpe\protocol\PlayerActionPacket;
 use pocketmine\network\mcpe\protocol\StartGamePacket;
 use pocketmine\network\mcpe\protocol\types\DimensionIds;
 use pocketmine\network\mcpe\protocol\types\PlayerAction;
 use pocketmine\network\mcpe\protocol\types\SpawnSettings;
-use pocketmine\player\Player;
 use pocketmine\scheduler\CancelTaskException;
 use pocketmine\scheduler\ClosureTask;
 use pocketmine\world\Position;
@@ -96,5 +101,76 @@ class DimensionListener implements Listener {
 			$event->cancel();
 			// TODO: blow up bed
 		}
+	}
+
+	public function onBlockUpdate(BlockUpdateEvent $event){
+		$block = $event->getBlock();
+		if(!$block instanceof Fire)
+			return;
+		/** @var DimensionalWorld $world */
+		$world = $block->getPosition()->getWorld();
+		if($world->getEnd() === $world){
+			return;
+		}
+		foreach($block->getAllSides() as $block){
+			if(!$block->isSameType(VanillaBlocks::OBSIDIAN())){
+				continue;
+			}
+			$minWidth = 2;
+			if($this->testDirectionForObsidian(Facing::NORTH, $block->getPosition(), $widthA) and $this->testDirectionForObsidian(Facing::SOUTH, $block->getPosition(), $widthB)){
+				$totalWidth = $widthA + $widthB - 1;
+				if($totalWidth < $minWidth){
+					return; // portal cannot be made
+				}
+				$direction = Facing::NORTH;
+			}elseif($this->testDirectionForObsidian(Facing::EAST, $block->getPosition(), $widthA) and $this->testDirectionForObsidian(Facing::WEST, $block->getPosition(), $widthB)){
+				$totalWidth = $widthA + $widthB - 1;
+				if($totalWidth < $minWidth){
+					return;
+				}
+				$direction = Facing::EAST;
+			}else{
+				return;
+			}
+
+			$minHeight = 3;
+			if($this->testDirectionForObsidian(Facing::UP, $block->getPosition(), $heightA) and $this->testDirectionForObsidian(Facing::DOWN, $block->getPosition(), $heightB)){
+				$totalHeight = $heightA + $heightB - 1;
+				if($totalHeight < $minHeight){
+					return; // portal cannot be made
+				}
+			}else{
+				return;
+			}
+
+			$this->testDirectionForObsidian($direction, $block->getPosition(), $horizblocks);
+			$start = $block->getPosition()->getSide($direction, $horizblocks - 1);
+			$this->testDirectionForObsidian(Facing::UP, $block->getPosition(), $vertblocks);
+			$start = Position::fromObject($start->add(0, $vertblocks - 1, 0), $start->getWorld());
+
+			for($j = 0; $j < $totalHeight; ++$j){
+				for($k = 0; $k < $totalWidth; ++$k){
+					if($direction == Facing::NORTH){
+						$start->getWorld()->setBlock($start->add(0, -$j, $k), (new Portal())->setAxis(Axis::Z), false);
+					}else{
+						$start->getWorld()->setBlock($start->add(-$k, -$j, 0), (new Portal())->setAxis(Axis::X), false);
+					}
+				}
+			}
+			return;
+		}
+	}
+
+	private function testDirectionForObsidian(int $direction, Position $start, ?int &$distance = null) : bool{
+		for($i = 1; $i <= 23; ++$i){
+			$testPos = $start->getSide($direction, $i);
+			if($testPos->getWorld()->getBlock($testPos, true, false) instanceof Obsidian){
+				$distance = $i;
+				return true;
+			}elseif(!$testPos->getWorld()->getBlock($testPos, true, false) instanceof Air){
+				return false;
+			}
+		}
+		return false;
 	}
 }

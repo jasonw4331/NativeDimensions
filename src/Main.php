@@ -3,7 +3,6 @@ declare(strict_types=1);
 namespace jasonwynn10\NativeDimensions;
 
 use jasonwynn10\NativeDimensions\block\EndPortal;
-use jasonwynn10\NativeDimensions\block\Fire;
 use jasonwynn10\NativeDimensions\block\Obsidian;
 use jasonwynn10\NativeDimensions\block\Portal;
 use jasonwynn10\NativeDimensions\event\DimensionListener;
@@ -97,7 +96,6 @@ class Main extends PluginBase {
 		$parser = StringToItemParser::getInstance();
 		foreach([
 			new EndPortal(),
-			new Fire(),
 			new Obsidian(),
 			new Portal()
 		] as $block) {
