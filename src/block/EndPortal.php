@@ -5,8 +5,7 @@ namespace jasonwynn10\NativeDimensions\block;
 use jasonwynn10\NativeDimensions\Main;
 use jasonwynn10\NativeDimensions\world\DimensionalWorld;
 use pocketmine\block\BlockBreakInfo;
-use pocketmine\block\BlockIdentifier as BID;
-use pocketmine\block\BlockLegacyIds as Ids;
+use pocketmine\block\BlockIdentifier;
 use pocketmine\block\Opaque;
 use pocketmine\block\utils\FacesOppositePlacingPlayerTrait;
 use pocketmine\block\utils\HorizontalFacingTrait;
@@ -23,8 +22,8 @@ class EndPortal extends Opaque{
 	use FacesOppositePlacingPlayerTrait;
 	use HorizontalFacingTrait;
 
-	public function __construct(){
-		parent::__construct(new BID(Ids::END_PORTAL, 0), "End Portal", BlockBreakInfo::indestructible());
+	public function __construct(BlockIdentifier $idInfo){
+		parent::__construct($idInfo, "End Portal", BlockBreakInfo::indestructible());
 	}
 
 	public function getLightLevel() : int{

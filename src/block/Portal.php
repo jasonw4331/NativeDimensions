@@ -4,9 +4,9 @@ namespace jasonwynn10\NativeDimensions\block;
 
 use jasonwynn10\NativeDimensions\Main;
 use jasonwynn10\NativeDimensions\world\DimensionalWorld;
-use pocketmine\block\BlockBreakInfo;
+use pocketmine\block\BlockBreakInfo as BreakInfo;
 use pocketmine\block\BlockIdentifier as BID;
-use pocketmine\block\BlockLegacyIds as Ids;
+use pocketmine\block\BlockTypeIds;
 use pocketmine\block\NetherPortal;
 use pocketmine\block\VanillaBlocks;
 use pocketmine\entity\Entity;
@@ -23,7 +23,7 @@ use pocketmine\world\Position;
 class Portal extends NetherPortal {
 
 	public function __construct(){
-		parent::__construct(new BID(Ids::PORTAL, 0), "Nether Portal", BlockBreakInfo::indestructible(0.0));
+		parent::__construct(new BID(BlockTypeIds::NETHER_PORTAL), "Nether Portal", BreakInfo::indestructible(0.0));
 	}
 
 	public function onBreak(Item $item, Player $player = null): bool{

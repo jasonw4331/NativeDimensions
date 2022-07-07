@@ -12,6 +12,8 @@ use jasonwynn10\NativeDimensions\world\DimensionalWorldManager;
 use jasonwynn10\NativeDimensions\world\generator\ender\EnderGenerator;
 use jasonwynn10\NativeDimensions\world\generator\nether\NetherGenerator;
 use pocketmine\block\BlockFactory;
+use pocketmine\block\BlockIdentifier;
+use pocketmine\block\BlockTypeIds;
 use pocketmine\block\VanillaBlocks;
 use pocketmine\event\EventPriority;
 use pocketmine\event\player\PlayerLoginEvent;
@@ -36,6 +38,8 @@ class Main extends PluginBase {
 
 	/** @var int[] $teleporting */
 	protected static $teleporting = [];
+
+	private static int $end_portal = BlockTypeIds::FIRST_UNUSED_BLOCK_ID;
 
 	public static function getInstance() : Main {
 		return self::$instance;
@@ -94,8 +98,15 @@ class Main extends PluginBase {
 		new DimensionListener($this);
 		$factory = BlockFactory::getInstance();
 		$parser = StringToItemParser::getInstance();
+		for($i = BlockTypeIds::FIRST_UNUSED_BLOCK_ID; $i < BlockTypeIds::FIRST_UNUSED_BLOCK_ID + 256; ++$i){
+			if(!$factory->isRegistered($i)){
+				$block = new EndPortal(new BlockIdentifier(self::$end_portal = $i)); // TODO: handle cases where other plugins steal our id
+				$factory->register($block);
+				$parser->override($block->getName(), fn(string $input) => $block->asItem());
+				return;
+			}
+		}
 		foreach([
-			new EndPortal(),
 			new Obsidian(),
 			new Portal()
 		] as $block) {
@@ -249,7 +260,7 @@ class Main extends PluginBase {
 		$world = $world->getEnd();
 		$position = new Position(0, 64, 0, $world);
 
-		$endPortal = new EndPortal();
+		$endPortal = BlockFactory::getInstance()->fromTypeId(self::$end_portal);
 		$bedrock = VanillaBlocks::BEDROCK();
 		$endStone = VanillaBlocks::END_STONE();
 		$dragonEgg = VanillaBlocks::DRAGON_EGG();
