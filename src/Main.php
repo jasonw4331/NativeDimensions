@@ -155,7 +155,8 @@ class Main extends PluginBase {
 
 	/**
 	 * @param string $world_folder_name
-	 * @param DimensionIds::* $dimension_id
+	 * @param int $dimension_id
+	 * @phpstan-param DimensionIds::* $dimension_id
 	 */
 	public function applyToWorld(string $world_folder_name, int $dimension_id) : void{
 		$this->applicable_worlds[$world_folder_name] = $dimension_id;
@@ -272,7 +273,7 @@ class Main extends PluginBase {
 		return true;
 	}
 
-	public static function makeEndExit(DimensionalWorld $world) {
+	public static function makeEndExit(DimensionalWorld $world) : void {
 		$world = $world->getEnd();
 		$position = new Position(0, 64, 0, $world);
 
@@ -341,7 +342,7 @@ class Main extends PluginBase {
 			self::$teleporting[] = $id;
 	}
 
-	public static function removeTeleportingId(int $id) : void{
+	public static function removeTeleportingId(int $id) : void {
 		$key = array_search($id, self::$teleporting);
 		if($key !== false){
 			unset(self::$teleporting[$key]);
@@ -349,7 +350,7 @@ class Main extends PluginBase {
 		}
 	}
 
-	public static function isPortalDisabled(DimensionalWorld $world) : bool{
+	public static function isPortalDisabled(DimensionalWorld $world) : bool {
 		foreach(((array) self::$instance->getConfig()->get('Portal Disabled Worlds', [])) as $worldName){
 			if(str_contains($world->getFolderName(), $worldName))
 				return true;

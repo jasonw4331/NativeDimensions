@@ -37,7 +37,7 @@ class DimensionListener implements Listener {
 		$this->plugin = $plugin;
 	}
 
-	public function onDataPacket(DataPacketSendEvent $event) {
+	public function onDataPacket(DataPacketSendEvent $event) : void {
 		foreach($event->getPackets() as $pk) {
 			if($pk instanceof StartGamePacket) {
 				foreach($event->getTargets() as $session) {
@@ -58,7 +58,7 @@ class DimensionListener implements Listener {
 		}
 	}
 
-	public function onReceivePacket(DataPacketReceiveEvent $event) {
+	public function onReceivePacket(DataPacketReceiveEvent $event) : void {
 		$pk = $event->getPacket();
 		if($pk instanceof PlayerActionPacket and $pk->action === PlayerAction::DIMENSION_CHANGE_ACK) {
 			$player = $event->getOrigin()->getPlayer();
@@ -92,9 +92,6 @@ class DimensionListener implements Listener {
 		}
 	}
 
-	/**
-	 * @param PlayerBedEnterEvent $event
-	 */
 	public function onSleep(PlayerBedEnterEvent $event) : void {
 		$pos = $event->getBed()->getPosition();
 		/** @var DimensionalWorld $world */
@@ -105,7 +102,7 @@ class DimensionListener implements Listener {
 		}
 	}
 
-	public function onBlockUpdate(BlockUpdateEvent $event){
+	public function onBlockUpdate(BlockUpdateEvent $event) : void {
 		$block = $event->getBlock();
 		if(!$block instanceof Fire)
 			return;
@@ -157,7 +154,7 @@ class DimensionListener implements Listener {
 		}
 	}
 
-	private function testDirectionForObsidian(int $direction, Position $start, ?int &$distance = 0) : bool{
+	private function testDirectionForObsidian(int $direction, Position $start, ?int &$distance = 0) : bool {
 		$distance ??= 0;
 		for($i = 1; $i <= 23; ++$i){
 			$testPos = $start->getSide($direction, $i);
