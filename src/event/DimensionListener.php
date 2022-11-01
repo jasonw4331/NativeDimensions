@@ -19,6 +19,7 @@ use pocketmine\event\server\DataPacketSendEvent;
 use pocketmine\math\Axis;
 use pocketmine\math\Facing;
 use pocketmine\network\mcpe\protocol\PlayerActionPacket;
+use pocketmine\network\mcpe\protocol\PlayStatusPacket;
 use pocketmine\network\mcpe\protocol\StartGamePacket;
 use pocketmine\network\mcpe\protocol\types\DimensionIds;
 use pocketmine\network\mcpe\protocol\types\PlayerAction;
@@ -61,6 +62,7 @@ class DimensionListener implements Listener {
 		$pk = $event->getPacket();
 		if($pk instanceof PlayerActionPacket and $pk->action === PlayerAction::DIMENSION_CHANGE_ACK) {
 			$player = $event->getOrigin()->getPlayer();
+			$player->getNetworkSession()->sendDataPacket(PlayStatusPacket::create(PlayStatusPacket::PLAYER_SPAWN));
 
 			if(!in_array($player->getId(), Main::getTeleporting()))
 				return;
