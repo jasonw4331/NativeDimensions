@@ -10,6 +10,7 @@ use jasonwynn10\NativeDimensions\world\data\NetherPortalMap;
 use jasonwynn10\NativeDimensions\world\DimensionalWorld;
 use jasonwynn10\NativeDimensions\world\provider\DimensionLevelDBProvider;
 use pocketmine\block\Air;
+use pocketmine\block\Bed;
 use pocketmine\block\BlockFactory;
 use pocketmine\block\Fire;
 use pocketmine\block\NetherPortal;
@@ -40,6 +41,7 @@ use pocketmine\scheduler\CancelTaskException;
 use pocketmine\scheduler\ClosureTask;
 use pocketmine\timings\Timings;
 use pocketmine\timings\TimingsHandler;
+use pocketmine\world\Explosion;
 use pocketmine\world\format\SubChunk;
 use pocketmine\world\Position;
 
@@ -251,12 +253,17 @@ class DimensionListener implements Listener {
 	}
 
 	public function onSleep(PlayerBedEnterEvent $event) : void {
-		$pos = $event->getBed()->getPosition();
+		$bed = $event->getBed();
+		if(!$bed instanceof Bed)
+			return;
+		$pos = $bed->isHeadPart() ? $bed->getPosition() : $bed->getOtherHalf()->getPosition();
 		/** @var DimensionalWorld $world */
 		$world = $pos->getWorld();
 		if($world->getOverworld() !== $world) {
 			$event->cancel();
-			// TODO: blow up bed
+			$explosion = new Explosion($pos, 5, $event->getBed());
+			$explosion->explodeA();
+			$explosion->explodeB();
 		}
 	}
 
