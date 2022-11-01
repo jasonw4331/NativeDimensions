@@ -35,7 +35,7 @@ final class DimensionSpecificCompressor implements Compressor{
 			if($packet instanceof LevelChunkPacket){
 				$packet->decode(PacketSerializer::decoder($buffer, 0, $context));
 				$new_payload = substr($packet->getExtraPayload(), ChunkSerializer::LOWER_PADDING_SIZE * 2);
-				$modified = PacketBatch::fromPackets($context, LevelChunkPacket::create($packet->getChunkX(), $packet->getChunkZ(), $packet->getSubChunkCount() - ChunkSerializer::LOWER_PADDING_SIZE, $packet->isClientSubChunkRequestEnabled(), $packet->getUsedBlobHashes(), $new_payload))->getBuffer();
+				$modified = PacketBatch::fromPackets($context, LevelChunkPacket::create($packet->getChunkPosition(), $packet->getSubChunkCount() - ChunkSerializer::LOWER_PADDING_SIZE, $packet->isClientSubChunkRequestEnabled(), $packet->getUsedBlobHashes(), $new_payload))->getBuffer();
 			}
 		}
 		return $this->inner->compress($modified ?? $payload);
