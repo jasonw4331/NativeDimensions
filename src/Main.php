@@ -22,12 +22,16 @@ use pocketmine\math\Facing;
 use pocketmine\network\mcpe\cache\ChunkCache;
 use pocketmine\network\mcpe\compression\Compressor;
 use pocketmine\network\mcpe\compression\ZlibCompressor;
+use pocketmine\network\mcpe\protocol\types\DimensionIds;
 use pocketmine\plugin\PluginBase;
 use pocketmine\world\generator\GeneratorManager;
 use pocketmine\world\Position;
 use Webmozart\PathUtil\Path;
 
 class Main extends PluginBase {
+
+	/** @var array<string, DimensionIds::*> */
+	private array $applicable_worlds = [];
 
 	/** @var Compressor[] */
 	private array $known_compressors = [];
@@ -81,14 +85,15 @@ class Main extends PluginBase {
 		$this->getServer()->getPluginManager()->registerEvent(WorldLoadEvent::class, function(WorldLoadEvent $event) : void{
 			/** @var DimensionalWorld $world */
 			$world = $event->getWorld();
-			$this->registerHackToWorld($world);
+			$this->registerHackToWorldIfApplicable($world);
 		}, EventPriority::LOWEST, $this);
 
 		// register already-registered values
 		$this->registerKnownCompressor(ZlibCompressor::getInstance());
 		/** @var DimensionalWorld $world */
 		foreach($this->getServer()->getWorldManager()->getWorlds() as $world){
-			$this->registerHackToWorld($world);
+			if($world->getDimensionId() !== DimensionIds::OVERWORLD)
+				$this->applyToWorld($world->getFolderName(), $world->getDimensionId());
 		}
 
 		new DimensionListener($this);
@@ -112,22 +117,29 @@ class Main extends PluginBase {
 		$this->known_compressors[$id] = $compressor;
 		/** @var DimensionalWorld $world */
 		foreach($this->getServer()->getWorldManager()->getWorlds() as $world){
-			$this->registerHackToWorld($world);
+			$this->registerHackToWorldIfApplicable($world);
 		}
 	}
 
-	private function registerHackToWorld(DimensionalWorld $world) : void{
-		if($world->getOverworld() === $world)
-			return;
-
-		static $_chunk_cache_instances = null;
-		if($_chunk_cache_instances === null){
-			$_chunk_cache_instances = new \ReflectionProperty(ChunkCache::class, "instances");
-			$_chunk_cache_instances->setAccessible(true);
+	private function registerHackToWorldIfApplicable(DimensionalWorld $world) : bool{
+		if(!isset($this->applicable_worlds[$world_name = $world->getFolderName()])){
+			return false;
 		}
 
+		$dimension_id = $this->applicable_worlds[$world_name];
+		$this->registerHackToWorld($world, $dimension_id);
+		return true;
+	}
+
+	/**
+	 * @param DimensionalWorld $world
+	 * @param int $dimension_id
+	 * @phpstan-param DimensionIds::* $dimension_id
+	 */
+	private function registerHackToWorld(DimensionalWorld $world, int $dimension_id) : void{
 		static $_chunk_cache_compressor = null;
 		if($_chunk_cache_compressor === null){
+			/** @see ChunkCache::$compressor */
 			$_chunk_cache_compressor = new \ReflectionProperty(ChunkCache::class, "compressor");
 			$_chunk_cache_compressor->setAccessible(true);
 		}
@@ -135,12 +147,27 @@ class Main extends PluginBase {
 		foreach($this->known_compressors as $compressor){
 			$chunk_cache = ChunkCache::getInstance($world, $compressor);
 			$compressor = $_chunk_cache_compressor->getValue($chunk_cache);
-			if($compressor instanceof DimensionSpecificCompressor){
-				continue;
+			if(!($compressor instanceof DimensionSpecificCompressor)){
+				$_chunk_cache_compressor->setValue($chunk_cache, new DimensionSpecificCompressor($compressor, $dimension_id));
 			}
-
-			$_chunk_cache_compressor->setValue(ChunkCache::getInstance($world, $compressor), new DimensionSpecificCompressor($compressor));
 		}
+	}
+
+	/**
+	 * @param string $world_folder_name
+	 * @param DimensionIds::* $dimension_id
+	 */
+	public function applyToWorld(string $world_folder_name, int $dimension_id) : void{
+		$this->applicable_worlds[$world_folder_name] = $dimension_id;
+		/** @var DimensionalWorld $world */
+		$world = $this->getServer()->getWorldManager()->getWorldByName($world_folder_name);
+		if($world !== null){
+			$this->registerHackToWorldIfApplicable($world);
+		}
+	}
+
+	public function unapplyFromWorld(string $world_folder_name) : void{
+		unset($this->applicable_worlds[$world_folder_name]);
 	}
 
 	public static function makeNetherPortal(Position $position) : bool {
