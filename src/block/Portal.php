@@ -32,7 +32,7 @@ class Portal extends NetherPortal {
 	}
 
 	public function onBreak(Item $item, Player $player = null): bool{
-		$position = $this->position;
+		$position = $this->getPosition();
 		if($this->getSide(Facing::WEST) instanceof NetherPortal or
 			$this->getSide(Facing::EAST) instanceof NetherPortal
 		){//x direction
@@ -111,8 +111,8 @@ class Portal extends NetherPortal {
 						if($entity instanceof Player) {
 							if(!$entity->isCreative()) {
 								Main::getInstance()->getScheduler()->scheduleDelayedTask(new ClosureTask(function() use($entity, $position) : void {
-									$entity->teleport($position);
 									$entity->getNetworkSession()->sendDataPacket(ChangeDimensionPacket::create(DimensionIds::NETHER, $entity->getPosition(), false));
+									$entity->teleport($position);
 								}), 20 * 6);
 								return;
 							}
@@ -131,8 +131,8 @@ class Portal extends NetherPortal {
 				if($entity instanceof Player) {
 					if(!$entity->isCreative()) {
 						Main::getInstance()->getScheduler()->scheduleDelayedTask(new ClosureTask(function() use($entity, $position) : void {
-							$entity->teleport($position);
 							$entity->getNetworkSession()->sendDataPacket(ChangeDimensionPacket::create(DimensionIds::NETHER, $entity->getPosition(), false));
+							$entity->teleport($position);
 						}), 20 * 6);
 						return true;
 					}
@@ -154,8 +154,8 @@ class Portal extends NetherPortal {
 						if($entity instanceof Player) {
 							if(!$entity->isCreative()) {
 								Main::getInstance()->getScheduler()->scheduleDelayedTask(new ClosureTask(function() use($entity, $position) : void {
-									$entity->teleport($position);
 									$entity->getNetworkSession()->sendDataPacket(ChangeDimensionPacket::create(DimensionIds::OVERWORLD, $entity->getPosition(), false));
+									$entity->teleport($position);
 								}), 20 * 6);
 								return;
 							}
@@ -174,8 +174,8 @@ class Portal extends NetherPortal {
 				if($entity instanceof Player) {
 					if(!$entity->isCreative()) {
 						Main::getInstance()->getScheduler()->scheduleDelayedTask(new ClosureTask(function() use($entity, $position) : void {
-							$entity->teleport($position);
 							$entity->getNetworkSession()->sendDataPacket(ChangeDimensionPacket::create(DimensionIds::OVERWORLD, $entity->getPosition(), false));
+							$entity->teleport($position);
 						}), 20 * 6);
 						return true;
 					}

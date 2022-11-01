@@ -266,7 +266,7 @@ class DimensionalWorldManager extends WorldManager {
 	 *
 	 * @throws \InvalidArgumentException
 	 */
-	public function generateWorld(string $name, WorldCreationOptions $options, bool $backgroundGeneration = true) : bool{
+	public function generateWorld(string $name, WorldCreationOptions $options, bool $backgroundGeneration = true, bool $dimensionalWorld = true) : bool{
 		if(trim($name) === "" or $this->isWorldGenerated($name)){
 			return false;
 		}
@@ -277,108 +277,145 @@ class DimensionalWorldManager extends WorldManager {
 		$providerEntry->generate($path, $name, $options);
 		$provider = $providerEntry->fromPath($path, DimensionIds::OVERWORLD);
 
-		$world = new DimensionalWorld($this->server, $name, $provider, $this->server->getAsyncPool(), DimensionIds::OVERWORLD);
-		$this->worlds[$world->getId()] = $world;
+		if(!$dimensionalWorld){
+			$world = new World($this->server, $name, $provider, $this->server->getAsyncPool());
+			$this->worlds[$world->getId()] = $world;
 
-		$world->setAutoSave($this->autoSave);
+			$world->setAutoSave($this->autoSave);
 
-		(new WorldInitEvent($world))->call();
+			(new WorldInitEvent($world))->call();
 
-		(new WorldLoadEvent($world))->call();
+			(new WorldLoadEvent($world))->call();
 
-		if($backgroundGeneration){
-			$this->server->getLogger()->notice($this->server->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_backgroundGeneration($name)));
+			if($backgroundGeneration){
+				$this->server->getLogger()->notice($this->server->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_backgroundGeneration($name)));
 
-			$spawnLocation = $world->getSpawnLocation();
-			$centerX = $spawnLocation->getFloorX() >> Chunk::COORD_BIT_SIZE;
-			$centerZ = $spawnLocation->getFloorZ() >> Chunk::COORD_BIT_SIZE;
+				$spawnLocation = $world->getSpawnLocation();
+				$centerX = $spawnLocation->getFloorX() >> Chunk::COORD_BIT_SIZE;
+				$centerZ = $spawnLocation->getFloorZ() >> Chunk::COORD_BIT_SIZE;
 
-			$selected = iterator_to_array((new ChunkSelector())->selectChunks(8, $centerX, $centerZ));
-			$overworldDone = 0;
-			$total = count($selected);
-			foreach($selected as $index){
-				World::getXZ($index, $chunkX, $chunkZ);
-				$world->orderChunkPopulation($chunkX, $chunkZ, null)->onCompletion(
-					static function() use ($world, &$overworldDone, $total) : void{
-						$oldProgress = (int) floor(($overworldDone / $total) * 100);
-						$newProgress = (int) floor((++$overworldDone / $total) * 100);
-						if(intdiv($oldProgress, 10) !== intdiv($newProgress, 10) || $overworldDone === $total || $overworldDone === 1){
-							$world->getLogger()->info($world->getServer()->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_spawnTerrainGenerationProgress(strval($overworldDone), strval($total), strval($newProgress))));
-						}
-					},
-					static function() : void{
-						//NOOP: we don't care if the world was unloaded
-					});
+				$selected = iterator_to_array((new ChunkSelector())->selectChunks(8, $centerX, $centerZ));
+				$overworldDone = 0;
+				$total = count($selected);
+				foreach($selected as $index){
+					World::getXZ($index, $chunkX, $chunkZ);
+					$world->orderChunkPopulation($chunkX, $chunkZ, null)->onCompletion(
+						static function() use ($world, &$overworldDone, $total) : void{
+							$oldProgress = (int) floor(($overworldDone / $total) * 100);
+							$newProgress = (int) floor((++$overworldDone / $total) * 100);
+							if(intdiv($oldProgress, 10) !== intdiv($newProgress, 10) || $overworldDone === $total || $overworldDone === 1){
+								$world->getLogger()->info($world->getServer()->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_spawnTerrainGenerationProgress(strval($overworldDone), strval($total), strval($newProgress))));
+							}
+						},
+						static function() : void{
+							//NOOP: we don't care if the world was unloaded
+						});
+				}
 			}
-		}
+		}else{
+			$world = new DimensionalWorld($this->server, $name, $provider, $this->server->getAsyncPool(), DimensionIds::OVERWORLD);
+			$this->worlds[$world->getId()] = $world;
 
-		$world = new DimensionalWorld($this->server, $name . " nether", $providerEntry->fromPath($path, DimensionIds::NETHER, $provider->getDatabase()), $this->server->getAsyncPool(), DimensionIds::NETHER);
-		$this->worlds[$world->getId()] = $world;
+			$world->setAutoSave($this->autoSave);
 
-		$world->setAutoSave($this->autoSave);
+			(new WorldInitEvent($world))->call();
 
-		(new WorldInitEvent($world))->call();
+			(new WorldLoadEvent($world))->call();
 
-		(new WorldLoadEvent($world))->call();
+			if($backgroundGeneration){
+				$this->server->getLogger()->notice($this->server->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_backgroundGeneration($name)));
 
-		if($backgroundGeneration){
-			$this->server->getLogger()->notice($this->server->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_backgroundGeneration($name)));
+				$spawnLocation = $world->getSpawnLocation();
+				$centerX = $spawnLocation->getFloorX() >> Chunk::COORD_BIT_SIZE;
+				$centerZ = $spawnLocation->getFloorZ() >> Chunk::COORD_BIT_SIZE;
 
-			$spawnLocation = $world->getSpawnLocation();
-			$centerX = $spawnLocation->getFloorX() >> Chunk::COORD_BIT_SIZE;
-			$centerZ = $spawnLocation->getFloorZ() >> Chunk::COORD_BIT_SIZE;
-
-			$selected = iterator_to_array((new ChunkSelector())->selectChunks(8, $centerX, $centerZ));
-			$netherDone = 0;
-			$total = count($selected);
-			foreach($selected as $index){
-				World::getXZ($index, $chunkX, $chunkZ);
-				$world->orderChunkPopulation($chunkX, $chunkZ, null)->onCompletion(
-					static function() use ($world, &$netherDone, $total) : void{
-						$oldProgress = (int) floor(($netherDone / $total) * 100);
-						$newProgress = (int) floor((++$netherDone / $total) * 100);
-						if(intdiv($oldProgress, 10) !== intdiv($newProgress, 10) || $netherDone === $total || $netherDone === 1){
-							$world->getLogger()->info($world->getServer()->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_spawnTerrainGenerationProgress(strval($netherDone), strval($total), strval($newProgress))));
-						}
-					},
-					static function() : void{
-						//NOOP: we don't care if the world was unloaded
-					});
+				$selected = iterator_to_array((new ChunkSelector())->selectChunks(8, $centerX, $centerZ));
+				$overworldDone = 0;
+				$total = count($selected);
+				foreach($selected as $index){
+					World::getXZ($index, $chunkX, $chunkZ);
+					$world->orderChunkPopulation($chunkX, $chunkZ, null)->onCompletion(
+						static function() use ($world, &$overworldDone, $total) : void{
+							$oldProgress = (int) floor(($overworldDone / $total) * 100);
+							$newProgress = (int) floor((++$overworldDone / $total) * 100);
+							if(intdiv($oldProgress, 10) !== intdiv($newProgress, 10) || $overworldDone === $total || $overworldDone === 1){
+								$world->getLogger()->info($world->getServer()->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_spawnTerrainGenerationProgress(strval($overworldDone), strval($total), strval($newProgress))));
+							}
+						},
+						static function() : void{
+							//NOOP: we don't care if the world was unloaded
+						});
+				}
 			}
-		}
 
-		$world = new DimensionalWorld($this->server, $name . " end", $providerEntry->fromPath($path, DimensionIds::THE_END, $provider->getDatabase()), $this->server->getAsyncPool(), DimensionIds::THE_END);
-		$this->worlds[$world->getId()] = $world;
+			$world = new DimensionalWorld($this->server, $name . " nether", $providerEntry->fromPath($path, DimensionIds::NETHER, $provider->getDatabase()), $this->server->getAsyncPool(), DimensionIds::NETHER);
+			$this->worlds[$world->getId()] = $world;
 
-		$world->setAutoSave($this->autoSave);
+			$world->setAutoSave($this->autoSave);
 
-		(new WorldInitEvent($world))->call();
+			(new WorldInitEvent($world))->call();
 
-		(new WorldLoadEvent($world))->call();
+			(new WorldLoadEvent($world))->call();
 
-		if($backgroundGeneration){
-			$this->server->getLogger()->notice($this->server->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_backgroundGeneration($name)));
+			if($backgroundGeneration){
+				$this->server->getLogger()->notice($this->server->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_backgroundGeneration($name)));
 
-			$spawnLocation = $world->getSpawnLocation();
-			$centerX = $spawnLocation->getFloorX() >> Chunk::COORD_BIT_SIZE;
-			$centerZ = $spawnLocation->getFloorZ() >> Chunk::COORD_BIT_SIZE;
+				$spawnLocation = $world->getSpawnLocation();
+				$centerX = $spawnLocation->getFloorX() >> Chunk::COORD_BIT_SIZE;
+				$centerZ = $spawnLocation->getFloorZ() >> Chunk::COORD_BIT_SIZE;
 
-			$selected = iterator_to_array((new ChunkSelector())->selectChunks(8, $centerX, $centerZ));
-			$endDone = 0;
-			$total = count($selected);
-			foreach($selected as $index){
-				World::getXZ($index, $chunkX, $chunkZ);
-				$world->orderChunkPopulation($chunkX, $chunkZ, null)->onCompletion(
-					static function() use ($world, &$endDone, $total) : void{
-						$oldProgress = (int) floor(($endDone / $total) * 100);
-						$newProgress = (int) floor((++$endDone / $total) * 100);
-						if(intdiv($oldProgress, 10) !== intdiv($newProgress, 10) || $endDone === $total || $endDone === 1){
-							$world->getLogger()->info($world->getServer()->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_spawnTerrainGenerationProgress(strval($endDone), strval($total), strval($newProgress))));
-						}
-					},
-					static function() : void{
-						//NOOP: we don't care if the world was unloaded
-					});
+				$selected = iterator_to_array((new ChunkSelector())->selectChunks(8, $centerX, $centerZ));
+				$netherDone = 0;
+				$total = count($selected);
+				foreach($selected as $index){
+					World::getXZ($index, $chunkX, $chunkZ);
+					$world->orderChunkPopulation($chunkX, $chunkZ, null)->onCompletion(
+						static function() use ($world, &$netherDone, $total) : void{
+							$oldProgress = (int) floor(($netherDone / $total) * 100);
+							$newProgress = (int) floor((++$netherDone / $total) * 100);
+							if(intdiv($oldProgress, 10) !== intdiv($newProgress, 10) || $netherDone === $total || $netherDone === 1){
+								$world->getLogger()->info($world->getServer()->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_spawnTerrainGenerationProgress(strval($netherDone), strval($total), strval($newProgress))));
+							}
+						},
+						static function() : void{
+							//NOOP: we don't care if the world was unloaded
+						});
+				}
+			}
+
+			$world = new DimensionalWorld($this->server, $name . " end", $providerEntry->fromPath($path, DimensionIds::THE_END, $provider->getDatabase()), $this->server->getAsyncPool(), DimensionIds::THE_END);
+			$this->worlds[$world->getId()] = $world;
+
+			$world->setAutoSave($this->autoSave);
+
+			(new WorldInitEvent($world))->call();
+
+			(new WorldLoadEvent($world))->call();
+
+			if($backgroundGeneration){
+				$this->server->getLogger()->notice($this->server->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_backgroundGeneration($name)));
+
+				$spawnLocation = $world->getSpawnLocation();
+				$centerX = $spawnLocation->getFloorX() >> Chunk::COORD_BIT_SIZE;
+				$centerZ = $spawnLocation->getFloorZ() >> Chunk::COORD_BIT_SIZE;
+
+				$selected = iterator_to_array((new ChunkSelector())->selectChunks(8, $centerX, $centerZ));
+				$endDone = 0;
+				$total = count($selected);
+				foreach($selected as $index){
+					World::getXZ($index, $chunkX, $chunkZ);
+					$world->orderChunkPopulation($chunkX, $chunkZ, null)->onCompletion(
+						static function() use ($world, &$endDone, $total) : void{
+							$oldProgress = (int) floor(($endDone / $total) * 100);
+							$newProgress = (int) floor((++$endDone / $total) * 100);
+							if(intdiv($oldProgress, 10) !== intdiv($newProgress, 10) || $endDone === $total || $endDone === 1){
+								$world->getLogger()->info($world->getServer()->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_spawnTerrainGenerationProgress(strval($endDone), strval($total), strval($newProgress))));
+							}
+						},
+						static function() : void{
+							//NOOP: we don't care if the world was unloaded
+						});
+				}
 			}
 		}
 

@@ -3,7 +3,6 @@ declare(strict_types=1);
 namespace jasonwynn10\NativeDimensions;
 
 use jasonwynn10\NativeDimensions\block\EndPortal;
-use jasonwynn10\NativeDimensions\block\Fire;
 use jasonwynn10\NativeDimensions\block\Obsidian;
 use jasonwynn10\NativeDimensions\block\Portal;
 use jasonwynn10\NativeDimensions\event\DimensionListener;
@@ -26,37 +25,37 @@ use pocketmine\math\Facing;
 use pocketmine\network\mcpe\cache\ChunkCache;
 use pocketmine\network\mcpe\compression\Compressor;
 use pocketmine\network\mcpe\compression\ZlibCompressor;
+use pocketmine\network\mcpe\protocol\types\DimensionIds;
 use pocketmine\plugin\PluginBase;
 use pocketmine\world\generator\GeneratorManager;
 use pocketmine\world\Position;
 use Webmozart\PathUtil\Path;
 
-class Main extends PluginBase{
+class Main extends PluginBase {
+
+	/** @var array<string, DimensionIds::*> */
+	private array $applicable_worlds = [];
+
+	/** @var Compressor[] */
+	private array $known_compressors = [];
 
 	private static self $instance;
 
 	/** @var int[] $teleporting */
 	protected static array $teleporting = [];
 
-	/** @var string[] $disabledWorlds */
-	private static array $disabledWorlds = [];
-
-	/** @var Compressor[] $knownCompressors */
-	private array $knownCompressors = [];
-
-	public static function getInstance() : Main{
+	public static function getInstance() : Main {
 		return self::$instance;
 	}
 
-	public function onLoad() : void{
+	public function onLoad() : void {
 		self::$instance = $this;
 
 		GeneratorManager::getInstance()->addGenerator(NetherGenerator::class, 'nether', fn() => null, true);
 		GeneratorManager::getInstance()->addGenerator(EnderGenerator::class, 'ender', fn() => null, true);
 
 		$config = $this->getConfig();
-		self::$disabledWorlds = (array) $config->get('Portal Disabled Worlds', []);
-		if(count(self::$disabledWorlds) === 0)
+		if(count($config->get('Portal Disabled Worlds', [])) === 0)
 			$config->set('Portal Disabled Worlds', []);
 
 		$this->getLogger()->debug("Unloading Worlds");
@@ -89,14 +88,15 @@ class Main extends PluginBase{
 		$this->getServer()->getPluginManager()->registerEvent(WorldLoadEvent::class, function(WorldLoadEvent $event) : void{
 			/** @var DimensionalWorld $world */
 			$world = $event->getWorld();
-			$this->registerHackToWorld($world);
+			$this->registerHackToWorldIfApplicable($world);
 		}, EventPriority::LOWEST, $this);
 
 		// register already-registered values
 		$this->registerKnownCompressor(ZlibCompressor::getInstance());
 		/** @var DimensionalWorld $world */
 		foreach($this->getServer()->getWorldManager()->getWorlds() as $world){
-			$this->registerHackToWorld($world);
+			if($world->getDimensionId() !== DimensionIds::OVERWORLD)
+				$this->applyToWorld($world->getFolderName(), $world->getDimensionId());
 		}
 
 		new DimensionListener($this);
@@ -104,7 +104,6 @@ class Main extends PluginBase{
 		$parser = StringToItemParser::getInstance();
 		foreach([
 			new EndPortal(),
-			new Fire(),
 			new Obsidian(),
 			new Portal()
 		] as $block) {
@@ -114,42 +113,65 @@ class Main extends PluginBase{
 	}
 
 	private function registerKnownCompressor(Compressor $compressor) : void{
-		if(isset($this->knownCompressors[$id = spl_object_id($compressor)])){
+		if(isset($this->known_compressors[$id = spl_object_id($compressor)])){
 			return;
 		}
 
-		$this->knownCompressors[$id] = $compressor;
+		$this->known_compressors[$id] = $compressor;
 		/** @var DimensionalWorld $world */
 		foreach($this->getServer()->getWorldManager()->getWorlds() as $world){
-			$this->registerHackToWorld($world);
+			$this->registerHackToWorldIfApplicable($world);
 		}
 	}
 
-	private function registerHackToWorld(DimensionalWorld $world) : void{
-		if($world->getOverworld() === $world)
-			return;
-
-		static $_chunk_cache_instances = null;
-		if($_chunk_cache_instances === null){
-			$_chunk_cache_instances = new \ReflectionProperty(ChunkCache::class, "instances");
-			$_chunk_cache_instances->setAccessible(true);
+	private function registerHackToWorldIfApplicable(DimensionalWorld $world) : bool{
+		if(!isset($this->applicable_worlds[$world_name = $world->getFolderName()])){
+			return false;
 		}
 
+		$dimension_id = $this->applicable_worlds[$world_name];
+		$this->registerHackToWorld($world, $dimension_id);
+		return true;
+	}
+
+	/**
+	 * @param DimensionalWorld $world
+	 * @param int $dimension_id
+	 * @phpstan-param DimensionIds::* $dimension_id
+	 */
+	private function registerHackToWorld(DimensionalWorld $world, int $dimension_id) : void{
 		static $_chunk_cache_compressor = null;
 		if($_chunk_cache_compressor === null){
+			/** @see ChunkCache::$compressor */
 			$_chunk_cache_compressor = new \ReflectionProperty(ChunkCache::class, "compressor");
 			$_chunk_cache_compressor->setAccessible(true);
 		}
 
-		foreach($this->knownCompressors as $compressor){
+		foreach($this->known_compressors as $compressor){
 			$chunk_cache = ChunkCache::getInstance($world, $compressor);
 			$compressor = $_chunk_cache_compressor->getValue($chunk_cache);
-			if($compressor instanceof DimensionSpecificCompressor){
-				continue;
+			if(!($compressor instanceof DimensionSpecificCompressor)){
+				$_chunk_cache_compressor->setValue($chunk_cache, new DimensionSpecificCompressor($compressor, $dimension_id));
 			}
-
-			$_chunk_cache_compressor->setValue(ChunkCache::getInstance($world, $compressor), new DimensionSpecificCompressor($compressor));
 		}
+	}
+
+	/**
+	 * @param string $world_folder_name
+	 * @param int $dimension_id
+	 * @phpstan-param DimensionIds::* $dimension_id
+	 */
+	public function applyToWorld(string $world_folder_name, int $dimension_id) : void{
+		$this->applicable_worlds[$world_folder_name] = $dimension_id;
+		/** @var DimensionalWorld $world */
+		$world = $this->getServer()->getWorldManager()->getWorldByName($world_folder_name);
+		if($world !== null){
+			$this->registerHackToWorldIfApplicable($world);
+		}
+	}
+
+	public function unapplyFromWorld(string $world_folder_name) : void{
+		unset($this->applicable_worlds[$world_folder_name]);
 	}
 
 	public static function generateValidPortalCoords(Position $position, DimensionalWorld $world) : Position {
@@ -273,81 +295,83 @@ class Main extends PluginBase{
 		$portalBlock = (new Portal())->setAxis($axis);
 
 		/** @var DimensionalWorld $world */
-		$world = $position->world;
-		if($axis === Axis::Z){
-			self::$instance->getLogger()->debug('Generating Z Axis Nether Portal');
+		$world = $position->getWorld();
+		$frameBlock = new Obsidian();
+		$air = VanillaBlocks::AIR();
+		if($axis === Axis::Z) {
+			self::getInstance()->getLogger()->debug('Generating Z Axis Nether Portal');
 			// portal blocks
-			$world->setBlock($position, $portalBlock, true);
-			$world->setBlock($position->getSide(Facing::UP), $portalBlock, true);
-			$world->setBlock($position->getSide(Facing::UP, 2), $portalBlock, true);
-			$world->setBlock($position->getSide(Facing::NORTH), $portalBlock, true);
-			$world->setBlock($position->getSide(Facing::NORTH)->getSide(Facing::UP), $portalBlock, true);
-			$world->setBlock($position->getSide(Facing::NORTH)->getSide(Facing::UP, 2), $portalBlock, true);
+			$world->setBlock($position, $portalBlock, false);
+			$world->setBlock($position->getSide(Facing::UP), $portalBlock, false);
+			$world->setBlock($position->getSide(Facing::UP, 2), $portalBlock, false);
+			$world->setBlock($position->getSide(Facing::NORTH), $portalBlock, false);
+			$world->setBlock($position->getSide(Facing::NORTH)->getSide(Facing::UP), $portalBlock, false);
+			$world->setBlock($position->getSide(Facing::NORTH)->getSide(Facing::UP, 2), $portalBlock, false);
 			// obsidian
-			$world->setBlock($position->getSide(Facing::SOUTH), VanillaBlocks::OBSIDIAN(), true);
-			$world->setBlock($position->getSide(Facing::SOUTH)->getSide(Facing::DOWN), VanillaBlocks::OBSIDIAN(), true);
-			$world->setBlock($position->getSide(Facing::SOUTH)->getSide(Facing::UP), VanillaBlocks::OBSIDIAN(), true);
-			$world->setBlock($position->getSide(Facing::SOUTH)->getSide(Facing::UP, 2), VanillaBlocks::OBSIDIAN(), true);
-			$world->setBlock($position->getSide(Facing::SOUTH)->getSide(Facing::UP, 3), VanillaBlocks::OBSIDIAN(), true);
-			$world->setBlock($position->getSide(Facing::DOWN), VanillaBlocks::OBSIDIAN(), true);
-			$world->setBlock($position->getSide(Facing::DOWN)->getSide(Facing::NORTH), VanillaBlocks::OBSIDIAN(), true);
-			$world->setBlock($position->getSide(Facing::UP, 3), VanillaBlocks::OBSIDIAN(), true);
-			$world->setBlock($position->getSide(Facing::UP, 3)->getSide(Facing::NORTH), VanillaBlocks::OBSIDIAN(), true);
-			$world->setBlock($position->getSide(Facing::NORTH, 2), VanillaBlocks::OBSIDIAN(), true);
-			$world->setBlock($position->getSide(Facing::NORTH, 2)->getSide(Facing::DOWN), VanillaBlocks::OBSIDIAN(), true);
-			$world->setBlock($position->getSide(Facing::NORTH, 2)->getSide(Facing::UP), VanillaBlocks::OBSIDIAN(), true);
-			$world->setBlock($position->getSide(Facing::NORTH, 2)->getSide(Facing::UP, 2), VanillaBlocks::OBSIDIAN(), true);
-			$world->setBlock($position->getSide(Facing::NORTH, 2)->getSide(Facing::UP, 3), VanillaBlocks::OBSIDIAN(), true);
+			$world->setBlock($position->getSide(Facing::SOUTH), $frameBlock, false);
+			$world->setBlock($position->getSide(Facing::SOUTH)->getSide(Facing::DOWN), $frameBlock, false);
+			$world->setBlock($position->getSide(Facing::SOUTH)->getSide(Facing::UP), $frameBlock, false);
+			$world->setBlock($position->getSide(Facing::SOUTH)->getSide(Facing::UP, 2), $frameBlock, false);
+			$world->setBlock($position->getSide(Facing::SOUTH)->getSide(Facing::UP, 3), $frameBlock, false);
+			$world->setBlock($position->getSide(Facing::DOWN), $frameBlock, false);
+			$world->setBlock($position->getSide(Facing::DOWN)->getSide(Facing::NORTH), $frameBlock, false);
+			$world->setBlock($position->getSide(Facing::UP, 3), $frameBlock, false);
+			$world->setBlock($position->getSide(Facing::UP, 3)->getSide(Facing::NORTH), $frameBlock, false);
+			$world->setBlock($position->getSide(Facing::NORTH, 2), $frameBlock, false);
+			$world->setBlock($position->getSide(Facing::NORTH, 2)->getSide(Facing::DOWN), $frameBlock, false);
+			$world->setBlock($position->getSide(Facing::NORTH, 2)->getSide(Facing::UP), $frameBlock, false);
+			$world->setBlock($position->getSide(Facing::NORTH, 2)->getSide(Facing::UP, 2), $frameBlock, false);
+			$world->setBlock($position->getSide(Facing::NORTH, 2)->getSide(Facing::UP, 3), $frameBlock, false);
 			// air
-			$world->setBlock($position->getSide(Facing::EAST), VanillaBlocks::AIR(), true);
-			$world->setBlock($position->getSide(Facing::UP)->getSide(Facing::EAST), VanillaBlocks::AIR(), true);
-			$world->setBlock($position->getSide(Facing::UP, 2)->getSide(Facing::EAST), VanillaBlocks::AIR(), true);
-			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::EAST), VanillaBlocks::AIR(), true);
-			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::UP)->getSide(Facing::EAST), VanillaBlocks::AIR(), true);
-			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::UP, 2)->getSide(Facing::EAST), VanillaBlocks::AIR(), true);
-			$world->setBlock($position->getSide(Facing::WEST), VanillaBlocks::AIR(), true);
-			$world->setBlock($position->getSide(Facing::UP)->getSide(Facing::WEST), VanillaBlocks::AIR(), true);
-			$world->setBlock($position->getSide(Facing::UP, 2)->getSide(Facing::WEST), VanillaBlocks::AIR(), true);
-			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::WEST), VanillaBlocks::AIR(), true);
-			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::UP)->getSide(Facing::WEST), VanillaBlocks::AIR(), true);
-			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::UP, 2)->getSide(Facing::WEST), VanillaBlocks::AIR(), true);
+			$world->setBlock($position->getSide(Facing::EAST), $air, false);
+			$world->setBlock($position->getSide(Facing::UP)->getSide(Facing::EAST), $air, false);
+			$world->setBlock($position->getSide(Facing::UP, 2)->getSide(Facing::EAST), $air, false);
+			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::EAST), $air, false);
+			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::UP)->getSide(Facing::EAST), $air, false);
+			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::UP, 2)->getSide(Facing::EAST), $air, false);
+			$world->setBlock($position->getSide(Facing::WEST), $air, false);
+			$world->setBlock($position->getSide(Facing::UP)->getSide(Facing::WEST), $air, false);
+			$world->setBlock($position->getSide(Facing::UP, 2)->getSide(Facing::WEST), $air, false);
+			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::WEST), $air, false);
+			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::UP)->getSide(Facing::WEST), $air, false);
+			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::UP, 2)->getSide(Facing::WEST), $air, false);
 		}else{
-			self::$instance->getLogger()->debug('Generating X Axis Nether Portal');
+			self::getInstance()->getLogger()->debug('Generating X Axis Nether Portal');
 			// portal blocks
-			$world->setBlock($position, $portalBlock, true);
-			$world->setBlock($position->getSide(Facing::UP), $portalBlock, true);
-			$world->setBlock($position->getSide(Facing::UP, 2), $portalBlock, true);
-			$world->setBlock($position->getSide(Facing::EAST), $portalBlock, true);
-			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::UP), $portalBlock, true);
-			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::UP, 2), $portalBlock, true);
+			$world->setBlock($position, $portalBlock, false);
+			$world->setBlock($position->getSide(Facing::UP), $portalBlock, false);
+			$world->setBlock($position->getSide(Facing::UP, 2), $portalBlock, false);
+			$world->setBlock($position->getSide(Facing::EAST), $portalBlock, false);
+			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::UP), $portalBlock, false);
+			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::UP, 2), $portalBlock, false);
 			// obsidian
-			$world->setBlock($position->getSide(Facing::WEST), VanillaBlocks::OBSIDIAN(), true);
-			$world->setBlock($position->getSide(Facing::WEST)->getSide(Facing::DOWN), VanillaBlocks::OBSIDIAN(), true);
-			$world->setBlock($position->getSide(Facing::WEST)->getSide(Facing::UP), VanillaBlocks::OBSIDIAN(), true);
-			$world->setBlock($position->getSide(Facing::WEST)->getSide(Facing::UP, 2), VanillaBlocks::OBSIDIAN(), true);
-			$world->setBlock($position->getSide(Facing::WEST)->getSide(Facing::UP, 3), VanillaBlocks::OBSIDIAN(), true);
-			$world->setBlock($position->getSide(Facing::DOWN), VanillaBlocks::OBSIDIAN(), true);
-			$world->setBlock($position->getSide(Facing::DOWN)->getSide(Facing::EAST), VanillaBlocks::OBSIDIAN(), true);
-			$world->setBlock($position->getSide(Facing::UP, 3), VanillaBlocks::OBSIDIAN(), true);
-			$world->setBlock($position->getSide(Facing::UP, 3)->getSide(Facing::EAST), VanillaBlocks::OBSIDIAN(), true);
-			$world->setBlock($position->getSide(Facing::EAST, 2), VanillaBlocks::OBSIDIAN(), true);
-			$world->setBlock($position->getSide(Facing::EAST, 2)->getSide(Facing::DOWN), VanillaBlocks::OBSIDIAN(), true);
-			$world->setBlock($position->getSide(Facing::EAST, 2)->getSide(Facing::UP), VanillaBlocks::OBSIDIAN(), true);
-			$world->setBlock($position->getSide(Facing::EAST, 2)->getSide(Facing::UP, 2), VanillaBlocks::OBSIDIAN(), true);
-			$world->setBlock($position->getSide(Facing::EAST, 2)->getSide(Facing::UP, 3), VanillaBlocks::OBSIDIAN(), true);
+			$world->setBlock($position->getSide(Facing::WEST), $frameBlock, false);
+			$world->setBlock($position->getSide(Facing::WEST)->getSide(Facing::DOWN), $frameBlock, false);
+			$world->setBlock($position->getSide(Facing::WEST)->getSide(Facing::UP), $frameBlock, false);
+			$world->setBlock($position->getSide(Facing::WEST)->getSide(Facing::UP, 2), $frameBlock, false);
+			$world->setBlock($position->getSide(Facing::WEST)->getSide(Facing::UP, 3), $frameBlock, false);
+			$world->setBlock($position->getSide(Facing::DOWN), $frameBlock, false);
+			$world->setBlock($position->getSide(Facing::DOWN)->getSide(Facing::EAST), $frameBlock, false);
+			$world->setBlock($position->getSide(Facing::UP, 3), $frameBlock, false);
+			$world->setBlock($position->getSide(Facing::UP, 3)->getSide(Facing::EAST), $frameBlock, false);
+			$world->setBlock($position->getSide(Facing::EAST, 2), $frameBlock, false);
+			$world->setBlock($position->getSide(Facing::EAST, 2)->getSide(Facing::DOWN), $frameBlock, false);
+			$world->setBlock($position->getSide(Facing::EAST, 2)->getSide(Facing::UP), $frameBlock, false);
+			$world->setBlock($position->getSide(Facing::EAST, 2)->getSide(Facing::UP, 2), $frameBlock, false);
+			$world->setBlock($position->getSide(Facing::EAST, 2)->getSide(Facing::UP, 3), $frameBlock, false);
 			// air
-			$world->setBlock($position->getSide(Facing::NORTH), VanillaBlocks::AIR(), true);
-			$world->setBlock($position->getSide(Facing::UP)->getSide(Facing::NORTH), VanillaBlocks::AIR(), true);
-			$world->setBlock($position->getSide(Facing::UP, 2)->getSide(Facing::NORTH), VanillaBlocks::AIR(), true);
-			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::NORTH), VanillaBlocks::AIR(), true);
-			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::UP)->getSide(Facing::NORTH), VanillaBlocks::AIR(), true);
-			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::UP, 2)->getSide(Facing::NORTH), VanillaBlocks::AIR(), true);
-			$world->setBlock($position->getSide(Facing::SOUTH), VanillaBlocks::AIR(), true);
-			$world->setBlock($position->getSide(Facing::UP)->getSide(Facing::SOUTH), VanillaBlocks::AIR(), true);
-			$world->setBlock($position->getSide(Facing::UP, 2)->getSide(Facing::SOUTH), VanillaBlocks::AIR(), true);
-			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::SOUTH), VanillaBlocks::AIR(), true);
-			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::UP)->getSide(Facing::SOUTH), VanillaBlocks::AIR(), true);
-			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::UP, 2)->getSide(Facing::SOUTH), VanillaBlocks::AIR(), true);
+			$world->setBlock($position->getSide(Facing::NORTH), $air, false);
+			$world->setBlock($position->getSide(Facing::UP)->getSide(Facing::NORTH), $air, false);
+			$world->setBlock($position->getSide(Facing::UP, 2)->getSide(Facing::NORTH), $air, false);
+			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::NORTH), $air, false);
+			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::UP)->getSide(Facing::NORTH), $air, false);
+			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::UP, 2)->getSide(Facing::NORTH), $air, false);
+			$world->setBlock($position->getSide(Facing::SOUTH), $air, false);
+			$world->setBlock($position->getSide(Facing::UP)->getSide(Facing::SOUTH), $air, false);
+			$world->setBlock($position->getSide(Facing::UP, 2)->getSide(Facing::SOUTH), $air, false);
+			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::SOUTH), $air, false);
+			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::UP)->getSide(Facing::SOUTH), $air, false);
+			$world->setBlock($position->getSide(Facing::EAST)->getSide(Facing::UP, 2)->getSide(Facing::SOUTH), $air, false);
 		}
 		NetherPortalMap::getInstance()->addPortal($world, new NetherPortalData(2, $axis, $world->getDimensionId(), (int) floor($position->x), (int) floor($position->y), (int) floor($position->z)));
 		return true;
@@ -436,7 +460,7 @@ class Main extends PluginBase{
 			self::$teleporting[] = $id;
 	}
 
-	public static function removeTeleportingId(int $id) : void{
+	public static function removeTeleportingId(int $id) : void {
 		$key = array_search($id, self::$teleporting);
 		if($key !== false){
 			unset(self::$teleporting[$key]);
@@ -444,8 +468,8 @@ class Main extends PluginBase{
 		}
 	}
 
-	public static function isPortalDisabled(DimensionalWorld $world) : bool{
-		foreach(self::$disabledWorlds as $worldName){
+	public static function isPortalDisabled(DimensionalWorld $world) : bool {
+		foreach(((array) self::$instance->getConfig()->get('Portal Disabled Worlds', [])) as $worldName){
 			if(str_contains($world->getFolderName(), $worldName))
 				return true;
 		}
