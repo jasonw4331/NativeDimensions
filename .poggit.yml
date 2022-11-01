@@ -3,4 +3,5 @@ projects:
   NativeDimensions:
     path: ""
     icon: icon.gif
+    lint: false
 ...
