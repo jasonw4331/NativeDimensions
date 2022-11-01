@@ -2,9 +2,7 @@ name: NativeDimensions
 main: jasonwynn10\NativeDimensions\Main
 src-namespace-prefix: jasonwynn10\NativeDimensions
 version: 1.0.0-beta7
-api: 4.2.0
+api: 4.5.1
 description: "A plugin which loads dimensions within worlds and provides an API for managing dimensions across worlds"
 author: "jasonwynn10"
-load: STARTUP
-mcpe-protocols:
-  - 554
+load: POSTWORLD
