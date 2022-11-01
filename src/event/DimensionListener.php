@@ -116,31 +116,25 @@ class DimensionListener implements Listener {
 			if(!$obsidian->isSameType(VanillaBlocks::OBSIDIAN())){
 				continue;
 			}
-			$minWidth = 2;
-			if($this->testDirectionForObsidian(Facing::NORTH, $block->getPosition(), $widthA) and $this->testDirectionForObsidian(Facing::SOUTH, $block->getPosition(), $widthB)){
-				$totalWidth = $widthA + $widthB - 1;
-				if($totalWidth < $minWidth){
-					return; // portal cannot be made
-				}
-				$direction = Facing::NORTH;
-			}elseif($this->testDirectionForObsidian(Facing::EAST, $block->getPosition(), $widthA) and $this->testDirectionForObsidian(Facing::WEST, $block->getPosition(), $widthB)){
-				$totalWidth = $widthA + $widthB - 1;
-				if($totalWidth < $minWidth){
-					return;
-				}
-				$direction = Facing::EAST;
-			}else{
-				return;
+			$direction = match(true) {
+				$this->testDirectionForObsidian(Facing::NORTH, $block->getPosition(), $widthA) and
+				$this->testDirectionForObsidian(Facing::SOUTH, $block->getPosition(), $widthB) => Facing::NORTH,
+				$this->testDirectionForObsidian(Facing::EAST, $block->getPosition(), $widthA) and
+				$this->testDirectionForObsidian(Facing::WEST, $block->getPosition(), $widthB) => Facing::EAST,
+				default => null
+			};
+			$totalWidth = $widthA + $widthB - 1;
+			if($totalWidth < 2){
+				return; // portal cannot be made
 			}
 
-			$minHeight = 3;
-			if($this->testDirectionForObsidian(Facing::UP, $block->getPosition(), $heightA) and $this->testDirectionForObsidian(Facing::DOWN, $block->getPosition(), $heightB)){
-				$totalHeight = $heightA + $heightB - 1;
-				if($totalHeight < $minHeight){
-					return; // portal cannot be made
-				}
-			}else{
-				return;
+			if(!$this->testDirectionForObsidian(Facing::UP, $block->getPosition(), $heightA) or
+				!$this->testDirectionForObsidian(Facing::DOWN, $block->getPosition(), $heightB)){
+				return; // portal cannot be made
+			}
+			$totalHeight = $heightA + $heightB - 1;
+			if($totalHeight < 3){
+				return; // portal cannot be made
 			}
 
 			$this->testDirectionForObsidian($direction, $block->getPosition(), $horizblocks);
