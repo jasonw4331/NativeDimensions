@@ -155,7 +155,8 @@ class DimensionListener implements Listener {
 		}
 	}
 
-	private function testDirectionForObsidian(int $direction, Position $start, ?int &$distance = null) : bool{
+	private function testDirectionForObsidian(int $direction, Position $start, ?int &$distance = 0) : bool{
+		$distance ??= 0;
 		for($i = 1; $i <= 23; ++$i){
 			$testPos = $start->getSide($direction, $i);
 			if($testPos->getWorld()->getBlock($testPos, true, false) instanceof Obsidian){
