@@ -112,8 +112,8 @@ class DimensionListener implements Listener {
 		if($world->getEnd() === $world){
 			return;
 		}
-		foreach($block->getAllSides() as $block){
-			if(!$block->isSameType(VanillaBlocks::OBSIDIAN())){
+		foreach($block->getAllSides() as $obsidian){
+			if(!$obsidian->isSameType(VanillaBlocks::OBSIDIAN())){
 				continue;
 			}
 			$minWidth = 2;
