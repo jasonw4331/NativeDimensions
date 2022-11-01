@@ -39,7 +39,7 @@ class Main extends PluginBase {
 	private static self $instance;
 
 	/** @var int[] $teleporting */
-	protected static $teleporting = [];
+	protected static array $teleporting = [];
 
 	public static function getInstance() : Main {
 		return self::$instance;
