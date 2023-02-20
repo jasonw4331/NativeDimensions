@@ -1,6 +1,6 @@
 ---
 name: Crash
-about: Report a crash caused by NativeDimensions
+about: Report a crash caused by SimpleReplies
 title: Server crashed
 labels: ''
 assignees: ''
