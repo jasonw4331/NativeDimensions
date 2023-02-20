@@ -2,6 +2,15 @@
 projects:
   NativeDimensions:
     path: ""
-    icon: icon.gif
+    icon: "icon.gif"
     lint: false
+    excludeDirs:
+      - tests
+      - .github
+      - build
+      - phpstan
+    excludeFiles:
+      - .gitignore
+      - CONTRIBUTING.md
+      - SECURITY.md
 ...
