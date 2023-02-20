@@ -9,7 +9,7 @@
 	},
 	"autoload": {
 		"psr-4": {
-			"jasonwynn10\\NativeDimensions\\": "../src"
+			"jasonwynn10\\NativeDimensions\\": "../../src"
 		}
 	},
 	"config": {
