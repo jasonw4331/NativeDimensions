@@ -40,4 +40,4 @@ jobs:
 
       - name: Run PHPStan
         working-directory: ./phpstan
-        run: vendor/bin/phpstan analyze -c ./phpstan.neon.dist
+        run: vendor/bin/phpstan analyze -c ./phpstan.neon.dist --memory-limit 128M
