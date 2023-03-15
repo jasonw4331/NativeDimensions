@@ -37,8 +37,8 @@ final class DimensionSpecificCompressor implements Compressor{
 		};
 	}
 
-	public function willCompress(string $data) : bool{
-		return $this->inner->willCompress($data);
+	public function getCompressionThreshold() : ?int{
+		return $this->inner->getCompressionThreshold();
 	}
 
 	public function decompress(string $payload) : string{
