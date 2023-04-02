@@ -7,6 +7,7 @@ namespace jasonwynn10\NativeDimensions\world\generator;
 use pocketmine\utils\Random;
 use pocketmine\world\ChunkManager;
 use pocketmine\world\format\Chunk;
+use const PHP_INT_MAX;
 
 abstract class Decorator implements Populator{
 

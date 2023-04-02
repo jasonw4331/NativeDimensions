@@ -1,9 +1,10 @@
 <?php
+
 declare(strict_types=1);
+
 namespace jasonwynn10\NativeDimensions\world\provider;
 
 use pocketmine\world\format\io\WorldProvider;
-use pocketmine\world\format\io\WorldProviderManagerEntry;
 
 /**
  * @phpstan-type FromPath \Closure(string $path, int $dimension) : WorldProvider

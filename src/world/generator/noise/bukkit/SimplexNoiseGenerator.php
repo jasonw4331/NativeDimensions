@@ -46,20 +46,12 @@ class SimplexNoiseGenerator extends BasePerlinNoiseGenerator{
 	protected static float $offset_w;
 	private static ?SimplexNoiseGenerator $instance;
 
-	/**
-	 * @return SimplexNoiseGenerator
-	 */
 	public static function getInstance() : SimplexNoiseGenerator{
 		return self::$instance ??= new SimplexNoiseGenerator();
 	}
 
 	/**
 	 * @param int[]|float[] $g
-	 * @param float $x
-	 * @param float $y
-	 * @param float $z
-	 * @param float $w
-	 * @return float
 	 */
 	protected static function dot(array $g, float $x, float $y, float $z = 0.0, float $w = 0.0) : float{
 		$result = $g[0] * $x + $g[1] * $y;
@@ -87,6 +79,7 @@ class SimplexNoiseGenerator extends BasePerlinNoiseGenerator{
 	 * @param float $xin X coordinate
 	 * @param float $yin Y coordinate
 	 * @param float $zin Z coordinate
+	 *
 	 * @return float noise at given location, from range -1 to 1
 	 */
 	public static function getNoise3d(float $xin, float $yin = 0.0, float $zin = 0.0) : float{
@@ -101,6 +94,7 @@ class SimplexNoiseGenerator extends BasePerlinNoiseGenerator{
 	 * @param float $y Y coordinate
 	 * @param float $z Z coordinate
 	 * @param float $w W coordinate
+	 *
 	 * @return float noise at given location, from range -1 to 1
 	 */
 	public static function getNoise(float $x, float $y, float $z, float $w) : float{
@@ -343,6 +337,7 @@ class SimplexNoiseGenerator extends BasePerlinNoiseGenerator{
 	 * @param float $y Y coordinate
 	 * @param float $z Z coordinate
 	 * @param float $w W coordinate
+	 *
 	 * @return float noise at given location, from range -1 to 1
 	 */
 	public function noise(float $x, float $y, float $z, float $w) : float{

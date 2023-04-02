@@ -10,8 +10,6 @@ class PerlinNoiseGenerator extends BasePerlinNoiseGenerator{
 
 	/**
 	 * Gets the singleton unseeded instance of this generator
-	 *
-	 * @return PerlinNoiseGenerator
 	 */
 	public static function getInstance() : PerlinNoiseGenerator{
 		return self::$instance ??= new PerlinNoiseGenerator();
@@ -25,12 +23,13 @@ class PerlinNoiseGenerator extends BasePerlinNoiseGenerator{
 	 * Generates noise for the 3D coordinates using the specified number of
 	 * octaves and parameters
 	 *
-	 * @param float $x X-coordinate
-	 * @param float $y Y-coordinate
-	 * @param float $z Z-coordinate
-	 * @param int $octaves Number of octaves to use
+	 * @param float $x         X-coordinate
+	 * @param float $y         Y-coordinate
+	 * @param float $z         Z-coordinate
+	 * @param int   $octaves   Number of octaves to use
 	 * @param float $frequency How much to alter the frequency by each octave
 	 * @param float $amplitude How much to alter the amplitude by each octave
+	 *
 	 * @return float resulting noise
 	 */
 	public static function getNoise(float $x, float $y, float $z, int $octaves, float $frequency, float $amplitude) : float{
@@ -83,13 +82,14 @@ class PerlinNoiseGenerator extends BasePerlinNoiseGenerator{
 	 * Generates noise for the 3D coordinates using the specified number of
 	 * octaves and parameters
 	 *
-	 * @param float $x X-coordinate
-	 * @param float $y Y-coordinate
-	 * @param float $z Z-coordinate
-	 * @param int $octaves Number of octaves to use
-	 * @param float $frequency How much to alter the frequency by each octave
-	 * @param float $amplitude How much to alter the amplitude by each octave
-	 * @param bool $normalized If true, normalize the value to [-1, 1]
+	 * @param float $x          X-coordinate
+	 * @param float $y          Y-coordinate
+	 * @param float $z          Z-coordinate
+	 * @param int   $octaves    Number of octaves to use
+	 * @param float $frequency  How much to alter the frequency by each octave
+	 * @param float $amplitude  How much to alter the amplitude by each octave
+	 * @param bool  $normalized If true, normalize the value to [-1, 1]
+	 *
 	 * @return float Resulting noise
 	 */
 	public function noise(float $x, float $y, float $z, int $octaves, float $frequency, float $amplitude, bool $normalized = false) : float{

@@ -1,8 +1,9 @@
 <?php
+
 declare(strict_types=1);
+
 namespace jasonwynn10\NativeDimensions\world\provider;
 
-use pocketmine\world\format\io\WorldProviderManagerEntry;
 use pocketmine\world\format\io\WritableWorldProvider;
 use pocketmine\world\WorldCreationOptions;
 

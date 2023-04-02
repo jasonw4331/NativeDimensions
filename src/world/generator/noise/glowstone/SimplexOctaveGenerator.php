@@ -5,12 +5,11 @@ declare(strict_types=1);
 namespace jasonwynn10\NativeDimensions\world\generator\noise\glowstone;
 
 use pocketmine\utils\Random;
+use function array_fill;
 
 class SimplexOctaveGenerator extends PerlinOctaveGenerator{
 
 	/**
-	 * @param Random $rand
-	 * @param int $octaves
 	 * @return SimplexNoise[]
 	 */
 	protected static function createOctaves(Random $rand, int $octaves) : array{
@@ -23,14 +22,6 @@ class SimplexOctaveGenerator extends PerlinOctaveGenerator{
 		return $result;
 	}
 
-	/**
-	 * @param Random $random
-	 * @param int $octaves
-	 * @param int $size_x
-	 * @param int $size_y
-	 * @param int $size_z
-	 * @return SimplexOctaveGenerator
-	 */
 	public static function fromRandomAndOctaves(Random $random, int $octaves, int $size_x, int $size_y, int $size_z) : self{
 		return new SimplexOctaveGenerator(self::createOctaves($random, $octaves), $size_x, $size_y, $size_z);
 	}

@@ -1,9 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace jasonwynn10\NativeDimensions\world\provider;
 
-use pocketmine\world\format\io\exception\CorruptedWorldException;
-use pocketmine\world\format\io\exception\UnsupportedWorldFormatException;
 use pocketmine\world\format\io\WorldProvider;
 use pocketmine\world\format\io\WorldProviderManagerEntry;
 

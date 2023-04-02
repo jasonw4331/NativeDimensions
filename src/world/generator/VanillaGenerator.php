@@ -12,6 +12,8 @@ use pocketmine\world\ChunkManager;
 use pocketmine\world\format\Chunk;
 use pocketmine\world\generator\Generator;
 use pocketmine\world\World;
+use function array_push;
+use function count;
 
 /**
  * @phpstan-template T of WorldOctaves
@@ -32,10 +34,6 @@ abstract class VanillaGenerator extends Generator{
 	}
 
 	/**
-	 * @param int $x
-	 * @param int $z
-	 * @param int $size_x
-	 * @param int $size_z
 	 * @return int[]
 	 */
 	public function getBiomeGridAtLowerRes(int $x, int $z, int $size_x, int $size_z) : array{
@@ -43,10 +41,6 @@ abstract class VanillaGenerator extends Generator{
 	}
 
 	/**
-	 * @param int $x
-	 * @param int $z
-	 * @param int $size_x
-	 * @param int $size_z
 	 * @return int[]
 	 */
 	public function getBiomeGrid(int $x, int $z, int $size_x, int $size_z) : array{
@@ -58,8 +52,6 @@ abstract class VanillaGenerator extends Generator{
 	}
 
 	/**
-	 * @return WorldOctaves
-	 *
 	 * @phpstan-return T
 	 */
 	abstract protected function createWorldOctaves() : WorldOctaves;
@@ -77,8 +69,6 @@ abstract class VanillaGenerator extends Generator{
 	abstract protected function generateChunkData(ChunkManager $world, int $chunk_x, int $chunk_z, VanillaBiomeGrid $biomes) : void;
 
 	/**
-	 * @return WorldOctaves
-	 *
 	 * @phpstan-return T
 	 */
 	final protected function getWorldOctaves() : WorldOctaves{

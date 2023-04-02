@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 namespace jasonwynn10\NativeDimensions\world\provider;
 
 use jasonwynn10\NativeDimensions\world\data\DimensionalBedrockWorldData;
@@ -30,8 +32,21 @@ use pocketmine\world\format\SubChunk;
 use pocketmine\world\WorldCreationOptions;
 use pocketmine\world\WorldException;
 use Webmozart\PathUtil\Path;
+use function array_map;
+use function array_values;
+use function chr;
+use function count;
+use function defined;
+use function extension_loaded;
+use function file_exists;
+use function mkdir;
+use function ord;
+use function str_repeat;
+use function trim;
+use function unpack;
+use const LEVELDB_ZLIB_RAW_COMPRESSION;
 
-class DimensionLevelDBProvider extends LevelDB {
+class DimensionLevelDBProvider extends LevelDB{
 
 	protected int $dimensionId = 0;
 
@@ -61,11 +76,11 @@ class DimensionLevelDBProvider extends LevelDB {
 			throw new WorldException("World does not exist");
 		}
 
-		if($dimension < 0) {
+		if($dimension < 0){
 			throw new \LevelDBException("Dimension cannot be saved with negative index");
 		}
 
-		if($dimension > 0 and $db === null) {
+		if($dimension > 0 && $db === null){
 			throw new \LevelDBException("Dimension cannot be generated without overworld data");
 		}
 
@@ -73,7 +88,6 @@ class DimensionLevelDBProvider extends LevelDB {
 
 		$this->path = $path;
 		$this->worldData = $this->loadLevelData();
-
 
 		try{
 			$this->db = $db ?? self::createDB($path);
@@ -85,7 +99,7 @@ class DimensionLevelDBProvider extends LevelDB {
 
 	protected function loadLevelData() : WorldData{
 		$data = new DimensionalBedrockWorldData(Path::join($this->getPath(), "level.dat"));
-		if($this->dimensionId > 0) {
+		if($this->dimensionId > 0){
 			$data->setGenerator($this->dimensionId === DimensionIds::NETHER ? "nether" : "ender");
 			$data->setName($data->getName() . ($this->dimensionId === DimensionIds::NETHER ? " nether" : " end"));
 		}
@@ -101,7 +115,7 @@ class DimensionLevelDBProvider extends LevelDB {
 	}
 
 	public static function generate(string $path, string $name, WorldCreationOptions $options, int $dimension = 0) : void{
-		if($dimension !== 0) {
+		if($dimension !== 0){
 			return;
 		}
 
@@ -271,7 +285,7 @@ class DimensionLevelDBProvider extends LevelDB {
 
 		/** @var CompoundTag[] $entities */
 		$entities = [];
-		if(($entityData = $this->db->get($index . self::TAG_ENTITY)) !== false and $entityData !== ""){
+		if(($entityData = $this->db->get($index . self::TAG_ENTITY)) !== false && $entityData !== ""){
 			try{
 				$entities = array_map(fn(TreeRoot $root) => $root->mustGetCompoundTag(), $nbt->readMultiple($entityData));
 			}catch(NbtDataException $e){
@@ -281,7 +295,7 @@ class DimensionLevelDBProvider extends LevelDB {
 
 		/** @var CompoundTag[] $tiles */
 		$tiles = [];
-		if(($tileData = $this->db->get($index . self::TAG_BLOCK_ENTITY)) !== false and $tileData !== ""){
+		if(($tileData = $this->db->get($index . self::TAG_BLOCK_ENTITY)) !== false && $tileData !== ""){
 			try{
 				$tiles = array_map(fn(TreeRoot $root) => $root->mustGetCompoundTag(), $nbt->readMultiple($tileData));
 			}catch(NbtDataException $e){
@@ -378,7 +392,7 @@ class DimensionLevelDBProvider extends LevelDB {
 	}
 
 	/**
-	 * @param CompoundTag[]      $targets
+	 * @param CompoundTag[] $targets
 	 */
 	private function writeTags(array $targets, string $index, \LevelDBWriteBatch $write) : void{
 		if(count($targets) > 0){
@@ -390,10 +404,10 @@ class DimensionLevelDBProvider extends LevelDB {
 	}
 
 	public static function dimensionalChunkIndex(int $chunkX, int $chunkZ, int $dimension) : string{
-		return Binary::writeLInt($chunkX) . Binary::writeLInt($chunkZ).($dimension > 0 ? Binary::writeLInt($dimension) : '');
+		return Binary::writeLInt($chunkX) . Binary::writeLInt($chunkZ) . ($dimension > 0 ? Binary::writeLInt($dimension) : '');
 	}
 
-	public function getDimensionId() : int {
+	public function getDimensionId() : int{
 		return $this->dimensionId;
 	}
 }

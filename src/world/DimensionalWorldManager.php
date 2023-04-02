@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 namespace jasonwynn10\NativeDimensions\world;
 
 use jasonwynn10\NativeDimensions\world\converter\DimensionalFormatConverter;
@@ -27,8 +29,21 @@ use pocketmine\world\WorldCreationOptions;
 use pocketmine\world\WorldException;
 use pocketmine\world\WorldManager;
 use Webmozart\PathUtil\Path;
+use function array_keys;
+use function array_shift;
+use function assert;
+use function count;
+use function floor;
+use function implode;
+use function intdiv;
+use function iterator_to_array;
+use function microtime;
+use function round;
+use function sprintf;
+use function strval;
+use function trim;
 
-class DimensionalWorldManager extends WorldManager {
+class DimensionalWorldManager extends WorldManager{
 
 	private string $dataPath;
 
@@ -75,7 +90,7 @@ class DimensionalWorldManager extends WorldManager {
 	 * it only affects the server on runtime
 	 */
 	public function setDefaultWorld(?World $world) : void{
-		if($world === null or ($this->isWorldLoaded($world->getFolderName()) and $world !== $this->defaultWorld)){
+		if($world === null || ($this->isWorldLoaded($world->getFolderName()) && $world !== $this->defaultWorld)){
 			$this->defaultWorld = $world;
 		}
 	}
@@ -105,7 +120,7 @@ class DimensionalWorldManager extends WorldManager {
 	 * @throws \InvalidArgumentException
 	 */
 	public function unloadWorld(World $world, bool $forceUnload = false) : bool{
-		if($world === $this->getDefaultWorld() and !$forceUnload){
+		if($world === $this->getDefaultWorld() && !$forceUnload){
 			throw new \InvalidArgumentException("The default world cannot be unloaded while running, please switch worlds.");
 		}
 		if($world->isDoingTick()){
@@ -113,13 +128,13 @@ class DimensionalWorldManager extends WorldManager {
 		}
 
 		$ev = new WorldUnloadEvent($world);
-		if($world === $this->defaultWorld and !$forceUnload){
+		if($world === $this->defaultWorld && !$forceUnload){
 			$ev->cancel();
 		}
 
 		$ev->call();
 
-		if(!$forceUnload and $ev->isCancelled()){
+		if(!$forceUnload && $ev->isCancelled()){
 			return false;
 		}
 
@@ -130,7 +145,7 @@ class DimensionalWorldManager extends WorldManager {
 			$safeSpawn = null;
 		}
 		foreach($world->getPlayers() as $player){
-			if($world === $this->defaultWorld or $safeSpawn === null){
+			if($world === $this->defaultWorld || $safeSpawn === null){
 				$player->disconnect("Forced default world unload");
 			}else{
 				$player->teleport($safeSpawn);
@@ -149,7 +164,7 @@ class DimensionalWorldManager extends WorldManager {
 	/**
 	 * Loads a world from the data directory
 	 *
-	 * @param bool   $autoUpgrade Converts worlds to the default format if the world's format is not writable / deprecated
+	 * @param bool $autoUpgrade Converts worlds to the default format if the world's format is not writable / deprecated
 	 *
 	 * @throws WorldException
 	 */
@@ -267,7 +282,7 @@ class DimensionalWorldManager extends WorldManager {
 	 * @throws \InvalidArgumentException
 	 */
 	public function generateWorld(string $name, WorldCreationOptions $options, bool $backgroundGeneration = true, bool $dimensionalWorld = true) : bool{
-		if(trim($name) === "" or $this->isWorldGenerated($name)){
+		if(trim($name) === "" || $this->isWorldGenerated($name)){
 			return false;
 		}
 
@@ -469,7 +484,7 @@ class DimensionalWorldManager extends WorldManager {
 			}
 		}
 
-		if($this->autoSave and ++$this->autoSaveTicker >= $this->autoSaveTicks){
+		if($this->autoSave && ++$this->autoSaveTicker >= $this->autoSaveTicks){
 			$this->autoSaveTicker = 0;
 			$this->server->getLogger()->debug("[Auto Save] Saving worlds...");
 			$start = microtime(true);

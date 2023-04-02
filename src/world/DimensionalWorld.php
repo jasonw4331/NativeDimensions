@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 namespace jasonwynn10\NativeDimensions\world;
 
 use pocketmine\event\world\WorldSaveEvent;
@@ -10,7 +12,7 @@ use pocketmine\world\format\io\WritableWorldProvider;
 use pocketmine\world\Position;
 use pocketmine\world\World;
 
-class DimensionalWorld extends World {
+class DimensionalWorld extends World{
 
 	private int $dimensionId;
 
@@ -19,31 +21,31 @@ class DimensionalWorld extends World {
 		parent::__construct($server, $name, $provider, $workerPool);
 	}
 
-	public function getOverworld() : World {
+	public function getOverworld() : World{
 		if($this->dimensionId === DimensionIds::OVERWORLD)
 			return $this;
 		return $this->getServer()->getWorldManager()->getWorld($this->getId() + (DimensionIds::OVERWORLD - $this->dimensionId));
 	}
 
-	public function getNether() : World {
+	public function getNether() : World{
 		if($this->dimensionId === DimensionIds::NETHER)
 			return $this;
 		return $this->getServer()->getWorldManager()->getWorld($this->getId() + (DimensionIds::NETHER - $this->dimensionId));
 	}
 
-	public function getEnd() : World {
+	public function getEnd() : World{
 		if($this->dimensionId === DimensionIds::THE_END)
 			return $this;
 		return $this->getServer()->getWorldManager()->getWorld($this->getId() + (DimensionIds::THE_END - $this->dimensionId));
 	}
 
-	public function getDimensionId() : int {
+	public function getDimensionId() : int{
 		return $this->dimensionId;
 	}
 
 	public function save(bool $force = false) : bool{
 
-		if(!$this->getAutoSave() and !$force){
+		if(!$this->getAutoSave() && !$force){
 			return false;
 		}
 

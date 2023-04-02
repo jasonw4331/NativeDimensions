@@ -7,12 +7,11 @@ namespace jasonwynn10\NativeDimensions\world\generator\noise\glowstone;
 use jasonwynn10\NativeDimensions\world\generator\noise\bukkit\NoiseGenerator;
 use jasonwynn10\NativeDimensions\world\generator\noise\bukkit\OctaveGenerator;
 use pocketmine\utils\Random;
+use function array_fill;
 
 class PerlinOctaveGenerator extends OctaveGenerator{
 
 	/**
-	 * @param Random $rand
-	 * @param int $octaves
 	 * @return PerlinNoise[]
 	 */
 	protected static function createOctaves(Random $rand, int $octaves) : array{
@@ -29,14 +28,6 @@ class PerlinOctaveGenerator extends OctaveGenerator{
 		return $x >= 0 ? (int) $x : (int) $x - 1;
 	}
 
-	/**
-	 * @param Random $random
-	 * @param int $octaves
-	 * @param int $size_x
-	 * @param int $size_y
-	 * @param int $size_z
-	 * @return PerlinOctaveGenerator
-	 */
 	public static function fromRandomAndOctaves(Random $random, int $octaves, int $size_x, int $size_y, int $size_z) : self{
 		return new PerlinOctaveGenerator(self::createOctaves($random, $octaves), $size_x, $size_y, $size_z);
 	}
@@ -52,9 +43,9 @@ class PerlinOctaveGenerator extends OctaveGenerator{
 	 * Creates a generator for multiple layers of Perlin noise.
 	 *
 	 * @param NoiseGenerator[] $octaves the noise generators
-	 * @param int $size_x the size on the X axis
-	 * @param int $size_y the size on the Y axis
-	 * @param int $size_z the size on the Z axis
+	 * @param int              $size_x  the size on the X axis
+	 * @param int              $size_y  the size on the Y axis
+	 * @param int              $size_z  the size on the Z axis
 	 */
 	public function __construct(array $octaves, int $size_x, int $size_y, int $size_z){
 		parent::__construct($octaves);
@@ -91,11 +82,12 @@ class PerlinOctaveGenerator extends OctaveGenerator{
 	/**
 	 * Generates multiple layers of noise.
 	 *
-	 * @param float $x the starting X coordinate
-	 * @param float $y the starting Y coordinate
-	 * @param float $z the starting Z coordinate
-	 * @param float $lacunarity layer n's frequency as a fraction of layer {@code n - 1}'s frequency
+	 * @param float $x           the starting X coordinate
+	 * @param float $y           the starting Y coordinate
+	 * @param float $z           the starting Z coordinate
+	 * @param float $lacunarity  layer n's frequency as a fraction of layer {@code n - 1}'s frequency
 	 * @param float $persistence layer n's amplitude as a multiple of layer {@code n - 1}'s amplitude
+	 *
 	 * @return float[] the noise array
 	 */
 	public function getFractalBrownianMotion(float $x, float $y, float $z, float $lacunarity, float $persistence) : array{

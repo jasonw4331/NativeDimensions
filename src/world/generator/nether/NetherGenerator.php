@@ -14,6 +14,10 @@ use pocketmine\block\VanillaBlocks;
 use pocketmine\utils\Random;
 use pocketmine\world\ChunkManager;
 use pocketmine\world\format\Chunk;
+use function cos;
+use function max;
+use function min;
+use const M_PI;
 
 /**
  * @phpstan-extends VanillaGenerator<NetherWorldOctaves<PerlinOctaveGenerator, PerlinOctaveGenerator, PerlinOctaveGenerator, PerlinOctaveGenerator, PerlinOctaveGenerator, PerlinOctaveGenerator>>
@@ -33,7 +37,6 @@ class NetherGenerator extends VanillaGenerator{
 	 * @param int $i 0-4
 	 * @param int $j 0-4
 	 * @param int $k 0-32
-	 * @return int
 	 */
 	private static function densityHash(int $i, int $j, int $k) : int{
 		return ($k << 6) | ($j << 3) | $i;
@@ -125,58 +128,56 @@ class NetherGenerator extends VanillaGenerator{
 		/** @var Chunk $chunk */
 		$chunk = $world->getChunk($chunk_x, $chunk_z);
 
-		for ($i = 0; $i < 5 - 1; ++$i) {
-			for ($j = 0; $j < 5 - 1; ++$j) {
-				for ($k = 0; $k < 17 - 1; ++$k) {
+		for($i = 0; $i < 5 - 1; ++$i){
+			for($j = 0; $j < 5 - 1; ++$j){
+				for($k = 0; $k < 17 - 1; ++$k){
 					$d1 = $density[self::densityHash($i, $j, $k)];
-                    $d2 = $density[self::densityHash($i + 1, $j, $k)];
-                    $d3 = $density[self::densityHash($i, $j + 1, $k)];
-                    $d4 = $density[self::densityHash($i + 1, $j + 1, $k)];
-                    $d5 = ($density[self::densityHash($i, $j, $k + 1)] - $d1) / 8;
-                    $d6 = ($density[self::densityHash($i + 1, $j, $k + 1)] - $d2) / 8;
-                    $d7 = ($density[self::densityHash($i, $j + 1, $k + 1)] - $d3) / 8;
-                    $d8 = ($density[self::densityHash($i + 1, $j + 1, $k + 1)] - $d4) / 8;
+					$d2 = $density[self::densityHash($i + 1, $j, $k)];
+					$d3 = $density[self::densityHash($i, $j + 1, $k)];
+					$d4 = $density[self::densityHash($i + 1, $j + 1, $k)];
+					$d5 = ($density[self::densityHash($i, $j, $k + 1)] - $d1) / 8;
+					$d6 = ($density[self::densityHash($i + 1, $j, $k + 1)] - $d2) / 8;
+					$d7 = ($density[self::densityHash($i, $j + 1, $k + 1)] - $d3) / 8;
+					$d8 = ($density[self::densityHash($i + 1, $j + 1, $k + 1)] - $d4) / 8;
 
-                    for ($l = 0; $l < 8; ++$l) {
+					for($l = 0; $l < 8; ++$l){
 						$d9 = $d1;
-                        $d10 = $d3;
+						$d10 = $d3;
 
 						$y_pos = $l + ($k << 3);
 						$y_block_pos = $y_pos & 0xf;
 						$sub_chunk = $chunk->getSubChunk($y_pos >> 4);
 
-                        for ($m = 0; $m < 4; ++$m) {
+						for($m = 0; $m < 4; ++$m){
 							$dens = $d9;
-                            for ($n = 0; $n < 4; ++$n) {
+							for($n = 0; $n < 4; ++$n){
 								// any density higher than 0 is ground, any density lower or equal
 								// to 0 is air (or lava if under the lava level).
-								if ($dens > 0) {
+								if($dens > 0){
 									$sub_chunk->setFullBlock($m + ($i << 2), $y_block_pos, $n + ($j << 2), $nether_rack);
-								} else if ($l + ($k << 3) < 32) {
+								}elseif($l + ($k << 3) < 32){
 									$sub_chunk->setFullBlock($m + ($i << 2), $y_block_pos, $n + ($j << 2), $still_lava);
 								}
 								// interpolation along z
 								$dens += ($d10 - $d9) / 4;
 							}
-                            // interpolation along x
-                            $d9 += ($d2 - $d1) / 4;
-                            // interpolate along z
-                            $d10 += ($d4 - $d3) / 4;
-                        }
-                        // interpolation along y
-                        $d1 += $d5;
-                        $d3 += $d7;
-                        $d2 += $d6;
-                        $d4 += $d8;
-                    }
-                }
-            }
-        }
+							// interpolation along x
+							$d9 += ($d2 - $d1) / 4;
+							// interpolate along z
+							$d10 += ($d4 - $d3) / 4;
+						}
+						// interpolation along y
+						$d1 += $d5;
+						$d3 += $d7;
+						$d2 += $d6;
+						$d4 += $d8;
+					}
+				}
+			}
+		}
 	}
 
 	/**
-	 * @param int $x
-	 * @param int $z
 	 * @return float[]
 	 */
 	private function generateTerrainDensity(int $x, int $z) : array{

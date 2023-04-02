@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 namespace jasonwynn10\NativeDimensions\world\data;
 
 use pocketmine\math\Vector3;
@@ -7,20 +9,20 @@ use pocketmine\nbt\tag\IntTag;
 use pocketmine\network\mcpe\protocol\types\DimensionIds;
 use pocketmine\world\format\io\data\BedrockWorldData;
 
-class DimensionalBedrockWorldData extends BedrockWorldData {
+class DimensionalBedrockWorldData extends BedrockWorldData{
 	protected function fix() : void{
-		if(!($this->compoundTag->getTag("NetherScale")) instanceof IntTag) {
+		if(!($this->compoundTag->getTag("NetherScale")) instanceof IntTag){
 			$this->compoundTag->setInt("NetherScale", 8);
 		}
 		parent::fix();
 	}
 
-	public function setGenerator(string $generatorName) {
+	public function setGenerator(string $generatorName){
 		$this->compoundTag->setString("generatorName", $generatorName);
 		$this->fix();
 	}
 
-	public function setName(string $name) {
+	public function setName(string $name){
 		$this->compoundTag->setString("LevelName", $name);
 	}
 

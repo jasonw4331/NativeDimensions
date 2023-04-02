@@ -9,8 +9,6 @@ use pocketmine\utils\Random;
 class SimplexOctaveGenerator extends BaseOctaveGenerator{
 
 	/**
-	 * @param Random $rand
-	 * @param int $octaves
 	 * @return SimplexNoiseGenerator[]
 	 */
 	private static function createOctaves(Random $rand, int $octaves) : array{
@@ -28,7 +26,6 @@ class SimplexOctaveGenerator extends BaseOctaveGenerator{
 	/**
 	 * Creates a simplex octave generator for the given {@link Random}
 	 *
-	 * @param Random $rand
 	 * @param int $octaves Amount of octaves to create
 	 */
 	public function __construct(Random $rand, int $octaves){
@@ -62,12 +59,13 @@ class SimplexOctaveGenerator extends BaseOctaveGenerator{
 	 * Generates noise for the 3D coordinates using the specified number of
 	 * octaves and parameters
 	 *
-	 * @param float $x X-coordinate
-	 * @param float $y Y-coordinate
-	 * @param float $z Z-coordinate
-	 * @param float $frequency How much to alter the frequency by each octave
-	 * @param float $amplitude How much to alter the amplitude by each octave
-	 * @param bool $normalized If true, normalize the value to [-1, 1]
+	 * @param float $x          X-coordinate
+	 * @param float $y          Y-coordinate
+	 * @param float $z          Z-coordinate
+	 * @param float $frequency  How much to alter the frequency by each octave
+	 * @param float $amplitude  How much to alter the amplitude by each octave
+	 * @param bool  $normalized If true, normalize the value to [-1, 1]
+	 *
 	 * @return float resulting noise
 	 */
 	public function octaveNoise(float $x, float $y, float $z, float $frequency, float $amplitude, bool $normalized) : float{
@@ -98,13 +96,14 @@ class SimplexOctaveGenerator extends BaseOctaveGenerator{
 	 * Generates noise for the 3D coordinates using the specified number of
 	 * octaves and parameters
 	 *
-	 * @param float $x X-coordinate
-	 * @param float $y Y-coordinate
-	 * @param float $z Z-coordinate
-	 * @param float $w W-coordinate
-	 * @param float $frequency How much to alter the frequency by each octave
-	 * @param float $amplitude How much to alter the amplitude by each octave
-	 * @param bool $normalized If true, normalize the value to [-1, 1]
+	 * @param float $x          X-coordinate
+	 * @param float $y          Y-coordinate
+	 * @param float $z          Z-coordinate
+	 * @param float $w          W-coordinate
+	 * @param float $frequency  How much to alter the frequency by each octave
+	 * @param float $amplitude  How much to alter the amplitude by each octave
+	 * @param bool  $normalized If true, normalize the value to [-1, 1]
+	 *
 	 * @return float resulting noise
 	 */
 	public function noise(float $x, float $y, float $z, float $w, float $frequency, float $amplitude, bool $normalized = false) : float{
