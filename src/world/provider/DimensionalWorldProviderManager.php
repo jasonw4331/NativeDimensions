@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace jasonwynn10\NativeDimensions\world\provider;
+namespace jasonw4331\NativeDimensions\world\provider;
 
 use pocketmine\network\mcpe\protocol\types\DimensionIds;
 use pocketmine\utils\Utils;

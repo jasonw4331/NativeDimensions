@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace jasonwynn10\NativeDimensions\world\generator;
+namespace jasonw4331\NativeDimensions\world\generator;
 
-use jasonwynn10\NativeDimensions\world\generator\biomegrid\BiomeGrid;
+use jasonw4331\NativeDimensions\world\generator\biomegrid\BiomeGrid;
 use function array_key_exists;
 
 class VanillaBiomeGrid implements BiomeGrid{

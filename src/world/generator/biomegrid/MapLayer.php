@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace jasonwynn10\NativeDimensions\world\generator\biomegrid;
+namespace jasonw4331\NativeDimensions\world\generator\biomegrid;
 
-use jasonwynn10\NativeDimensions\world\generator\biome\BiomeIds;
-use jasonwynn10\NativeDimensions\world\generator\biomegrid\utils\MapLayerPair;
-use jasonwynn10\NativeDimensions\world\generator\Environment;
+use jasonw4331\NativeDimensions\world\generator\biome\BiomeIds;
+use jasonw4331\NativeDimensions\world\generator\biomegrid\utils\MapLayerPair;
+use jasonw4331\NativeDimensions\world\generator\Environment;
 use pocketmine\utils\Random;
 
 abstract class MapLayer{

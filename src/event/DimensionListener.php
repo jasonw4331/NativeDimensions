@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace jasonwynn10\NativeDimensions\event;
+namespace jasonw4331\NativeDimensions\event;
 
-use jasonwynn10\NativeDimensions\block\Obsidian;
-use jasonwynn10\NativeDimensions\block\Portal;
-use jasonwynn10\NativeDimensions\Main;
-use jasonwynn10\NativeDimensions\world\DimensionalWorld;
+use jasonw4331\NativeDimensions\block\Obsidian;
+use jasonw4331\NativeDimensions\block\Portal;
+use jasonw4331\NativeDimensions\Main;
+use jasonw4331\NativeDimensions\world\DimensionalWorld;
 use pocketmine\block\Air;
 use pocketmine\block\Bed;
 use pocketmine\block\Fire;

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace jasonwynn10\NativeDimensions\world\generator\biome;
+namespace jasonw4331\NativeDimensions\world\generator\biome;
 
 class BiomeClimate{
 

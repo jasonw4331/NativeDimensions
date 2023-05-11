@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace jasonwynn10\NativeDimensions\block;
+namespace jasonw4331\NativeDimensions\block;
 
 use pocketmine\block\BlockBreakInfo;
 use pocketmine\block\BlockIdentifier as BID;

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace jasonwynn10\NativeDimensions\world\generator\noise\glowstone;
+namespace jasonw4331\NativeDimensions\world\generator\noise\glowstone;
 
-use jasonwynn10\NativeDimensions\world\generator\noise\bukkit\BasePerlinNoiseGenerator;
+use jasonw4331\NativeDimensions\world\generator\noise\bukkit\BasePerlinNoiseGenerator;
 use pocketmine\utils\Random;
 
 class PerlinNoise extends BasePerlinNoiseGenerator{

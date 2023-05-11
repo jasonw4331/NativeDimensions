@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace jasonwynn10\NativeDimensions\world\generator\biomegrid\utils;
+namespace jasonw4331\NativeDimensions\world\generator\biomegrid\utils;
 
-use jasonwynn10\NativeDimensions\world\generator\biomegrid\MapLayer;
+use jasonw4331\NativeDimensions\world\generator\biomegrid\MapLayer;
 
 final class MapLayerPair{
 

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace jasonwynn10\NativeDimensions\block;
+namespace jasonw4331\NativeDimensions\block;
 
-use jasonwynn10\NativeDimensions\Main;
-use jasonwynn10\NativeDimensions\world\DimensionalWorld;
+use jasonw4331\NativeDimensions\Main;
+use jasonw4331\NativeDimensions\world\DimensionalWorld;
 use pocketmine\block\BlockBreakInfo;
 use pocketmine\block\BlockIdentifier as BID;
 use pocketmine\block\BlockLegacyIds as Ids;

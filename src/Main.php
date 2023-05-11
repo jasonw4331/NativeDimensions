@@ -2,17 +2,17 @@
 
 declare(strict_types=1);
 
-namespace jasonwynn10\NativeDimensions;
+namespace jasonw4331\NativeDimensions;
 
-use jasonwynn10\NativeDimensions\block\EndPortal;
-use jasonwynn10\NativeDimensions\block\Obsidian;
-use jasonwynn10\NativeDimensions\block\Portal;
-use jasonwynn10\NativeDimensions\event\DimensionListener;
-use jasonwynn10\NativeDimensions\network\DimensionSpecificCompressor;
-use jasonwynn10\NativeDimensions\world\DimensionalWorld;
-use jasonwynn10\NativeDimensions\world\DimensionalWorldManager;
-use jasonwynn10\NativeDimensions\world\generator\ender\EnderGenerator;
-use jasonwynn10\NativeDimensions\world\generator\nether\NetherGenerator;
+use jasonw4331\NativeDimensions\block\EndPortal;
+use jasonw4331\NativeDimensions\block\Obsidian;
+use jasonw4331\NativeDimensions\block\Portal;
+use jasonw4331\NativeDimensions\event\DimensionListener;
+use jasonw4331\NativeDimensions\network\DimensionSpecificCompressor;
+use jasonw4331\NativeDimensions\world\DimensionalWorld;
+use jasonw4331\NativeDimensions\world\DimensionalWorldManager;
+use jasonw4331\NativeDimensions\world\generator\ender\EnderGenerator;
+use jasonw4331\NativeDimensions\world\generator\nether\NetherGenerator;
 use pocketmine\block\BlockFactory;
 use pocketmine\block\VanillaBlocks;
 use pocketmine\event\EventPriority;

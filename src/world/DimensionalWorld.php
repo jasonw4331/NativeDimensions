@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace jasonwynn10\NativeDimensions\world;
+namespace jasonw4331\NativeDimensions\world;
 
 use pocketmine\event\world\WorldSaveEvent;
 use pocketmine\network\mcpe\protocol\types\DimensionIds;

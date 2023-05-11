@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace jasonwynn10\NativeDimensions\world\provider;
+namespace jasonw4331\NativeDimensions\world\provider;
 
-use jasonwynn10\NativeDimensions\world\data\DimensionalBedrockWorldData;
+use jasonw4331\NativeDimensions\world\data\DimensionalBedrockWorldData;
 use pocketmine\block\Block;
 use pocketmine\block\BlockLegacyIds;
 use pocketmine\data\bedrock\BiomeIds;

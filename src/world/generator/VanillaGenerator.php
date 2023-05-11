@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace jasonwynn10\NativeDimensions\world\generator;
+namespace jasonw4331\NativeDimensions\world\generator;
 
-use jasonwynn10\NativeDimensions\world\generator\biomegrid\MapLayer;
-use jasonwynn10\NativeDimensions\world\generator\biomegrid\utils\MapLayerPair;
-use jasonwynn10\NativeDimensions\world\generator\nether\WorldType;
-use jasonwynn10\NativeDimensions\world\generator\utils\WorldOctaves;
+use jasonw4331\NativeDimensions\world\generator\biomegrid\MapLayer;
+use jasonw4331\NativeDimensions\world\generator\biomegrid\utils\MapLayerPair;
+use jasonw4331\NativeDimensions\world\generator\nether\WorldType;
+use jasonw4331\NativeDimensions\world\generator\utils\WorldOctaves;
 use pocketmine\world\ChunkManager;
 use pocketmine\world\format\Chunk;
 use pocketmine\world\generator\Generator;

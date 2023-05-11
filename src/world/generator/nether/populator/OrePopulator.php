@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace jasonwynn10\NativeDimensions\world\generator\nether\populator;
+namespace jasonw4331\NativeDimensions\world\generator\nether\populator;
 
-use jasonwynn10\NativeDimensions\world\generator\nether\populator\biome\OrePopulator as OverworldOrePopulator;
-use jasonwynn10\NativeDimensions\world\generator\object\OreType;
+use jasonw4331\NativeDimensions\world\generator\nether\populator\biome\OrePopulator as OverworldOrePopulator;
+use jasonw4331\NativeDimensions\world\generator\object\OreType;
 use pocketmine\block\BlockLegacyIds;
 use pocketmine\block\VanillaBlocks;
 use pocketmine\world\World;

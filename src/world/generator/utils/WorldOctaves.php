@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace jasonwynn10\NativeDimensions\world\generator\utils;
+namespace jasonw4331\NativeDimensions\world\generator\utils;
 
-use jasonwynn10\NativeDimensions\world\generator\noise\bukkit\OctaveGenerator;
+use jasonw4331\NativeDimensions\world\generator\noise\bukkit\OctaveGenerator;
 
 /**
  * @phpstan-template T of OctaveGenerator

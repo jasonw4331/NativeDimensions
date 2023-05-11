@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace jasonwynn10\NativeDimensions\network;
+namespace jasonw4331\NativeDimensions\network;
 
 use pocketmine\network\mcpe\compression\Compressor;
 use pocketmine\network\mcpe\convert\GlobalItemTypeDictionary;

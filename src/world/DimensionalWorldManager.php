@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace jasonwynn10\NativeDimensions\world;
+namespace jasonw4331\NativeDimensions\world;
 
-use jasonwynn10\NativeDimensions\world\converter\DimensionalFormatConverter;
-use jasonwynn10\NativeDimensions\world\provider\DimensionalWorldProviderManager;
-use jasonwynn10\NativeDimensions\world\provider\DimensionLevelDBProvider;
+use jasonw4331\NativeDimensions\world\converter\DimensionalFormatConverter;
+use jasonw4331\NativeDimensions\world\provider\DimensionalWorldProviderManager;
+use jasonw4331\NativeDimensions\world\provider\DimensionLevelDBProvider;
 use pocketmine\entity\Entity;
 use pocketmine\event\world\WorldInitEvent;
 use pocketmine\event\world\WorldLoadEvent;

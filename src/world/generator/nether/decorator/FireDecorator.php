@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace jasonwynn10\NativeDimensions\world\generator\nether\decorator;
+namespace jasonw4331\NativeDimensions\world\generator\nether\decorator;
 
-use jasonwynn10\NativeDimensions\world\generator\Decorator;
+use jasonw4331\NativeDimensions\world\generator\Decorator;
 use pocketmine\block\BlockLegacyIds;
 use pocketmine\block\VanillaBlocks;
 use pocketmine\utils\Random;

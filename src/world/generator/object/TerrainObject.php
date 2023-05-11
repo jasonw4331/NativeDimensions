@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace jasonwynn10\NativeDimensions\world\generator\object;
+namespace jasonw4331\NativeDimensions\world\generator\object;
 
 use pocketmine\block\BlockLegacyIds;
 use pocketmine\block\Flowable;

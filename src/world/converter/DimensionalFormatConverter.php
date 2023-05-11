@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace jasonwynn10\NativeDimensions\world\converter;
+namespace jasonw4331\NativeDimensions\world\converter;
 
-use jasonwynn10\NativeDimensions\world\provider\DimensionLevelDBProvider;
-use jasonwynn10\NativeDimensions\world\provider\RewritableWorldProviderManagerEntry;
+use jasonw4331\NativeDimensions\world\provider\DimensionLevelDBProvider;
+use jasonw4331\NativeDimensions\world\provider\RewritableWorldProviderManagerEntry;
 use pocketmine\network\mcpe\protocol\types\DimensionIds;
 use pocketmine\utils\Filesystem;
 use pocketmine\world\format\io\WorldData;

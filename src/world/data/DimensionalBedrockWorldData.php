@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace jasonwynn10\NativeDimensions\world\data;
+namespace jasonw4331\NativeDimensions\world\data;
 
 use pocketmine\math\Vector3;
 use pocketmine\nbt\tag\IntTag;

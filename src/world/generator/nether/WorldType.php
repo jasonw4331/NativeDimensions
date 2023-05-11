@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace jasonwynn10\NativeDimensions\world\generator\nether;
+namespace jasonw4331\NativeDimensions\world\generator\nether;
 
 interface WorldType{
 

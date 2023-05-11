@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace jasonwynn10\NativeDimensions\world\generator\nether\populator\biome;
+namespace jasonw4331\NativeDimensions\world\generator\nether\populator\biome;
 
-use jasonwynn10\NativeDimensions\world\generator\nether\populator\biome\utils\OreTypeHolder;
-use jasonwynn10\NativeDimensions\world\generator\object\OreType;
-use jasonwynn10\NativeDimensions\world\generator\object\OreVein;
-use jasonwynn10\NativeDimensions\world\generator\Populator;
+use jasonw4331\NativeDimensions\world\generator\nether\populator\biome\utils\OreTypeHolder;
+use jasonw4331\NativeDimensions\world\generator\object\OreType;
+use jasonw4331\NativeDimensions\world\generator\object\OreVein;
+use jasonw4331\NativeDimensions\world\generator\Populator;
 use pocketmine\block\VanillaBlocks;
 use pocketmine\utils\Random;
 use pocketmine\world\ChunkManager;

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace jasonwynn10\NativeDimensions\world\generator\noise\glowstone;
+namespace jasonw4331\NativeDimensions\world\generator\noise\glowstone;
 
-use jasonwynn10\NativeDimensions\world\generator\noise\bukkit\NoiseGenerator;
-use jasonwynn10\NativeDimensions\world\generator\noise\bukkit\OctaveGenerator;
+use jasonw4331\NativeDimensions\world\generator\noise\bukkit\NoiseGenerator;
+use jasonw4331\NativeDimensions\world\generator\noise\bukkit\OctaveGenerator;
 use pocketmine\utils\Random;
 use function array_fill;
 

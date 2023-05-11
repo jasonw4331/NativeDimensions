@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace jasonwynn10\NativeDimensions\world\generator\ender\populator;
+namespace jasonw4331\NativeDimensions\world\generator\ender\populator;
 
-use jasonwynn10\NativeDimensions\world\generator\ender\EnderGenerator;
+use jasonw4331\NativeDimensions\world\generator\ender\EnderGenerator;
 use pocketmine\block\VanillaBlocks;
 use pocketmine\utils\AssumptionFailedError;
 use pocketmine\utils\Random;

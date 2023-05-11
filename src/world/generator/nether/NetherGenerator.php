@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace jasonwynn10\NativeDimensions\world\generator\nether;
+namespace jasonw4331\NativeDimensions\world\generator\nether;
 
-use jasonwynn10\NativeDimensions\world\generator\Environment;
-use jasonwynn10\NativeDimensions\world\generator\nether\populator\NetherPopulator;
-use jasonwynn10\NativeDimensions\world\generator\noise\glowstone\PerlinOctaveGenerator;
-use jasonwynn10\NativeDimensions\world\generator\utils\NetherWorldOctaves;
-use jasonwynn10\NativeDimensions\world\generator\VanillaBiomeGrid;
-use jasonwynn10\NativeDimensions\world\generator\VanillaGenerator;
+use jasonw4331\NativeDimensions\world\generator\Environment;
+use jasonw4331\NativeDimensions\world\generator\nether\populator\NetherPopulator;
+use jasonw4331\NativeDimensions\world\generator\noise\glowstone\PerlinOctaveGenerator;
+use jasonw4331\NativeDimensions\world\generator\utils\NetherWorldOctaves;
+use jasonw4331\NativeDimensions\world\generator\VanillaBiomeGrid;
+use jasonw4331\NativeDimensions\world\generator\VanillaGenerator;
 use pocketmine\block\VanillaBlocks;
 use pocketmine\utils\Random;
 use pocketmine\world\ChunkManager;
