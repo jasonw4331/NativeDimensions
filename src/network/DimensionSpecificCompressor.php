@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace jasonw4331\NativeDimensions\network;
 
 use pocketmine\network\mcpe\compression\Compressor;
-use pocketmine\network\mcpe\convert\GlobalItemTypeDictionary;
+use pocketmine\network\mcpe\convert\TypeConverter;
 use pocketmine\network\mcpe\protocol\LevelChunkPacket;
 use pocketmine\network\mcpe\protocol\PacketPool;
 use pocketmine\network\mcpe\protocol\serializer\NetworkNbtSerializer;
@@ -13,7 +13,6 @@ use pocketmine\network\mcpe\protocol\serializer\PacketBatch;
 use pocketmine\network\mcpe\protocol\serializer\PacketSerializer;
 use pocketmine\network\mcpe\protocol\serializer\PacketSerializerContext;
 use pocketmine\network\mcpe\protocol\types\DimensionIds;
-use pocketmine\network\mcpe\serializer\ChunkSerializer;
 use function assert;
 use function substr;
 use function substr_replace;
@@ -23,7 +22,6 @@ final class DimensionSpecificCompressor implements Compressor{
 	private int $biome_palettes_to_reduce;
 
 	/**
-	 * @param Compressor $inner
 	 * @param DimensionIds::* $dimension_id
 	 */
 	public function __construct(
@@ -46,17 +44,17 @@ final class DimensionSpecificCompressor implements Compressor{
 	}
 
 	public function compress(string $payload) : string{
-		$context = new PacketSerializerContext(GlobalItemTypeDictionary::getInstance()->getDictionary());
+		$context = new PacketSerializerContext(TypeConverter::getInstance()->getItemTypeDictionary());
 		foreach((new PacketBatch($payload))->getPackets(PacketPool::getInstance(), $context, 1) as [$packet, $buffer]){
 			if($packet instanceof LevelChunkPacket){
 				$packet->decode(PacketSerializer::decoder($buffer, 0, $context));
-				$payload_with_reduced_biomes = $this->reduceBiomePalettesInPayload($context, $packet->getSubChunkCount() - ChunkSerializer::LOWER_PADDING_SIZE, $packet->getExtraPayload(), $this->biome_palettes_to_reduce);
+				$payload_with_reduced_biomes = $this->reduceBiomePalettesInPayload($context, $packet->getSubChunkCount() - 4, $packet->getExtraPayload(), $this->biome_palettes_to_reduce);
 				$payload = PacketBatch::fromPackets($context, LevelChunkPacket::create(
 					$packet->getChunkPosition(),
-					$packet->getSubChunkCount() - ChunkSerializer::LOWER_PADDING_SIZE,
+					$packet->getSubChunkCount() - 4,
 					$packet->isClientSubChunkRequestEnabled(),
 					$packet->getUsedBlobHashes(),
-					substr($payload_with_reduced_biomes, ChunkSerializer::LOWER_PADDING_SIZE * 2)
+					substr($payload_with_reduced_biomes, 4 * 2)
 				))->getBuffer();
 			}
 		}
@@ -66,16 +64,10 @@ final class DimensionSpecificCompressor implements Compressor{
 	/**
 	 * This method reduces the number of biome palettes in a chunk's extra payload relative to this value:
 	 * https://github.com/pmmp/PocketMine-MP/blob/38d6284671e8b657ba557e765a6c29b24a7705f5/src/network/mcpe/serializer/ChunkSerializer.php#L81
-	 *
-	 * @param PacketSerializerContext $context
-	 * @param int $sub_chunk_count
-	 * @param string $payload
-	 * @param int $reduction
-	 * @return string
 	 */
 	private function reduceBiomePalettesInPayload(PacketSerializerContext $context, int $sub_chunk_count, string $payload, int $reduction) : string{
 		$extra_payload = PacketSerializer::decoder($payload, 0, $context);
-		$extra_payload->get(ChunkSerializer::LOWER_PADDING_SIZE * 2); // undo fake subchunks for negative space
+		$extra_payload->get(4 * 2); // undo fake subchunks for negative space
 
 		static $BITS_PER_BLOCK_TO_WORD_ARRAY_LENGTH = [0, 512, 1024, 1640, 2048, 2732, 3280];
 

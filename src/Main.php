@@ -123,7 +123,7 @@ class Main extends PluginBase{
 		}
 
 		$this->known_compressors[$id] = $compressor;
-		/** @var DimensionalWorld $world */
+		/** @phpstan-var DimensionalWorld $world */
 		foreach($this->getServer()->getWorldManager()->getWorlds() as $world){
 			$this->registerHackToWorldIfApplicable($world);
 		}
@@ -143,12 +143,9 @@ class Main extends PluginBase{
 	 * @phpstan-param DimensionIds::* $dimension_id
 	 */
 	private function registerHackToWorld(DimensionalWorld $world, int $dimension_id) : void{
+		/** @see ChunkCache::$compressor */
 		static $_chunk_cache_compressor = null;
-		if($_chunk_cache_compressor === null){
-			/** @see ChunkCache::$compressor */
-			$_chunk_cache_compressor = new \ReflectionProperty(ChunkCache::class, "compressor");
-			$_chunk_cache_compressor->setAccessible(true);
-		}
+		$_chunk_cache_compressor ??= new ReflectionProperty(ChunkCache::class, "compressor");
 
 		foreach($this->known_compressors as $compressor){
 			$chunk_cache = ChunkCache::getInstance($world, $compressor);
