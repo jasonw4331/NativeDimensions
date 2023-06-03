@@ -6,10 +6,6 @@ namespace jasonw4331\NativeDimensions\block;
 
 use jasonw4331\NativeDimensions\Main;
 use jasonw4331\NativeDimensions\world\DimensionalWorld;
-use pocketmine\block\BlockBreakInfo;
-use pocketmine\block\BlockIdentifier as BID;
-use pocketmine\block\BlockLegacyIds as Ids;
-use pocketmine\block\NetherPortal;
 use pocketmine\block\VanillaBlocks;
 use pocketmine\entity\Entity;
 use pocketmine\item\Item;
@@ -23,13 +19,9 @@ use pocketmine\world\format\Chunk;
 use pocketmine\world\Position;
 use function in_array;
 
-class Portal extends NetherPortal{
+class NetherPortal extends \pocketmine\block\NetherPortal{
 
-	public function __construct(){
-		parent::__construct(new BID(Ids::PORTAL, 0), "Nether Portal", BlockBreakInfo::indestructible(0.0));
-	}
-
-	public function onBreak(Item $item, Player $player = null) : bool{
+	public function onBreak(Item $item, Player $player = null, array &$returnedItems = []) : bool{
 		$position = $this->getPosition();
 		if($this->getSide(Facing::WEST) instanceof NetherPortal ||
 			$this->getSide(Facing::EAST) instanceof NetherPortal
