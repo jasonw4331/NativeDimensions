@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace jasonw4331\NativeDimensions\world\generator\nether\decorator;
 
 use jasonw4331\NativeDimensions\world\generator\Decorator;
-use pocketmine\block\BlockLegacyIds;
+use pocketmine\block\BlockTypeIds;
 use pocketmine\block\VanillaBlocks;
 use pocketmine\utils\Random;
 use pocketmine\world\ChunkManager;
@@ -20,8 +20,8 @@ class FireDecorator extends Decorator{
 		$source_y_margin = 8 * ($height >> 7);
 
 		for($j = 0; $j < $amount; ++$j){
-			$source_x = ($chunk_x << 4) + $random->nextBoundedInt(16);
-			$source_z = ($chunk_z << 4) + $random->nextBoundedInt(16);
+			$source_x = ($chunk_x << Chunk::COORD_BIT_SIZE) + $random->nextBoundedInt(16);
+			$source_z = ($chunk_z << Chunk::COORD_BIT_SIZE) + $random->nextBoundedInt(16);
 			$source_y = 4 + $random->nextBoundedInt($source_y_margin);
 
 			for($i = 0; $i < 64; ++$i){
@@ -33,8 +33,8 @@ class FireDecorator extends Decorator{
 				$block_below = $world->getBlockAt($x, $y - 1, $z);
 				if(
 					$y < $height &&
-					$block->getId() === BlockLegacyIds::AIR &&
-					$block_below->getId() === BlockLegacyIds::NETHERRACK
+					$block->getTypeId() === BlockTypeIds::AIR &&
+					$block_below->getTypeId() === BlockTypeIds::NETHERRACK
 				){
 					$world->setBlockAt($x, $y, $z, VanillaBlocks::FIRE());
 				}

@@ -1,5 +1,23 @@
 <?php
 
+/**
+ * MultiWorld - PocketMine plugin that manages worlds.
+ * Copyright (C) 2018 - 2022  CzechPMDevs
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 declare(strict_types=1);
 
 namespace jasonw4331\NativeDimensions\world\generator\ender\populator;
@@ -13,17 +31,17 @@ use pocketmine\world\format\Chunk;
 use pocketmine\world\format\SubChunk;
 use pocketmine\world\generator\populator\Populator;
 
-class EnderPilar implements Populator{
+class EnderPilar implements Populator {
 	public const MIN_RADIUS = 3;
 	public const MAX_RADIUS = 5;
 
-	public function populate(ChunkManager $world, int $chunkX, int $chunkZ, Random $random) : void{
-		if($random->nextBoundedInt(10) > 0){
+	public function populate(ChunkManager $world, int $chunkX, int $chunkZ, Random $random) : void {
+		if($random->nextBoundedInt(10) > 0) {
 			return;
 		}
 
 		$chunk = $world->getChunk($chunkX, $chunkZ);
-		if($chunk === null){
+		if($chunk === null) {
 			throw new AssumptionFailedError("Populated chunk is null");
 		}
 
@@ -34,8 +52,8 @@ class EnderPilar implements Populator{
 
 		$centerY = $this->getWorkableBlockAt($chunk, $relativeX, $relativeZ) - 1;
 
-		$air = VanillaBlocks::AIR()->getFullId();
-		if($chunk->getFullBlock($relativeX, $centerY, $relativeZ) === $air){
+		$air = VanillaBlocks::AIR()->getStateId();
+		if($chunk->getBlockStateId($relativeX, $centerY, $relativeZ) === $air) {
 			return;
 		}
 
@@ -47,14 +65,14 @@ class EnderPilar implements Populator{
 		$radiusSquared = ($radius ** 2) - 1;
 
 		$obsidian = VanillaBlocks::OBSIDIAN();
-		for($x = 0; $x <= $radius; ++$x){
+		for($x = 0; $x <= $radius; ++$x) {
 			$xSquared = $x ** 2;
-			for($z = 0; $z <= $radius; ++$z){
-				if($xSquared + $z ** 2 >= $radiusSquared){
+			for($z = 0; $z <= $radius; ++$z) {
+				if($xSquared + $z ** 2 >= $radiusSquared) {
 					break;
 				}
 
-				for($y = 0; $y < $height; ++$y){
+				for($y = 0; $y < $height; ++$y) {
 					$world->setBlockAt($centerX + $x, $centerY + $y, $centerZ + $z, $obsidian);
 					$world->setBlockAt($centerX - $x, $centerY + $y, $centerZ + $z, $obsidian);
 					$world->setBlockAt($centerX + $x, $centerY + $y, $centerZ - $z, $obsidian);
@@ -64,10 +82,10 @@ class EnderPilar implements Populator{
 		}
 	}
 
-	private function getWorkableBlockAt(Chunk $chunk, int $x, int $z) : int{
-		$air = VanillaBlocks::AIR()->getFullId();
-		for($y = EnderGenerator::MAX_BASE_ISLAND_HEIGHT, $maxY = EnderGenerator::MAX_BASE_ISLAND_HEIGHT + EnderGenerator::NOISE_SIZE; $y <= $maxY; ++$y){
-			if($chunk->getFullBlock($x, $y, $z) === $air){
+	private function getWorkableBlockAt(Chunk $chunk, int $x, int $z) : int {
+		$air = VanillaBlocks::AIR()->getStateId();
+		for($y = EnderGenerator::MAX_BASE_ISLAND_HEIGHT, $maxY = EnderGenerator::MAX_BASE_ISLAND_HEIGHT + EnderGenerator::NOISE_SIZE; $y <= $maxY; ++$y ) {
+			if($chunk->getBlockStateId($x, $y, $z) === $air) {
 				return $y;
 			}
 		}

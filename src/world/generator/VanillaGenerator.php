@@ -7,6 +7,7 @@ namespace jasonw4331\NativeDimensions\world\generator;
 use jasonw4331\NativeDimensions\world\generator\biomegrid\MapLayer;
 use jasonw4331\NativeDimensions\world\generator\biomegrid\utils\MapLayerPair;
 use jasonw4331\NativeDimensions\world\generator\nether\WorldType;
+use jasonw4331\NativeDimensions\world\generator\utils\preset\GeneratorPreset;
 use jasonw4331\NativeDimensions\world\generator\utils\WorldOctaves;
 use pocketmine\world\ChunkManager;
 use pocketmine\world\format\Chunk;
@@ -16,11 +17,11 @@ use function array_push;
 use function count;
 
 /**
- * @phpstan-template T of WorldOctaves
+ * @template T of WorldOctaves
  */
 abstract class VanillaGenerator extends Generator{
 
-	/** @phpstan-var T */
+	/** @var T */
 	private ?WorldOctaves $octave_cache = null;
 
 	/** @var Populator[] */
@@ -28,8 +29,8 @@ abstract class VanillaGenerator extends Generator{
 
 	private MapLayerPair $biome_grid;
 
-	public function __construct(int $seed, int $environment, ?string $world_type = null, string $preset = ""){
-		parent::__construct($seed, $preset);
+	public function __construct(int $seed, int $environment, ?string $world_type, GeneratorPreset $preset){
+		parent::__construct($seed, $preset->toString());
 		$this->biome_grid = MapLayer::initialize($seed, $environment, $world_type ?? WorldType::NORMAL);
 	}
 
@@ -52,7 +53,7 @@ abstract class VanillaGenerator extends Generator{
 	}
 
 	/**
-	 * @phpstan-return T
+	 * @return T
 	 */
 	abstract protected function createWorldOctaves() : WorldOctaves;
 
@@ -69,7 +70,7 @@ abstract class VanillaGenerator extends Generator{
 	abstract protected function generateChunkData(ChunkManager $world, int $chunk_x, int $chunk_z, VanillaBiomeGrid $biomes) : void;
 
 	/**
-	 * @phpstan-return T
+	 * @return T
 	 */
 	final protected function getWorldOctaves() : WorldOctaves{
 		return $this->octave_cache ??= $this->createWorldOctaves();
