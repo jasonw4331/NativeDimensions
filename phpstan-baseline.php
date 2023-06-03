@@ -2,18 +2,8 @@
 
 $ignoreErrors = [];
 $ignoreErrors[] = [
-	'message' => '#^Parameter \\#1 \\$value of function count expects array\\|Countable, mixed given\\.$#',
-	'count' => 1,
-	'path' => __DIR__ . '/src/Main.php',
-];
-$ignoreErrors[] = [
 	'message' => '#^Parameter \\#1 \\$x of method pocketmine\\\\world\\\\World\\:\\:setBlockAt\\(\\) expects int, float\\|int given\\.$#',
 	'count' => 2,
-	'path' => __DIR__ . '/src/Main.php',
-];
-$ignoreErrors[] = [
-	'message' => '#^Parameter \\#2 \\$dimension_id of method jasonwynn10\\\\NativeDimensions\\\\Main\\:\\:applyToWorld\\(\\) expects 0\\|1\\|2, int\\<min, \\-1\\>\\|int\\<1, max\\> given\\.$#',
-	'count' => 1,
 	'path' => __DIR__ . '/src/Main.php',
 ];
 $ignoreErrors[] = [
@@ -32,29 +22,34 @@ $ignoreErrors[] = [
 	'path' => __DIR__ . '/src/Main.php',
 ];
 $ignoreErrors[] = [
-	'message' => '#^Strict comparison using \\!\\=\\= between jasonwynn10\\\\NativeDimensions\\\\world\\\\DimensionalWorld and null will always evaluate to true\\.$#',
+	'message' => '#^Strict comparison using \\!\\=\\= between jasonw4331\\\\NativeDimensions\\\\world\\\\DimensionalWorld and null will always evaluate to true\\.$#',
 	'count' => 1,
 	'path' => __DIR__ . '/src/Main.php',
 ];
 $ignoreErrors[] = [
-	'message' => '#^Parameter \\#1 \\$world of static method jasonwynn10\\\\NativeDimensions\\\\Main\\:\\:makeEndSpawn\\(\\) expects jasonwynn10\\\\NativeDimensions\\\\world\\\\DimensionalWorld, pocketmine\\\\world\\\\World given\\.$#',
+	'message' => '#^Parameter \\#1 \\$world of static method jasonw4331\\\\NativeDimensions\\\\Main\\:\\:makeEndSpawn\\(\\) expects jasonw4331\\\\NativeDimensions\\\\world\\\\DimensionalWorld, pocketmine\\\\world\\\\World given\\.$#',
 	'count' => 1,
 	'path' => __DIR__ . '/src/block/EndPortal.php',
 ];
 $ignoreErrors[] = [
 	'message' => '#^Parameter \\#1 \\$x of method pocketmine\\\\world\\\\World\\:\\:getBlockAt\\(\\) expects int, float\\|int given\\.$#',
 	'count' => 12,
-	'path' => __DIR__ . '/src/block/Portal.php',
+	'path' => __DIR__ . '/src/block/NetherPortal.php',
 ];
 $ignoreErrors[] = [
 	'message' => '#^Parameter \\#2 \\$y of method pocketmine\\\\world\\\\World\\:\\:getBlockAt\\(\\) expects int, float\\|int given\\.$#',
 	'count' => 12,
-	'path' => __DIR__ . '/src/block/Portal.php',
+	'path' => __DIR__ . '/src/block/NetherPortal.php',
 ];
 $ignoreErrors[] = [
 	'message' => '#^Parameter \\#3 \\$z of method pocketmine\\\\world\\\\World\\:\\:getBlockAt\\(\\) expects int, float\\|int given\\.$#',
 	'count' => 12,
-	'path' => __DIR__ . '/src/block/Portal.php',
+	'path' => __DIR__ . '/src/block/NetherPortal.php',
+];
+$ignoreErrors[] = [
+	'message' => '#^Call to an undefined method pocketmine\\\\block\\\\Block\\:\\:isSameType\\(\\)\\.$#',
+	'count' => 1,
+	'path' => __DIR__ . '/src/event/DimensionListener.php',
 ];
 $ignoreErrors[] = [
 	'message' => '#^Cannot call method getId\\(\\) on pocketmine\\\\player\\\\Player\\|null\\.$#',
@@ -63,11 +58,6 @@ $ignoreErrors[] = [
 ];
 $ignoreErrors[] = [
 	'message' => '#^Cannot call method getNetworkSession\\(\\) on pocketmine\\\\player\\\\Player\\|null\\.$#',
-	'count' => 1,
-	'path' => __DIR__ . '/src/event/DimensionListener.php',
-];
-$ignoreErrors[] = [
-	'message' => '#^Cannot call method getPlayer\\(\\) on pocketmine\\\\network\\\\mcpe\\\\NetworkSession\\|null\\.$#',
 	'count' => 1,
 	'path' => __DIR__ . '/src/event/DimensionListener.php',
 ];
@@ -87,12 +77,7 @@ $ignoreErrors[] = [
 	'path' => __DIR__ . '/src/event/DimensionListener.php',
 ];
 $ignoreErrors[] = [
-	'message' => '#^Parameter \\#1 \\$array of function array_shift is passed by reference, so it expects variables only\\.$#',
-	'count' => 1,
-	'path' => __DIR__ . '/src/event/DimensionListener.php',
-];
-$ignoreErrors[] = [
-	'message' => '#^Parameter \\#1 \\$direction of method jasonwynn10\\\\NativeDimensions\\\\event\\\\DimensionListener\\:\\:testDirectionForObsidian\\(\\) expects int, int\\|null given\\.$#',
+	'message' => '#^Parameter \\#1 \\$direction of method jasonw4331\\\\NativeDimensions\\\\event\\\\DimensionListener\\:\\:testDirectionForObsidian\\(\\) expects int, int\\|null given\\.$#',
 	'count' => 1,
 	'path' => __DIR__ . '/src/event/DimensionListener.php',
 ];
@@ -112,17 +97,22 @@ $ignoreErrors[] = [
 	'path' => __DIR__ . '/src/event/DimensionListener.php',
 ];
 $ignoreErrors[] = [
-	'message' => '#^Method jasonwynn10\\\\NativeDimensions\\\\world\\\\DimensionalWorld\\:\\:getEnd\\(\\) should return pocketmine\\\\world\\\\World but returns pocketmine\\\\world\\\\World\\|null\\.$#',
+	'message' => '#^Method jasonw4331\\\\NativeDimensions\\\\world\\\\DimensionalWorld\\:\\:getDimensionId\\(\\) should return 0\\|1\\|2 but returns int\\.$#',
 	'count' => 1,
 	'path' => __DIR__ . '/src/world/DimensionalWorld.php',
 ];
 $ignoreErrors[] = [
-	'message' => '#^Method jasonwynn10\\\\NativeDimensions\\\\world\\\\DimensionalWorld\\:\\:getNether\\(\\) should return pocketmine\\\\world\\\\World but returns pocketmine\\\\world\\\\World\\|null\\.$#',
+	'message' => '#^Method jasonw4331\\\\NativeDimensions\\\\world\\\\DimensionalWorld\\:\\:getEnd\\(\\) should return pocketmine\\\\world\\\\World but returns pocketmine\\\\world\\\\World\\|null\\.$#',
 	'count' => 1,
 	'path' => __DIR__ . '/src/world/DimensionalWorld.php',
 ];
 $ignoreErrors[] = [
-	'message' => '#^Method jasonwynn10\\\\NativeDimensions\\\\world\\\\DimensionalWorld\\:\\:getOverworld\\(\\) should return pocketmine\\\\world\\\\World but returns pocketmine\\\\world\\\\World\\|null\\.$#',
+	'message' => '#^Method jasonw4331\\\\NativeDimensions\\\\world\\\\DimensionalWorld\\:\\:getNether\\(\\) should return pocketmine\\\\world\\\\World but returns pocketmine\\\\world\\\\World\\|null\\.$#',
+	'count' => 1,
+	'path' => __DIR__ . '/src/world/DimensionalWorld.php',
+];
+$ignoreErrors[] = [
+	'message' => '#^Method jasonw4331\\\\NativeDimensions\\\\world\\\\DimensionalWorld\\:\\:getOverworld\\(\\) should return pocketmine\\\\world\\\\World but returns pocketmine\\\\world\\\\World\\|null\\.$#',
 	'count' => 1,
 	'path' => __DIR__ . '/src/world/DimensionalWorld.php',
 ];
@@ -137,29 +127,39 @@ $ignoreErrors[] = [
 	'path' => __DIR__ . '/src/world/DimensionalWorld.php',
 ];
 $ignoreErrors[] = [
+	'message' => '#^Access to an undefined static property pocketmine\\\\timings\\\\Timings\\:\\:\\$worldSave\\.$#',
+	'count' => 2,
+	'path' => __DIR__ . '/src/world/DimensionalWorldManager.php',
+];
+$ignoreErrors[] = [
 	'message' => '#^Call to an undefined method pocketmine\\\\world\\\\format\\\\io\\\\WritableWorldProvider\\:\\:getDatabase\\(\\)\\.$#',
 	'count' => 2,
 	'path' => __DIR__ . '/src/world/DimensionalWorldManager.php',
 ];
 $ignoreErrors[] = [
-	'message' => '#^Method jasonwynn10\\\\NativeDimensions\\\\world\\\\provider\\\\DimensionProviderManagerEntry\\:\\:fromPath\\(\\) invoked with 3 parameters, 1\\-2 required\\.$#',
+	'message' => '#^Method jasonw4331\\\\NativeDimensions\\\\world\\\\provider\\\\DimensionProviderManagerEntry\\:\\:fromPath\\(\\) invoked with 4 parameters, 2\\-3 required\\.$#',
 	'count' => 2,
 	'path' => __DIR__ . '/src/world/DimensionalWorldManager.php',
 ];
 $ignoreErrors[] = [
-	'message' => '#^Parameter \\#3 \\$provider of class jasonwynn10\\\\NativeDimensions\\\\world\\\\DimensionalWorld constructor expects pocketmine\\\\world\\\\format\\\\io\\\\WritableWorldProvider, pocketmine\\\\world\\\\format\\\\io\\\\WorldProvider given\\.$#',
+	'message' => '#^Parameter \\#3 \\$provider of class jasonw4331\\\\NativeDimensions\\\\world\\\\DimensionalWorld constructor expects pocketmine\\\\world\\\\format\\\\io\\\\WritableWorldProvider, pocketmine\\\\world\\\\format\\\\io\\\\WorldProvider given\\.$#',
 	'count' => 2,
 	'path' => __DIR__ . '/src/world/DimensionalWorldManager.php',
 ];
 $ignoreErrors[] = [
-	'message' => '#^Property jasonwynn10\\\\NativeDimensions\\\\world\\\\DimensionalWorldManager\\:\\:\\$worlds type has no value type specified in iterable type array\\.$#',
+	'message' => '#^Property jasonw4331\\\\NativeDimensions\\\\world\\\\DimensionalWorldManager\\:\\:\\$worlds \\(array\\<jasonw4331\\\\NativeDimensions\\\\world\\\\DimensionalWorld\\>\\) does not accept array\\<pocketmine\\\\world\\\\World\\>\\.$#',
 	'count' => 1,
 	'path' => __DIR__ . '/src/world/DimensionalWorldManager.php',
 ];
 $ignoreErrors[] = [
-	'message' => '#^jasonwynn10\\\\NativeDimensions\\\\world\\\\DimensionalWorldManager\\:\\:__construct\\(\\) does not call parent constructor from pocketmine\\\\world\\\\WorldManager\\.$#',
+	'message' => '#^jasonw4331\\\\NativeDimensions\\\\world\\\\DimensionalWorldManager\\:\\:__construct\\(\\) does not call parent constructor from pocketmine\\\\world\\\\WorldManager\\.$#',
 	'count' => 1,
 	'path' => __DIR__ . '/src/world/DimensionalWorldManager.php',
+];
+$ignoreErrors[] = [
+	'message' => '#^Call to an undefined method pocketmine\\\\world\\\\format\\\\io\\\\LoadedChunkData\\:\\:getChunk\\(\\)\\.$#',
+	'count' => 1,
+	'path' => __DIR__ . '/src/world/converter/DimensionalFormatConverter.php',
 ];
 $ignoreErrors[] = [
 	'message' => '#^Call to an undefined method pocketmine\\\\world\\\\format\\\\io\\\\WritableWorldProvider\\:\\:getDatabase\\(\\)\\.$#',
@@ -167,7 +167,7 @@ $ignoreErrors[] = [
 	'path' => __DIR__ . '/src/world/converter/DimensionalFormatConverter.php',
 ];
 $ignoreErrors[] = [
-	'message' => '#^Method jasonwynn10\\\\NativeDimensions\\\\world\\\\converter\\\\DimensionalFormatConverter\\:\\:generateNew\\(\\) should return array\\<jasonwynn10\\\\NativeDimensions\\\\world\\\\provider\\\\DimensionLevelDBProvider\\> but returns array\\<int, pocketmine\\\\world\\\\format\\\\io\\\\WritableWorldProvider\\>\\.$#',
+	'message' => '#^Method jasonw4331\\\\NativeDimensions\\\\world\\\\converter\\\\DimensionalFormatConverter\\:\\:generateNew\\(\\) should return array\\<jasonw4331\\\\NativeDimensions\\\\world\\\\provider\\\\DimensionLevelDBProvider\\> but returns array\\<int, pocketmine\\\\world\\\\format\\\\io\\\\WritableWorldProvider\\>\\.$#',
 	'count' => 1,
 	'path' => __DIR__ . '/src/world/converter/DimensionalFormatConverter.php',
 ];
@@ -177,34 +177,19 @@ $ignoreErrors[] = [
 	'path' => __DIR__ . '/src/world/converter/DimensionalFormatConverter.php',
 ];
 $ignoreErrors[] = [
-	'message' => '#^Method jasonwynn10\\\\NativeDimensions\\\\world\\\\data\\\\DimensionalBedrockWorldData\\:\\:setGenerator\\(\\) has no return type specified\\.$#',
-	'count' => 1,
-	'path' => __DIR__ . '/src/world/data/DimensionalBedrockWorldData.php',
+	'message' => '#^Parameter \\#2 \\$logger of method jasonw4331\\\\NativeDimensions\\\\world\\\\provider\\\\RewritableWorldProviderManagerEntry\\:\\:fromPath\\(\\) expects Logger, int given\\.$#',
+	'count' => 6,
+	'path' => __DIR__ . '/src/world/converter/DimensionalFormatConverter.php',
 ];
 $ignoreErrors[] = [
-	'message' => '#^Method jasonwynn10\\\\NativeDimensions\\\\world\\\\data\\\\DimensionalBedrockWorldData\\:\\:setName\\(\\) has no return type specified\\.$#',
+	'message' => '#^Parameter \\#3 \\$chunkData of method jasonw4331\\\\NativeDimensions\\\\world\\\\provider\\\\DimensionLevelDBProvider\\:\\:saveChunk\\(\\) expects pocketmine\\\\world\\\\format\\\\io\\\\ChunkData, pocketmine\\\\world\\\\format\\\\io\\\\LoadedChunkData given\\.$#',
 	'count' => 1,
-	'path' => __DIR__ . '/src/world/data/DimensionalBedrockWorldData.php',
+	'path' => __DIR__ . '/src/world/converter/DimensionalFormatConverter.php',
 ];
 $ignoreErrors[] = [
-	'message' => '#^Cannot call method generateValues\\(\\) on jasonwynn10\\\\NativeDimensions\\\\world\\\\generator\\\\biomegrid\\\\MapLayer\\|null\\.$#',
+	'message' => '#^Cannot call method generateValues\\(\\) on jasonw4331\\\\NativeDimensions\\\\world\\\\generator\\\\biomegrid\\\\MapLayer\\|null\\.$#',
 	'count' => 1,
 	'path' => __DIR__ . '/src/world/generator/VanillaGenerator.php',
-];
-$ignoreErrors[] = [
-	'message' => '#^Cannot call method setBiomeId\\(\\) on pocketmine\\\\world\\\\format\\\\Chunk\\|null\\.$#',
-	'count' => 1,
-	'path' => __DIR__ . '/src/world/generator/ender/EnderGenerator.php',
-];
-$ignoreErrors[] = [
-	'message' => '#^Cannot call method setFullBlock\\(\\) on pocketmine\\\\world\\\\format\\\\Chunk\\|null\\.$#',
-	'count' => 3,
-	'path' => __DIR__ . '/src/world/generator/ender/EnderGenerator.php',
-];
-$ignoreErrors[] = [
-	'message' => '#^Offset int\\<0, 15\\> does not exist on SplFixedArray\\<float\\>\\|null\\.$#',
-	'count' => 1,
-	'path' => __DIR__ . '/src/world/generator/ender/EnderGenerator.php',
 ];
 $ignoreErrors[] = [
 	'message' => '#^Variable \\$y might not be defined\\.$#',
@@ -212,7 +197,7 @@ $ignoreErrors[] = [
 	'path' => __DIR__ . '/src/world/generator/ender/populator/EnderPilar.php',
 ];
 $ignoreErrors[] = [
-	'message' => '#^Parameter \\#3 \\$biomeId of method pocketmine\\\\world\\\\format\\\\Chunk\\:\\:setBiomeId\\(\\) expects int, int\\|null given\\.$#',
+	'message' => '#^Parameter \\#4 \\$biomeId of method pocketmine\\\\world\\\\format\\\\Chunk\\:\\:setBiomeId\\(\\) expects int, int\\|null given\\.$#',
 	'count' => 1,
 	'path' => __DIR__ . '/src/world/generator/nether/NetherGenerator.php',
 ];
@@ -232,7 +217,7 @@ $ignoreErrors[] = [
 	'path' => __DIR__ . '/src/world/generator/nether/decorator/GlowstoneDecorator.php',
 ];
 $ignoreErrors[] = [
-	'message' => '#^jasonwynn10\\\\NativeDimensions\\\\world\\\\generator\\\\nether\\\\populator\\\\OrePopulator\\:\\:__construct\\(\\) does not call parent constructor from jasonwynn10\\\\NativeDimensions\\\\world\\\\generator\\\\nether\\\\populator\\\\biome\\\\OrePopulator\\.$#',
+	'message' => '#^jasonw4331\\\\NativeDimensions\\\\world\\\\generator\\\\nether\\\\populator\\\\OrePopulator\\:\\:__construct\\(\\) does not call parent constructor from jasonw4331\\\\NativeDimensions\\\\world\\\\generator\\\\nether\\\\populator\\\\biome\\\\OrePopulator\\.$#',
 	'count' => 1,
 	'path' => __DIR__ . '/src/world/generator/nether/populator/OrePopulator.php',
 ];
@@ -242,19 +227,54 @@ $ignoreErrors[] = [
 	'path' => __DIR__ . '/src/world/generator/noise/bukkit/SimplexNoiseGenerator.php',
 ];
 $ignoreErrors[] = [
-	'message' => '#^jasonwynn10\\\\NativeDimensions\\\\world\\\\generator\\\\noise\\\\glowstone\\\\PerlinNoise\\:\\:__construct\\(\\) does not call parent constructor from jasonwynn10\\\\NativeDimensions\\\\world\\\\generator\\\\noise\\\\bukkit\\\\BasePerlinNoiseGenerator\\.$#',
+	'message' => '#^jasonw4331\\\\NativeDimensions\\\\world\\\\generator\\\\noise\\\\glowstone\\\\PerlinNoise\\:\\:__construct\\(\\) does not call parent constructor from jasonw4331\\\\NativeDimensions\\\\world\\\\generator\\\\noise\\\\bukkit\\\\BasePerlinNoiseGenerator\\.$#',
 	'count' => 1,
 	'path' => __DIR__ . '/src/world/generator/noise/glowstone/PerlinNoise.php',
 ];
 $ignoreErrors[] = [
-	'message' => '#^Static property jasonwynn10\\\\NativeDimensions\\\\world\\\\generator\\\\object\\\\TerrainObject\\:\\:\\$PLANT_TYPES is never read, only written\\.$#',
+	'message' => '#^Static property jasonw4331\\\\NativeDimensions\\\\world\\\\generator\\\\object\\\\TerrainObject\\:\\:\\$PLANT_TYPES is never read, only written\\.$#',
 	'count' => 1,
 	'path' => __DIR__ . '/src/world/generator/object/TerrainObject.php',
 ];
 $ignoreErrors[] = [
-	'message' => '#^jasonwynn10\\\\NativeDimensions\\\\world\\\\provider\\\\DimensionLevelDBProvider\\:\\:__construct\\(\\) does not call parent constructor from pocketmine\\\\world\\\\format\\\\io\\\\leveldb\\\\LevelDB\\.$#',
+	'message' => '#^Part \\$value \\(mixed\\) of encapsed string cannot be cast to string\\.$#',
+	'count' => 1,
+	'path' => __DIR__ . '/src/world/generator/utils/preset/SimpleGeneratorPreset.php',
+];
+$ignoreErrors[] = [
+	'message' => '#^Call to an undefined method pocketmine\\\\world\\\\format\\\\io\\\\ChunkData\\:\\:getChunk\\(\\)\\.$#',
 	'count' => 1,
 	'path' => __DIR__ . '/src/world/provider/DimensionLevelDBProvider.php',
+];
+$ignoreErrors[] = [
+	'message' => '#^Class pocketmine\\\\world\\\\format\\\\io\\\\ChunkData constructor invoked with 3 parameters, 4 required\\.$#',
+	'count' => 1,
+	'path' => __DIR__ . '/src/world/provider/DimensionLevelDBProvider.php',
+];
+$ignoreErrors[] = [
+	'message' => '#^Parameter \\#1 \\$subChunks of class pocketmine\\\\world\\\\format\\\\io\\\\ChunkData constructor expects array\\<pocketmine\\\\world\\\\format\\\\SubChunk\\>, pocketmine\\\\world\\\\format\\\\Chunk given\\.$#',
+	'count' => 1,
+	'path' => __DIR__ . '/src/world/provider/DimensionLevelDBProvider.php',
+];
+$ignoreErrors[] = [
+	'message' => '#^Parameter \\#2 \\$populated of class pocketmine\\\\world\\\\format\\\\io\\\\ChunkData constructor expects bool, array\\<pocketmine\\\\nbt\\\\tag\\\\CompoundTag\\> given\\.$#',
+	'count' => 1,
+	'path' => __DIR__ . '/src/world/provider/DimensionLevelDBProvider.php',
+];
+$ignoreErrors[] = [
+	'message' => '#^jasonw4331\\\\NativeDimensions\\\\world\\\\provider\\\\DimensionLevelDBProvider\\:\\:__construct\\(\\) does not call parent constructor from pocketmine\\\\world\\\\format\\\\io\\\\leveldb\\\\LevelDB\\.$#',
+	'count' => 1,
+	'path' => __DIR__ . '/src/world/provider/DimensionLevelDBProvider.php',
+];
+$ignoreErrors[] = [
+	'message' => '#^Parameter \\#2 \\$logger of class jasonw4331\\\\NativeDimensions\\\\world\\\\provider\\\\DimensionLevelDBProvider constructor expects Logger, int given\\.$#',
+	'count' => 1,
+	'path' => __DIR__ . '/src/world/provider/DimensionalWorldProviderManager.php',
+];
+$ignoreErrors[] = [
+	'message' => '#^Parameter \\#3 \\$dimension of class jasonw4331\\\\NativeDimensions\\\\world\\\\provider\\\\DimensionLevelDBProvider constructor expects int, LevelDB\\|null given\\.$#',
+	'count' => 1,
+	'path' => __DIR__ . '/src/world/provider/DimensionalWorldProviderManager.php',
 ];
 $ignoreErrors[] = [
 	'message' => '#^Argument of an invalid type array\\<int, string\\>\\|false supplied for foreach, only iterables are supported\\.$#',
@@ -302,7 +322,7 @@ $ignoreErrors[] = [
 	'path' => __DIR__ . '/src/world/provider/RewritableWorldProviderManagerEntry.php',
 ];
 $ignoreErrors[] = [
-	'message' => '#^Property jasonwynn10\\\\NativeDimensions\\\\world\\\\provider\\\\RewritableWorldProviderManagerEntry\\:\\:\\$hasDimensions has no type specified\\.$#',
+	'message' => '#^Property jasonw4331\\\\NativeDimensions\\\\world\\\\provider\\\\RewritableWorldProviderManagerEntry\\:\\:\\$hasDimensions has no type specified\\.$#',
 	'count' => 1,
 	'path' => __DIR__ . '/src/world/provider/RewritableWorldProviderManagerEntry.php',
 ];
