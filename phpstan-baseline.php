@@ -127,11 +127,6 @@ $ignoreErrors[] = [
 	'path' => __DIR__ . '/src/world/DimensionalWorld.php',
 ];
 $ignoreErrors[] = [
-	'message' => '#^Access to an undefined static property pocketmine\\\\timings\\\\Timings\\:\\:\\$worldSave\\.$#',
-	'count' => 2,
-	'path' => __DIR__ . '/src/world/DimensionalWorldManager.php',
-];
-$ignoreErrors[] = [
 	'message' => '#^Call to an undefined method pocketmine\\\\world\\\\format\\\\io\\\\WritableWorldProvider\\:\\:getDatabase\\(\\)\\.$#',
 	'count' => 2,
 	'path' => __DIR__ . '/src/world/DimensionalWorldManager.php',
