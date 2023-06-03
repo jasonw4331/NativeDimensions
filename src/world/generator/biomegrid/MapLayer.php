@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace jasonwynn10\NativeDimensions\world\generator\biomegrid;
+namespace jasonw4331\NativeDimensions\world\generator\biomegrid;
 
-use jasonwynn10\NativeDimensions\world\generator\biomegrid\utils\MapLayerPair;
-use jasonwynn10\NativeDimensions\world\generator\Environment;
-use jasonwynn10\NativeDimensions\world\generator\biome\BiomeIds;
+use jasonw4331\NativeDimensions\world\generator\biome\BiomeIds;
+use jasonw4331\NativeDimensions\world\generator\biomegrid\utils\MapLayerPair;
+use jasonw4331\NativeDimensions\world\generator\Environment;
 use pocketmine\utils\Random;
 
 abstract class MapLayer{
@@ -36,10 +36,6 @@ abstract class MapLayer{
 	}
 
 	/**
-	 * @param int $x
-	 * @param int $z
-	 * @param int $size_x
-	 * @param int $size_z
 	 * @return int[]
 	 */
 	abstract public function generateValues(int $x, int $z, int $size_x, int $size_z) : array;

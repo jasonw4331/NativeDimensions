@@ -1,27 +1,27 @@
 <?php
+
 declare(strict_types=1);
-namespace jasonwynn10\NativeDimensions\world\data;
+
+namespace jasonw4331\NativeDimensions\world\data;
 
 use pocketmine\math\Vector3;
-use pocketmine\nbt\tag\IntTag;
 use pocketmine\network\mcpe\protocol\types\DimensionIds;
 use pocketmine\world\format\io\data\BedrockWorldData;
 
-class DimensionalBedrockWorldData extends BedrockWorldData {
+class DimensionalBedrockWorldData extends BedrockWorldData{
+
+	private const TAG_NETHER_SCALE = "NetherScale";
+
 	protected function fix() : void{
-		if(!($this->compoundTag->getTag("NetherScale")) instanceof IntTag) {
-			$this->compoundTag->setInt("NetherScale", 8);
+		if($this->compoundTag->getInt(self::TAG_NETHER_SCALE, -1) === -1){
+			$this->compoundTag->setInt(self::TAG_NETHER_SCALE, 8);
 		}
 		parent::fix();
 	}
 
-	public function setGenerator(string $generatorName) {
-		$this->compoundTag->setString("generatorName", $generatorName);
+	public function setGenerator(string $generatorName) : void{
+		$this->compoundTag->setString(self::TAG_GENERATOR_NAME, $generatorName);
 		$this->fix();
-	}
-
-	public function setName(string $name) {
-		$this->compoundTag->setString("LevelName", $name);
 	}
 
 	public function save(int $dimension = 0) : void{
@@ -30,6 +30,9 @@ class DimensionalBedrockWorldData extends BedrockWorldData {
 		parent::save();
 	}
 
+	/**
+	 * @phpstan-param DimensionIds::* $dimension
+	 */
 	public function getSpawn(int $dimension = 0) : Vector3{
 		if($dimension === DimensionIds::THE_END)
 			return new Vector3(100, 50, 0);

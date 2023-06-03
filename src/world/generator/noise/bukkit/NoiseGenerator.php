@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace jasonwynn10\NativeDimensions\world\generator\noise\bukkit;
+namespace jasonw4331\NativeDimensions\world\generator\noise\bukkit;
 
 abstract class NoiseGenerator{
 
@@ -38,6 +38,7 @@ abstract class NoiseGenerator{
 	 * @param float $x X coordinate
 	 * @param float $y Y coordinate
 	 * @param float $z Z coordinate
+	 *
 	 * @return float at given location, from range -1 to 1
 	 */
 	abstract public function noise3d(float $x, float $y = 0.0, float $z = 0.0) : float;

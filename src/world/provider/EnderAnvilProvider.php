@@ -1,19 +1,27 @@
 <?php
+
 declare(strict_types=1);
-namespace jasonwynn10\NativeDimensions\world\provider;
+
+namespace jasonw4331\NativeDimensions\world\provider;
 
 use pocketmine\world\format\io\exception\CorruptedChunkException;
 use pocketmine\world\format\io\region\Anvil;
-use Webmozart\PathUtil\Path;
+use Symfony\Component\Filesystem\Path;
+use function file_exists;
+use function is_dir;
+use function scandir;
+use function strrpos;
+use function substr;
+use const SCANDIR_SORT_NONE;
 
-class EnderAnvilProvider extends Anvil {
+class EnderAnvilProvider extends Anvil{
 
 	protected function pathToRegion(int $regionX, int $regionZ) : string{
 		return Path::join($this->path, "dim1", "region", "r.$regionX.$regionZ." . static::getRegionFileExtension());
 	}
 
 	public static function isValid(string $path) : bool{
-		if(file_exists(Path::join($path, "level.dat")) and is_dir($regionPath = Path::join($path, "dim1", "region"))){
+		if(file_exists(Path::join($path, "level.dat")) && is_dir($regionPath = Path::join($path, "dim1", "region"))){
 			foreach(scandir($regionPath, SCANDIR_SORT_NONE) as $file){
 				$extPos = strrpos($file, ".");
 				if($extPos !== false && substr($file, $extPos + 1) === static::getRegionFileExtension()){

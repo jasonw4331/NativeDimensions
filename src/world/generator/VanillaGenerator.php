@@ -2,23 +2,26 @@
 
 declare(strict_types=1);
 
-namespace jasonwynn10\NativeDimensions\world\generator;
+namespace jasonw4331\NativeDimensions\world\generator;
 
-use jasonwynn10\NativeDimensions\world\generator\biomegrid\MapLayer;
-use jasonwynn10\NativeDimensions\world\generator\biomegrid\utils\MapLayerPair;
-use jasonwynn10\NativeDimensions\world\generator\nether\WorldType;
-use jasonwynn10\NativeDimensions\world\generator\utils\WorldOctaves;
+use jasonw4331\NativeDimensions\world\generator\biomegrid\MapLayer;
+use jasonw4331\NativeDimensions\world\generator\biomegrid\utils\MapLayerPair;
+use jasonw4331\NativeDimensions\world\generator\nether\WorldType;
+use jasonw4331\NativeDimensions\world\generator\utils\preset\GeneratorPreset;
+use jasonw4331\NativeDimensions\world\generator\utils\WorldOctaves;
 use pocketmine\world\ChunkManager;
 use pocketmine\world\format\Chunk;
 use pocketmine\world\generator\Generator;
 use pocketmine\world\World;
+use function array_push;
+use function count;
 
 /**
- * @phpstan-template T of WorldOctaves
+ * @template T of WorldOctaves
  */
 abstract class VanillaGenerator extends Generator{
 
-	/** @phpstan-var T */
+	/** @var T */
 	private ?WorldOctaves $octave_cache = null;
 
 	/** @var Populator[] */
@@ -26,16 +29,12 @@ abstract class VanillaGenerator extends Generator{
 
 	private MapLayerPair $biome_grid;
 
-	public function __construct(int $seed, int $environment, ?string $world_type = null, string $preset = ""){
-		parent::__construct($seed, $preset);
+	public function __construct(int $seed, int $environment, ?string $world_type, GeneratorPreset $preset){
+		parent::__construct($seed, $preset->toString());
 		$this->biome_grid = MapLayer::initialize($seed, $environment, $world_type ?? WorldType::NORMAL);
 	}
 
 	/**
-	 * @param int $x
-	 * @param int $z
-	 * @param int $size_x
-	 * @param int $size_z
 	 * @return int[]
 	 */
 	public function getBiomeGridAtLowerRes(int $x, int $z, int $size_x, int $size_z) : array{
@@ -43,10 +42,6 @@ abstract class VanillaGenerator extends Generator{
 	}
 
 	/**
-	 * @param int $x
-	 * @param int $z
-	 * @param int $size_x
-	 * @param int $size_z
 	 * @return int[]
 	 */
 	public function getBiomeGrid(int $x, int $z, int $size_x, int $size_z) : array{
@@ -58,9 +53,7 @@ abstract class VanillaGenerator extends Generator{
 	}
 
 	/**
-	 * @return WorldOctaves
-	 *
-	 * @phpstan-return T
+	 * @return T
 	 */
 	abstract protected function createWorldOctaves() : WorldOctaves;
 
@@ -77,9 +70,7 @@ abstract class VanillaGenerator extends Generator{
 	abstract protected function generateChunkData(ChunkManager $world, int $chunk_x, int $chunk_z, VanillaBiomeGrid $biomes) : void;
 
 	/**
-	 * @return WorldOctaves
-	 *
-	 * @phpstan-return T
+	 * @return T
 	 */
 	final protected function getWorldOctaves() : WorldOctaves{
 		return $this->octave_cache ??= $this->createWorldOctaves();

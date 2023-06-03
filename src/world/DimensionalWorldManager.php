@@ -1,10 +1,12 @@
 <?php
-declare(strict_types=1);
-namespace jasonwynn10\NativeDimensions\world;
 
-use jasonwynn10\NativeDimensions\world\converter\DimensionalFormatConverter;
-use jasonwynn10\NativeDimensions\world\provider\DimensionalWorldProviderManager;
-use jasonwynn10\NativeDimensions\world\provider\DimensionLevelDBProvider;
+declare(strict_types=1);
+
+namespace jasonw4331\NativeDimensions\world;
+
+use jasonw4331\NativeDimensions\world\converter\DimensionalFormatConverter;
+use jasonw4331\NativeDimensions\world\provider\DimensionalWorldProviderManager;
+use jasonw4331\NativeDimensions\world\provider\DimensionLevelDBProvider;
 use pocketmine\entity\Entity;
 use pocketmine\event\world\WorldInitEvent;
 use pocketmine\event\world\WorldLoadEvent;
@@ -26,29 +28,37 @@ use pocketmine\world\World;
 use pocketmine\world\WorldCreationOptions;
 use pocketmine\world\WorldException;
 use pocketmine\world\WorldManager;
-use Webmozart\PathUtil\Path;
+use Symfony\Component\Filesystem\Path;
+use function array_keys;
+use function array_shift;
+use function assert;
+use function count;
+use function floor;
+use function implode;
+use function intdiv;
+use function iterator_to_array;
+use function microtime;
+use function round;
+use function sprintf;
+use function strval;
+use function trim;
 
-class DimensionalWorldManager extends WorldManager {
+class DimensionalWorldManager extends WorldManager{
+	public const TICKS_PER_AUTOSAVE = 300 * Server::TARGET_TICKS_PER_SECOND;
 
-	private string $dataPath;
-
-	private DimensionalWorldProviderManager $providerManager;
-
+	/** @var DimensionalWorld[] */
 	private array $worlds = [];
 	private ?World $defaultWorld = null;
 
-	private Server $server;
-
 	private bool $autoSave = true;
-	private int $autoSaveTicks = 6000;
-
+	private int $autoSaveTicks = self::TICKS_PER_AUTOSAVE;
 	private int $autoSaveTicker = 0;
 
-	public function __construct(Server $server, string $dataPath){
-		$this->server = $server;
-		$this->dataPath = $dataPath;
-		$this->providerManager = new DimensionalWorldProviderManager();
-	}
+	public function __construct(
+		private Server $server,
+		private string $dataPath,
+		private DimensionalWorldProviderManager $providerManager
+	){}
 
 	public function getProviderManager() : WorldProviderManager{
 		throw new \BadMethodCallException("Use of pocketmine WorldProviderManager is disallowed through NativeDimensions");
@@ -75,7 +85,7 @@ class DimensionalWorldManager extends WorldManager {
 	 * it only affects the server on runtime
 	 */
 	public function setDefaultWorld(?World $world) : void{
-		if($world === null or ($this->isWorldLoaded($world->getFolderName()) and $world !== $this->defaultWorld)){
+		if($world === null || ($this->isWorldLoaded($world->getFolderName()) && $world !== $this->defaultWorld)){
 			$this->defaultWorld = $world;
 		}
 	}
@@ -105,7 +115,7 @@ class DimensionalWorldManager extends WorldManager {
 	 * @throws \InvalidArgumentException
 	 */
 	public function unloadWorld(World $world, bool $forceUnload = false) : bool{
-		if($world === $this->getDefaultWorld() and !$forceUnload){
+		if($world === $this->getDefaultWorld() && !$forceUnload){
 			throw new \InvalidArgumentException("The default world cannot be unloaded while running, please switch worlds.");
 		}
 		if($world->isDoingTick()){
@@ -113,13 +123,13 @@ class DimensionalWorldManager extends WorldManager {
 		}
 
 		$ev = new WorldUnloadEvent($world);
-		if($world === $this->defaultWorld and !$forceUnload){
+		if($world === $this->defaultWorld && !$forceUnload){
 			$ev->cancel();
 		}
 
 		$ev->call();
 
-		if(!$forceUnload and $ev->isCancelled()){
+		if(!$forceUnload && $ev->isCancelled()){
 			return false;
 		}
 
@@ -130,7 +140,7 @@ class DimensionalWorldManager extends WorldManager {
 			$safeSpawn = null;
 		}
 		foreach($world->getPlayers() as $player){
-			if($world === $this->defaultWorld or $safeSpawn === null){
+			if($world === $this->defaultWorld || $safeSpawn === null){
 				$player->disconnect("Forced default world unload");
 			}else{
 				$player->teleport($safeSpawn);
@@ -149,7 +159,7 @@ class DimensionalWorldManager extends WorldManager {
 	/**
 	 * Loads a world from the data directory
 	 *
-	 * @param bool   $autoUpgrade Converts worlds to the default format if the world's format is not writable / deprecated
+	 * @param bool $autoUpgrade Converts worlds to the default format if the world's format is not writable / deprecated
 	 *
 	 * @throws WorldException
 	 */
@@ -178,7 +188,7 @@ class DimensionalWorldManager extends WorldManager {
 		$providerClass = array_shift($providers);
 
 		try{
-			$overworld = $providerClass->fromPath($path, DimensionIds::OVERWORLD);
+			$overworld = $providerClass->fromPath($path, new \PrefixedLogger($this->server->getLogger(), "World Provider: $name"), DimensionIds::OVERWORLD);
 		}catch(CorruptedWorldException $e){
 			$this->server->getLogger()->error($this->server->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_loadError(
 				$name,
@@ -222,15 +232,15 @@ class DimensionalWorldManager extends WorldManager {
 
 			$converter = new DimensionalFormatConverter([
 				$overworld,
-				$providerClass->fromPath($path, DimensionIds::NETHER),
-				$providerClass->fromPath($path, DimensionIds::THE_END)
+				$providerClass->fromPath($path, new \PrefixedLogger($this->server->getLogger(), "World Provider: $name"), DimensionIds::NETHER),
+				$providerClass->fromPath($path, new \PrefixedLogger($this->server->getLogger(), "World Provider: $name"), DimensionIds::THE_END)
 			], $this->providerManager->getDefault(), Path::join($this->server->getDataPath(), "backups", "worlds"), $this->server->getLogger());
 			[$overworld, $nether, $end] = $converter->execute();
 
 			$this->server->getLogger()->notice($this->server->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_conversion_finish($name, $converter->getBackupPath())));
 		}elseif($overworld instanceof DimensionLevelDBProvider){
-			$nether = $providerClass->fromPath($path, DimensionIds::NETHER, $overworld->getDatabase());
-			$end = $providerClass->fromPath($path, DimensionIds::THE_END, $overworld->getDatabase());
+			$nether = $providerClass->fromPath($path, new \PrefixedLogger($this->server->getLogger(), "World Provider: $name"), DimensionIds::NETHER, $overworld->getDatabase());
+			$end = $providerClass->fromPath($path, new \PrefixedLogger($this->server->getLogger(), "World Provider: $name"), DimensionIds::THE_END, $overworld->getDatabase());
 		}else{
 			throw new AssumptionFailedError('WorldProvider is not a WritableWorldProvider');
 		}
@@ -267,7 +277,7 @@ class DimensionalWorldManager extends WorldManager {
 	 * @throws \InvalidArgumentException
 	 */
 	public function generateWorld(string $name, WorldCreationOptions $options, bool $backgroundGeneration = true, bool $dimensionalWorld = true) : bool{
-		if(trim($name) === "" or $this->isWorldGenerated($name)){
+		if(trim($name) === "" || $this->isWorldGenerated($name)){
 			return false;
 		}
 
@@ -275,7 +285,7 @@ class DimensionalWorldManager extends WorldManager {
 
 		$path = $this->getWorldPath($name);
 		$providerEntry->generate($path, $name, $options);
-		$provider = $providerEntry->fromPath($path, DimensionIds::OVERWORLD);
+		$provider = $providerEntry->fromPath($path, new \PrefixedLogger($this->server->getLogger(), "World Provider: $name"), DimensionIds::OVERWORLD);
 
 		if(!$dimensionalWorld){
 			$world = new World($this->server, $name, $provider, $this->server->getAsyncPool());
@@ -348,7 +358,7 @@ class DimensionalWorldManager extends WorldManager {
 				}
 			}
 
-			$world = new DimensionalWorld($this->server, $name . " nether", $providerEntry->fromPath($path, DimensionIds::NETHER, $provider->getDatabase()), $this->server->getAsyncPool(), DimensionIds::NETHER);
+			$world = new DimensionalWorld($this->server, $name . " nether", $providerEntry->fromPath($path, new \PrefixedLogger($this->server->getLogger(), "World Provider: $name"), DimensionIds::NETHER, $provider->getDatabase()), $this->server->getAsyncPool(), DimensionIds::NETHER);
 			$this->worlds[$world->getId()] = $world;
 
 			$world->setAutoSave($this->autoSave);
@@ -383,7 +393,7 @@ class DimensionalWorldManager extends WorldManager {
 				}
 			}
 
-			$world = new DimensionalWorld($this->server, $name . " end", $providerEntry->fromPath($path, DimensionIds::THE_END, $provider->getDatabase()), $this->server->getAsyncPool(), DimensionIds::THE_END);
+			$world = new DimensionalWorld($this->server, $name . " end", $providerEntry->fromPath($path, new \PrefixedLogger($this->server->getLogger(), "World Provider: $name"), DimensionIds::THE_END, $provider->getDatabase()), $this->server->getAsyncPool(), DimensionIds::THE_END);
 			$this->worlds[$world->getId()] = $world;
 
 			$world->setAutoSave($this->autoSave);
@@ -469,7 +479,7 @@ class DimensionalWorldManager extends WorldManager {
 			}
 		}
 
-		if($this->autoSave and ++$this->autoSaveTicker >= $this->autoSaveTicks){
+		if($this->autoSave && ++$this->autoSaveTicker >= $this->autoSaveTicks){
 			$this->autoSaveTicker = 0;
 			$this->server->getLogger()->debug("[Auto Save] Saving worlds...");
 			$start = microtime(true);

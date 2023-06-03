@@ -1,9 +1,12 @@
 <?php
-declare(strict_types=1);
-namespace jasonwynn10\NativeDimensions\world\converter;
 
-use jasonwynn10\NativeDimensions\world\provider\DimensionLevelDBProvider;
-use jasonwynn10\NativeDimensions\world\provider\RewritableWorldProviderManagerEntry;
+declare(strict_types=1);
+
+namespace jasonw4331\NativeDimensions\world\converter;
+
+use Exception;
+use jasonw4331\NativeDimensions\world\provider\DimensionLevelDBProvider;
+use jasonw4331\NativeDimensions\world\provider\RewritableWorldProviderManagerEntry;
 use pocketmine\network\mcpe\protocol\types\DimensionIds;
 use pocketmine\utils\Filesystem;
 use pocketmine\world\format\io\WorldData;
@@ -12,9 +15,21 @@ use pocketmine\world\format\io\WritableWorldProvider;
 use pocketmine\world\generator\GeneratorManager;
 use pocketmine\world\generator\normal\Normal;
 use pocketmine\world\WorldCreationOptions;
-use Webmozart\PathUtil\Path;
+use PrefixedLogger;
+use Symfony\Component\Filesystem\Path;
+use function basename;
+use function crc32;
+use function file_exists;
+use function floor;
+use function microtime;
+use function mkdir;
+use function random_bytes;
+use function rename;
+use function round;
+use function rtrim;
+use const DIRECTORY_SEPARATOR;
 
-class DimensionalFormatConverter {
+class DimensionalFormatConverter{
 
 	/** @var WorldProvider[] $oldProviders */
 	private array $oldProviders;
@@ -27,18 +42,14 @@ class DimensionalFormatConverter {
 	private int $chunksPerProgressUpdate;
 
 	/**
-	 * @param WorldProvider[]                     $oldProviders
-	 * @param RewritableWorldProviderManagerEntry $newProvider
-	 * @param string                              $backupPath
-	 * @param \Logger                             $logger
-	 * @param int                                 $chunksPerProgressUpdate
+	 * @param WorldProvider[] $oldProviders
 	 *
-	 * @throws \Exception
+	 * @throws Exception
 	 */
 	public function __construct(array $oldProviders, RewritableWorldProviderManagerEntry $newProvider, string $backupPath, \Logger $logger, int $chunksPerProgressUpdate = 256){
 		$this->oldProviders = $oldProviders;
 		$this->newProvider = $newProvider;
-		$this->logger = new \PrefixedLogger($logger, "World Converter: " . $oldProviders[DimensionIds::OVERWORLD]->getWorldData()->getName());
+		$this->logger = new PrefixedLogger($logger, "World Converter: " . $oldProviders[DimensionIds::OVERWORLD]->getWorldData()->getName());
 		$this->chunksPerProgressUpdate = $chunksPerProgressUpdate;
 
 		if(!file_exists($backupPath)){
@@ -160,9 +171,6 @@ class DimensionalFormatConverter {
 		$this->logger->info("Converted $counter / $counter chunks in " . round($total, 3) . " seconds (" . floor($counter / $total) . " chunks/sec)");
 	}
 
-	/**
-	 * @return string
-	 */
 	public function getBackupPath() : string{
 		return $this->backupPath;
 	}

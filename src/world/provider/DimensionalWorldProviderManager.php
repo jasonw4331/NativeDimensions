@@ -1,16 +1,19 @@
 <?php
-declare(strict_types=1);
-namespace jasonwynn10\NativeDimensions\world\provider;
 
+declare(strict_types=1);
+
+namespace jasonw4331\NativeDimensions\world\provider;
+
+use Closure;
+use LevelDB;
+use Logger;
 use pocketmine\network\mcpe\protocol\types\DimensionIds;
 use pocketmine\utils\Utils;
 use pocketmine\world\format\io\region\Anvil;
-use pocketmine\world\format\io\region\McRegion;
-use pocketmine\world\format\io\region\PMAnvil;
-use pocketmine\world\format\io\WorldProviderManager;
-use pocketmine\world\format\io\WorldProviderManagerEntry;
+use function strtolower;
+use function trim;
 
-class DimensionalWorldProviderManager {
+class DimensionalWorldProviderManager{
 	/**
 	 * @var DimensionProviderManagerEntry[]
 	 * @phpstan-var array<string, DimensionProviderManagerEntry>
@@ -20,20 +23,18 @@ class DimensionalWorldProviderManager {
 	private RewritableWorldProviderManagerEntry $default;
 
 	public function __construct(){
-		$leveldb = new RewritableWorldProviderManagerEntry(\Closure::fromCallable([DimensionLevelDBProvider::class, 'isValid']), fn(string $path, int $dimension, ?\LevelDB $db) => new DimensionLevelDBProvider($path, $dimension, $db), \Closure::fromCallable([DimensionLevelDBProvider::class, 'generate']));
+		$leveldb = new RewritableWorldProviderManagerEntry(DimensionLevelDBProvider::isValid(...), fn(string $path, int $dimension, ?LevelDB $db) => new DimensionLevelDBProvider($path, $dimension, $db), Closure::fromCallable([DimensionLevelDBProvider::class, 'generate']));
 		$this->default = $leveldb;
 		$this->addProvider($leveldb, "leveldb");
 
-		$this->addProvider(new ReadOnlyWorldProviderManagerEntry(\Closure::fromCallable([Anvil::class, 'isValid']), function(string $path, int $dimension = 0) {
-			return match($dimension) {
-				DimensionIds::OVERWORLD => new Anvil($path),
-				DimensionIds::NETHER => new NetherAnvilProvider($path),
-				DimensionIds::THE_END => new EnderAnvilProvider($path),
+		$this->addProvider(new ReadOnlyWorldProviderManagerEntry(Anvil::isValid(...), function(string $path, Logger $logger, int $dimension = 0){
+			return match ($dimension) {
+				DimensionIds::OVERWORLD => new Anvil($path, $logger),
+				DimensionIds::NETHER => new NetherAnvilProvider($path, $logger),
+				DimensionIds::THE_END => new EnderAnvilProvider($path, $logger),
 				default => throw new \UnexpectedValueException("Invalid dimension Id")
 			};
 		}), "anvil");
-		$this->addProvider(new ReadOnlyWorldProviderManagerEntry(\Closure::fromCallable([McRegion::class, 'isValid']), fn(string $path) => new McRegion($path)), "mcregion");
-		$this->addProvider(new ReadOnlyWorldProviderManagerEntry(\Closure::fromCallable([PMAnvil::class, 'isValid']), fn(string $path) => new PMAnvil($path)), "pmanvil");
 	}
 
 	/**
@@ -49,7 +50,7 @@ class DimensionalWorldProviderManager {
 
 	public function addProvider(DimensionProviderManagerEntry $providerEntry, string $name, bool $overwrite = false) : void{
 		$name = strtolower($name);
-		if(!$overwrite and isset($this->providers[$name])){
+		if(!$overwrite && isset($this->providers[$name])){
 			throw new \InvalidArgumentException("Alias \"$name\" is already assigned");
 		}
 

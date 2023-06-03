@@ -2,7 +2,7 @@
 
 /**
  * MultiWorld - PocketMine plugin that manages worlds.
- * Copyright (C) 2018 - 2021  CzechPMDevs
+ * Copyright (C) 2018 - 2022  CzechPMDevs
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,9 +20,9 @@
 
 declare(strict_types=1);
 
-namespace jasonwynn10\NativeDimensions\world\generator\ender\populator;
+namespace jasonw4331\NativeDimensions\world\generator\ender\populator;
 
-use jasonwynn10\NativeDimensions\world\generator\ender\EnderGenerator;
+use jasonw4331\NativeDimensions\world\generator\ender\EnderGenerator;
 use pocketmine\block\VanillaBlocks;
 use pocketmine\utils\AssumptionFailedError;
 use pocketmine\utils\Random;
@@ -35,7 +35,7 @@ class EnderPilar implements Populator {
 	public const MIN_RADIUS = 3;
 	public const MAX_RADIUS = 5;
 
-	public function populate(ChunkManager $world, int $chunkX, int $chunkZ, Random $random): void {
+	public function populate(ChunkManager $world, int $chunkX, int $chunkZ, Random $random) : void {
 		if($random->nextBoundedInt(10) > 0) {
 			return;
 		}
@@ -52,8 +52,8 @@ class EnderPilar implements Populator {
 
 		$centerY = $this->getWorkableBlockAt($chunk, $relativeX, $relativeZ) - 1;
 
-		$air = VanillaBlocks::AIR()->getFullId();
-		if($chunk->getFullBlock($relativeX, $centerY, $relativeZ) === $air) {
+		$air = VanillaBlocks::AIR()->getStateId();
+		if($chunk->getBlockStateId($relativeX, $centerY, $relativeZ) === $air) {
 			return;
 		}
 
@@ -82,10 +82,10 @@ class EnderPilar implements Populator {
 		}
 	}
 
-	private function getWorkableBlockAt(Chunk $chunk, int $x, int $z): int {
-		$air = VanillaBlocks::AIR()->getFullId();
+	private function getWorkableBlockAt(Chunk $chunk, int $x, int $z) : int {
+		$air = VanillaBlocks::AIR()->getStateId();
 		for($y = EnderGenerator::MAX_BASE_ISLAND_HEIGHT, $maxY = EnderGenerator::MAX_BASE_ISLAND_HEIGHT + EnderGenerator::NOISE_SIZE; $y <= $maxY; ++$y ) {
-			if($chunk->getFullBlock($x, $y, $z) === $air) {
+			if($chunk->getBlockStateId($x, $y, $z) === $air) {
 				return $y;
 			}
 		}

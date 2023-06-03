@@ -1,8 +1,12 @@
 <?php
-declare(strict_types=1);
-namespace jasonwynn10\NativeDimensions\world\provider;
 
-use pocketmine\world\format\io\WorldProviderManagerEntry;
+declare(strict_types=1);
+
+namespace jasonw4331\NativeDimensions\world\provider;
+
+use Closure;
+use LevelDB;
+use Logger;
 use pocketmine\world\format\io\WritableWorldProvider;
 use pocketmine\world\WorldCreationOptions;
 
@@ -12,9 +16,9 @@ use pocketmine\world\WorldCreationOptions;
  */
 final class RewritableWorldProviderManagerEntry extends DimensionProviderManagerEntry{
 	/** @phpstan-var FromPath */
-	private \Closure $fromPath;
+	private Closure $fromPath;
 	/** @phpstan-var Generate */
-	private \Closure $generate;
+	private Closure $generate;
 
 	public $hasDimensions = true;
 
@@ -22,13 +26,13 @@ final class RewritableWorldProviderManagerEntry extends DimensionProviderManager
 	 * @phpstan-param FromPath $fromPath
 	 * @phpstan-param Generate $generate
 	 */
-	public function __construct(\Closure $isValid, \Closure $fromPath, \Closure $generate){
+	public function __construct(Closure $isValid, Closure $fromPath, Closure $generate){
 		parent::__construct($isValid);
 		$this->fromPath = $fromPath;
 		$this->generate = $generate;
 	}
 
-	public function fromPath(string $path, int $dimension = 0, \LevelDB $db = null) : WritableWorldProvider{
+	public function fromPath(string $path, Logger $logger, int $dimension = 0, LevelDB $db = null) : WritableWorldProvider{
 		return ($this->fromPath)($path, $dimension, $db);
 	}
 

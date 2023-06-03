@@ -2,11 +2,14 @@
 
 declare(strict_types=1);
 
-namespace jasonwynn10\NativeDimensions\world\generator\object;
+namespace jasonw4331\NativeDimensions\world\generator\object;
 
 use pocketmine\block\Block;
 use pocketmine\utils\Random;
 use pocketmine\world\ChunkManager;
+use function cos;
+use function sin;
+use const M_PI;
 
 class OreVein extends TerrainObject{
 
@@ -17,7 +20,8 @@ class OreVein extends TerrainObject{
 	 *
 	 * @param float $origin the center of the spheroid
 	 * @param float $radius the spheroid's radius on this axis
-	 * @param int $x the raw coordinate
+	 * @param int   $x      the raw coordinate
+	 *
 	 * @return float the square of the normalized coordinate
 	 */
 	protected static function normalizedSquaredCoordinate(float $origin, float $radius, int $x) : float{
@@ -36,9 +40,9 @@ class OreVein extends TerrainObject{
 	 * @param OreType $oreType the ore type
 	 */
 	public function __construct(OreType $oreType){
-		$this->type = $oreType->getType();
-		$this->amount = $oreType->getAmount();
-		$this->target_type = $oreType->getTargetType();
+		$this->type = $oreType->type;
+		$this->amount = $oreType->amount;
+		$this->target_type = $oreType->target_type;
 	}
 
 	public function generate(ChunkManager $world, Random $random, int $source_x, int $source_y, int $source_z) : bool{
@@ -80,7 +84,7 @@ class OreVein extends TerrainObject{
 					}
 					for($z = $min_z; $z <= $max_z; ++$z){
 						$squared_normalized_z = self::normalizedSquaredCoordinate($origin_z, $radius_h, $z);
-						if($squared_normalized_x + $squared_normalized_y + $squared_normalized_z < 1 && $world->getBlockAt($x, $y, $z)->getId() === $this->target_type){
+						if($squared_normalized_x + $squared_normalized_y + $squared_normalized_z < 1 && $world->getBlockAt($x, $y, $z)->getTypeId() === $this->target_type){
 							$world->setBlockAt($x, $y, $z, $this->type);
 							$succeeded = true;
 						}

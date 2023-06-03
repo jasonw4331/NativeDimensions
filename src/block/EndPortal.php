@@ -1,14 +1,12 @@
 <?php
-declare(strict_types=1);
-namespace jasonwynn10\NativeDimensions\block;
 
-use jasonwynn10\NativeDimensions\Main;
-use jasonwynn10\NativeDimensions\world\DimensionalWorld;
-use pocketmine\block\BlockBreakInfo;
-use pocketmine\block\BlockIdentifier;
+declare(strict_types=1);
+
+namespace jasonw4331\NativeDimensions\block;
+
+use jasonw4331\NativeDimensions\Main;
+use jasonw4331\NativeDimensions\world\DimensionalWorld;
 use pocketmine\block\Opaque;
-use pocketmine\block\utils\FacesOppositePlacingPlayerTrait;
-use pocketmine\block\utils\HorizontalFacingTrait;
 use pocketmine\entity\Entity;
 use pocketmine\math\AxisAlignedBB;
 use pocketmine\math\Facing;
@@ -17,14 +15,9 @@ use pocketmine\network\mcpe\protocol\types\DimensionIds;
 use pocketmine\player\Player;
 use pocketmine\world\format\Chunk;
 use pocketmine\world\Position;
+use function in_array;
 
 class EndPortal extends Opaque{
-	use FacesOppositePlacingPlayerTrait;
-	use HorizontalFacingTrait;
-
-	public function __construct(BlockIdentifier $idInfo){
-		parent::__construct($idInfo, "End Portal", BlockBreakInfo::indestructible());
-	}
 
 	public function getLightLevel() : int{
 		return 15;
@@ -41,8 +34,8 @@ class EndPortal extends Opaque{
 		return true;
 	}
 
-	public function onEntityInside(Entity $entity): bool{
-		if(in_array($entity->getId(), Main::getTeleporting()))
+	public function onEntityInside(Entity $entity) : bool{
+		if(in_array($entity->getId(), Main::getTeleporting(), true))
 			return true;
 
 		/** @var DimensionalWorld $world */
@@ -61,20 +54,20 @@ class EndPortal extends Opaque{
 					if($entity instanceof Player)
 						$entity->getNetworkSession()->sendDataPacket(ChangeDimensionPacket::create(DimensionIds::THE_END, $entity->getPosition(), false));
 				},
-				function() use ($entity) {
+				function() use ($entity){
 					Main::getInstance()->getLogger()->debug("Failed to generate End chunks");
 					Main::removeTeleportingId($entity->getId());
 				}
 			);
-		}else {
+		}else{
 			$world->getOverworld()->orderChunkPopulation(100 >> Chunk::COORD_BIT_SIZE, 0 >> Chunk::COORD_BIT_SIZE, null)->onCompletion(
-				function() use($world, $entity) {
+				function() use ($world, $entity){
 					$world->getLogger()->debug("Teleporting to the Overworld");
 					$entity->teleport($entity instanceof Player ? $entity->getSpawn() : $world->getOverworld()->getSpawnLocation());
 					if($entity instanceof Player)
 						$entity->getNetworkSession()->sendDataPacket(ChangeDimensionPacket::create(DimensionIds::OVERWORLD, $entity->getPosition(), false));
 				},
-				function() use ($entity) {
+				function() use ($entity){
 					Main::getInstance()->getLogger()->debug("Failed to generate Overworld chunks");
 					Main::removeTeleportingId($entity->getId());
 				}

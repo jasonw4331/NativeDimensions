@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace jasonwynn10\NativeDimensions\world\generator\noise\glowstone;
+namespace jasonw4331\NativeDimensions\world\generator\noise\glowstone;
 
 use pocketmine\utils\Random;
 
@@ -54,13 +54,7 @@ class SimplexNoise extends PerlinNoise{
 
 	/**
 	 * @param float[] $noise
-	 * @param float $x
-	 * @param float $z
-	 * @param int $size_x
-	 * @param int $size_y
-	 * @param float $scale_x
-	 * @param float $scale_y
-	 * @param float $amplitude
+	 *
 	 * @return float[]
 	 */
 	protected function get2dNoise(array &$noise, float $x, float $z, int $size_x, int $size_y, float $scale_x, float $scale_y, float $amplitude) : array{
@@ -77,16 +71,7 @@ class SimplexNoise extends PerlinNoise{
 
 	/**
 	 * @param float[] $noise
-	 * @param float $x
-	 * @param float $y
-	 * @param float $z
-	 * @param int $size_x
-	 * @param int $size_y
-	 * @param int $sizeZ
-	 * @param float $scale_x
-	 * @param float $scale_y
-	 * @param float $scale_z
-	 * @param float $amplitude
+	 *
 	 * @return float[]
 	 */
 	protected function get3dNoise(array &$noise, float $x, float $y, float $z, int $size_x, int $size_y, int $sizeZ, float $scale_x, float $scale_y, float $scale_z, float $amplitude) : array{
@@ -334,14 +319,11 @@ class SimplexNoise extends PerlinNoise{
 // (array access is a lot slower than member access)
 final class Grad{
 
-	public float $x;
-	public float $y;
-	public float $z;
-
-	public function __construct(float $x, float $y, float $z){
-		$this->x = $x;
-		$this->y = $y;
-		$this->z = $z;
+	public function __construct(
+		public float $x,
+		public float $y,
+		public float $z
+	){
 	}
 }
 

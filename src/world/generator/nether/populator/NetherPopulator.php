@@ -2,17 +2,18 @@
 
 declare(strict_types=1);
 
-namespace jasonwynn10\NativeDimensions\world\generator\nether\populator;
+namespace jasonw4331\NativeDimensions\world\generator\nether\populator;
 
-use jasonwynn10\NativeDimensions\world\generator\nether\decorator\FireDecorator;
-use jasonwynn10\NativeDimensions\world\generator\nether\decorator\GlowstoneDecorator;
-use jasonwynn10\NativeDimensions\world\generator\nether\decorator\MushroomDecorator;
-use jasonwynn10\NativeDimensions\world\generator\Populator;
+use jasonw4331\NativeDimensions\world\generator\nether\decorator\FireDecorator;
+use jasonw4331\NativeDimensions\world\generator\nether\decorator\GlowstoneDecorator;
+use jasonw4331\NativeDimensions\world\generator\nether\decorator\MushroomDecorator;
+use jasonw4331\NativeDimensions\world\generator\Populator;
 use pocketmine\block\VanillaBlocks;
 use pocketmine\utils\Random;
 use pocketmine\world\ChunkManager;
 use pocketmine\world\format\Chunk;
 use pocketmine\world\World;
+use function array_push;
 
 class NetherPopulator implements Populator{
 

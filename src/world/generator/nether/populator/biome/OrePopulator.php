@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace jasonwynn10\NativeDimensions\world\generator\nether\populator\biome;
+namespace jasonw4331\NativeDimensions\world\generator\nether\populator\biome;
 
-use jasonwynn10\NativeDimensions\world\generator\object\OreType;
-use jasonwynn10\NativeDimensions\world\generator\object\OreVein;
-use jasonwynn10\NativeDimensions\world\generator\nether\populator\biome\utils\OreTypeHolder;
-use jasonwynn10\NativeDimensions\world\generator\Populator;
+use jasonw4331\NativeDimensions\world\generator\nether\populator\biome\utils\OreTypeHolder;
+use jasonw4331\NativeDimensions\world\generator\object\OreType;
+use jasonw4331\NativeDimensions\world\generator\object\OreVein;
+use jasonw4331\NativeDimensions\world\generator\Populator;
 use pocketmine\block\VanillaBlocks;
 use pocketmine\utils\Random;
 use pocketmine\world\ChunkManager;
@@ -41,8 +41,8 @@ class OrePopulator implements Populator{
 	}
 
 	public function populate(ChunkManager $world, Random $random, int $chunk_x, int $chunk_z, Chunk $chunk) : void{
-		$cx = $chunk_x << 4;
-		$cz = $chunk_z << 4;
+		$cx = $chunk_x << Chunk::COORD_BIT_SIZE;
+		$cz = $chunk_z << Chunk::COORD_BIT_SIZE;
 
 		foreach($this->ores as $ore_type_holder){
 			for($n = 0; $n < $ore_type_holder->value; ++$n){

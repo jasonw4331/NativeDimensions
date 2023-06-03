@@ -2,21 +2,26 @@
 
 declare(strict_types=1);
 
-namespace jasonwynn10\NativeDimensions\world\generator\nether;
+namespace jasonw4331\NativeDimensions\world\generator\nether;
 
-use jasonwynn10\NativeDimensions\world\generator\Environment;
-use jasonwynn10\NativeDimensions\world\generator\nether\populator\NetherPopulator;
-use jasonwynn10\NativeDimensions\world\generator\noise\glowstone\PerlinOctaveGenerator;
-use jasonwynn10\NativeDimensions\world\generator\utils\NetherWorldOctaves;
-use jasonwynn10\NativeDimensions\world\generator\VanillaBiomeGrid;
-use jasonwynn10\NativeDimensions\world\generator\VanillaGenerator;
+use jasonw4331\NativeDimensions\world\generator\Environment;
+use jasonw4331\NativeDimensions\world\generator\nether\populator\NetherPopulator;
+use jasonw4331\NativeDimensions\world\generator\noise\glowstone\PerlinOctaveGenerator;
+use jasonw4331\NativeDimensions\world\generator\utils\NetherWorldOctaves;
+use jasonw4331\NativeDimensions\world\generator\utils\preset\SimpleGeneratorPreset;
+use jasonw4331\NativeDimensions\world\generator\VanillaBiomeGrid;
+use jasonw4331\NativeDimensions\world\generator\VanillaGenerator;
 use pocketmine\block\VanillaBlocks;
 use pocketmine\utils\Random;
 use pocketmine\world\ChunkManager;
 use pocketmine\world\format\Chunk;
+use function cos;
+use function max;
+use function min;
+use const M_PI;
 
 /**
- * @phpstan-extends VanillaGenerator<NetherWorldOctaves<PerlinOctaveGenerator, PerlinOctaveGenerator, PerlinOctaveGenerator, PerlinOctaveGenerator, PerlinOctaveGenerator, PerlinOctaveGenerator>>
+ * @extends VanillaGenerator<NetherWorldOctaves<PerlinOctaveGenerator, PerlinOctaveGenerator, PerlinOctaveGenerator, PerlinOctaveGenerator, PerlinOctaveGenerator, PerlinOctaveGenerator>>
  */
 class NetherGenerator extends VanillaGenerator{
 
@@ -33,7 +38,6 @@ class NetherGenerator extends VanillaGenerator{
 	 * @param int $i 0-4
 	 * @param int $j 0-4
 	 * @param int $k 0-32
-	 * @return int
 	 */
 	private static function densityHash(int $i, int $j, int $k) : int{
 		return ($k << 6) | ($j << 3) | $i;
@@ -41,8 +45,14 @@ class NetherGenerator extends VanillaGenerator{
 
 	protected int $bedrock_roughness = 5;
 
-	public function __construct(int $seed, string $preset){
-		parent::__construct($seed, Environment::NETHER, null, $preset);
+	public function __construct(int $seed, string $preset_string){
+		$preset = SimpleGeneratorPreset::parse($preset_string);
+		parent::__construct(
+			$seed,
+			$preset->exists("environment") ? Environment::fromString($preset->getString("environment")) : Environment::NETHER,
+			$preset->exists("worldtype") ? WorldType::fromString($preset->getString("worldtype")) : null,
+			$preset
+		);
 		$this->addPopulators(new NetherPopulator($this->getMaxY())); // This isn't faithful to original code. Was $world->getWorldHeight()
 	}
 
@@ -60,8 +70,8 @@ class NetherGenerator extends VanillaGenerator{
 
 	protected function generateChunkData(ChunkManager $world, int $chunk_x, int $chunk_z, VanillaBiomeGrid $biomes) : void{
 		$this->generateRawTerrain($world, $chunk_x, $chunk_z);
-		$cx = $chunk_x << 4;
-		$cz = $chunk_z << 4;
+		$cx = $chunk_x << Chunk::COORD_BIT_SIZE;
+		$cz = $chunk_z << Chunk::COORD_BIT_SIZE;
 
 		$octaves = $this->getWorldOctaves();
 
@@ -72,10 +82,15 @@ class NetherGenerator extends VanillaGenerator{
 		/** @var Chunk $chunk */
 		$chunk = $world->getChunk($chunk_x, $chunk_z);
 
+		$min_y = $world->getMinY();
+		$max_y = $world->getMaxY();
 		for($x = 0; $x < 16; ++$x){
 			for($z = 0; $z < 16; ++$z){
-				$chunk->setBiomeId($x, $z, $id = $biomes->getBiome($x, $z));
-				$this->generateTerrainColumn($world, $cx + $x, $cz + $z, $surface_noise[$x | $z << 4], $soul_sand_noise[$x | $z << 4], $grave_noise[$x | $z << 4]);
+				$id = $biomes->getBiome($x, $z);
+				for($y = $min_y; $y < $max_y; ++$y){
+					$chunk->setBiomeId($x, $y, $z, $id);
+				}
+				$this->generateTerrainColumn($world, $cx + $x, $cz + $z, $surface_noise[$x | $z << Chunk::COORD_BIT_SIZE], $soul_sand_noise[$x | $z << Chunk::COORD_BIT_SIZE], $grave_noise[$x | $z << Chunk::COORD_BIT_SIZE]);
 			}
 		}
 	}
@@ -84,34 +99,34 @@ class NetherGenerator extends VanillaGenerator{
 		$seed = new Random($this->random->getSeed());
 
 		$height = PerlinOctaveGenerator::fromRandomAndOctaves($seed, 16, 5, 1, 5);
-		$height->setXScale(static::HEIGHT_NOISE_SCALE_X);
-		$height->setZScale(static::HEIGHT_NOISE_SCALE_Z);
+		$height->x_scale = static::HEIGHT_NOISE_SCALE_X;
+		$height->z_scale = static::HEIGHT_NOISE_SCALE_Z;
 
 		$roughness = PerlinOctaveGenerator::fromRandomAndOctaves($seed, 16, 5, 17, 5);
-		$roughness->setXScale(static::COORDINATE_SCALE);
-		$roughness->setYScale(static::HEIGHT_SCALE);
-		$roughness->setZScale(static::COORDINATE_SCALE);
+		$roughness->x_scale = static::COORDINATE_SCALE;
+		$roughness->y_scale = static::HEIGHT_SCALE;
+		$roughness->z_scale = static::COORDINATE_SCALE;
 
 		$roughness2 = PerlinOctaveGenerator::fromRandomAndOctaves($seed, 16, 5, 17, 5);
-		$roughness2->setXScale(static::COORDINATE_SCALE);
-		$roughness2->setYScale(static::HEIGHT_SCALE);
-		$roughness2->setZScale(static::COORDINATE_SCALE);
+		$roughness2->x_scale = static::COORDINATE_SCALE;
+		$roughness2->y_scale = static::HEIGHT_SCALE;
+		$roughness2->z_scale = static::COORDINATE_SCALE;
 
 		$detail = PerlinOctaveGenerator::fromRandomAndOctaves($seed, 8, 5, 17, 5);
-		$detail->setXScale(static::COORDINATE_SCALE / static::DETAIL_NOISE_SCALE_X);
-		$detail->setYScale(static::HEIGHT_SCALE / static::DETAIL_NOISE_SCALE_Y);
-		$detail->setZScale(static::COORDINATE_SCALE / static::DETAIL_NOISE_SCALE_Z);
+		$detail->x_scale = static::COORDINATE_SCALE / static::DETAIL_NOISE_SCALE_X;
+		$detail->y_scale = static::HEIGHT_SCALE / static::DETAIL_NOISE_SCALE_Y;
+		$detail->z_scale = static::COORDINATE_SCALE / static::DETAIL_NOISE_SCALE_Z;
 
 		$surface = PerlinOctaveGenerator::fromRandomAndOctaves($seed, 4, 16, 16, 1);
 		$surface->setScale(static::SURFACE_SCALE);
 
 		$soulsand = PerlinOctaveGenerator::fromRandomAndOctaves($seed, 4, 16, 16, 1);
-		$soulsand->setXScale(static::SURFACE_SCALE / 2.0);
-		$soulsand->setYScale(static::SURFACE_SCALE / 2.0);
+		$soulsand->x_scale = static::SURFACE_SCALE / 2.0;
+		$soulsand->y_scale = static::SURFACE_SCALE / 2.0;
 
 		$gravel = PerlinOctaveGenerator::fromRandomAndOctaves($seed, 4, 16, 1, 16);
-		$gravel->setXScale(static::SURFACE_SCALE / 2.0);
-		$gravel->setZScale(static::SURFACE_SCALE / 2.0);
+		$gravel->x_scale = static::SURFACE_SCALE / 2.0;
+		$gravel->z_scale = static::SURFACE_SCALE / 2.0;
 
 		return new NetherWorldOctaves($height, $roughness, $roughness2, $detail, $surface, $soulsand, $gravel);
 	}
@@ -119,64 +134,62 @@ class NetherGenerator extends VanillaGenerator{
 	private function generateRawTerrain(ChunkManager $world, int $chunk_x, int $chunk_z) : void{
 		$density = $this->generateTerrainDensity($chunk_x << 2, $chunk_z << 2);
 
-		$nether_rack = VanillaBlocks::NETHERRACK()->getFullId();
-		$still_lava = VanillaBlocks::LAVA()->getStillForm()->getFullId();
+		$nether_rack = VanillaBlocks::NETHERRACK()->getStateId();
+		$still_lava = VanillaBlocks::LAVA()->getStillForm()->getStateId();
 
 		/** @var Chunk $chunk */
 		$chunk = $world->getChunk($chunk_x, $chunk_z);
 
-		for ($i = 0; $i < 5 - 1; ++$i) {
-			for ($j = 0; $j < 5 - 1; ++$j) {
-				for ($k = 0; $k < 17 - 1; ++$k) {
+		for($i = 0; $i < 5 - 1; ++$i){
+			for($j = 0; $j < 5 - 1; ++$j){
+				for($k = 0; $k < 17 - 1; ++$k){
 					$d1 = $density[self::densityHash($i, $j, $k)];
-                    $d2 = $density[self::densityHash($i + 1, $j, $k)];
-                    $d3 = $density[self::densityHash($i, $j + 1, $k)];
-                    $d4 = $density[self::densityHash($i + 1, $j + 1, $k)];
-                    $d5 = ($density[self::densityHash($i, $j, $k + 1)] - $d1) / 8;
-                    $d6 = ($density[self::densityHash($i + 1, $j, $k + 1)] - $d2) / 8;
-                    $d7 = ($density[self::densityHash($i, $j + 1, $k + 1)] - $d3) / 8;
-                    $d8 = ($density[self::densityHash($i + 1, $j + 1, $k + 1)] - $d4) / 8;
+					$d2 = $density[self::densityHash($i + 1, $j, $k)];
+					$d3 = $density[self::densityHash($i, $j + 1, $k)];
+					$d4 = $density[self::densityHash($i + 1, $j + 1, $k)];
+					$d5 = ($density[self::densityHash($i, $j, $k + 1)] - $d1) / 8;
+					$d6 = ($density[self::densityHash($i + 1, $j, $k + 1)] - $d2) / 8;
+					$d7 = ($density[self::densityHash($i, $j + 1, $k + 1)] - $d3) / 8;
+					$d8 = ($density[self::densityHash($i + 1, $j + 1, $k + 1)] - $d4) / 8;
 
-                    for ($l = 0; $l < 8; ++$l) {
+					for($l = 0; $l < 8; ++$l){
 						$d9 = $d1;
-                        $d10 = $d3;
+						$d10 = $d3;
 
 						$y_pos = $l + ($k << 3);
 						$y_block_pos = $y_pos & 0xf;
-						$sub_chunk = $chunk->getSubChunk($y_pos >> 4);
+						$sub_chunk = $chunk->getSubChunk($y_pos >> Chunk::COORD_BIT_SIZE);
 
-                        for ($m = 0; $m < 4; ++$m) {
+						for($m = 0; $m < 4; ++$m){
 							$dens = $d9;
-                            for ($n = 0; $n < 4; ++$n) {
+							for($n = 0; $n < 4; ++$n){
 								// any density higher than 0 is ground, any density lower or equal
 								// to 0 is air (or lava if under the lava level).
-								if ($dens > 0) {
-									$sub_chunk->setFullBlock($m + ($i << 2), $y_block_pos, $n + ($j << 2), $nether_rack);
-								} else if ($l + ($k << 3) < 32) {
-									$sub_chunk->setFullBlock($m + ($i << 2), $y_block_pos, $n + ($j << 2), $still_lava);
+								if($dens > 0){
+									$sub_chunk->setBlockStateId($m + ($i << 2), $y_block_pos, $n + ($j << 2), $nether_rack);
+								}elseif($l + ($k << 3) < 32){
+									$sub_chunk->setBlockStateId($m + ($i << 2), $y_block_pos, $n + ($j << 2), $still_lava);
 								}
 								// interpolation along z
 								$dens += ($d10 - $d9) / 4;
 							}
-                            // interpolation along x
-                            $d9 += ($d2 - $d1) / 4;
-                            // interpolate along z
-                            $d10 += ($d4 - $d3) / 4;
-                        }
-                        // interpolation along y
-                        $d1 += $d5;
-                        $d3 += $d7;
-                        $d2 += $d6;
-                        $d4 += $d8;
-                    }
-                }
-            }
-        }
+							// interpolation along x
+							$d9 += ($d2 - $d1) / 4;
+							// interpolate along z
+							$d10 += ($d4 - $d3) / 4;
+						}
+						// interpolation along y
+						$d1 += $d5;
+						$d3 += $d7;
+						$d2 += $d6;
+						$d4 += $d8;
+					}
+				}
+			}
+		}
 	}
 
 	/**
-	 * @param int $x
-	 * @param int $z
 	 * @return float[]
 	 */
 	private function generateTerrainDensity(int $x, int $z) : array{
@@ -186,7 +199,7 @@ class NetherGenerator extends VanillaGenerator{
 		$roughness_noise_2 = $octaves->roughness_2->getFractalBrownianMotion($x, 0, $z, 0.5, 2.0);
 		$detail_noise = $octaves->detail->getFractalBrownianMotion($x, 0, $z, 0.5, 2.0);
 
-		$k_max = $octaves->detail->getSizeY();
+		$k_max = $octaves->detail->size_y;
 
 		static $nv = null;
 		if($nv === null){
@@ -252,26 +265,26 @@ class NetherGenerator extends VanillaGenerator{
 		$world_height = $this->getMaxY();
 		$world_height_m1 = $world_height - 1;
 
-		$block_bedrock = VanillaBlocks::BEDROCK()->getFullId();
-		$block_air = VanillaBlocks::AIR()->getFullId();
-		$block_nether_rack = VanillaBlocks::NETHERRACK()->getFullId();
-		$block_gravel = VanillaBlocks::GRAVEL()->getFullId();
-		$block_soul_sand = VanillaBlocks::SOUL_SAND()->getFullId();
+		$block_bedrock = VanillaBlocks::BEDROCK()->getStateId();
+		$block_air = VanillaBlocks::AIR()->getStateId();
+		$block_nether_rack = VanillaBlocks::NETHERRACK()->getStateId();
+		$block_gravel = VanillaBlocks::GRAVEL()->getStateId();
+		$block_soul_sand = VanillaBlocks::SOUL_SAND()->getStateId();
 
 		$top_mat = $block_nether_rack;
 		$ground_mat = $block_nether_rack;
 
 		/** @var Chunk $chunk */
-		$chunk = $world->getChunk($x >> 4, $z >> 4);
-		$chunk_block_x = $x & 0x0f;
-		$chunk_block_z = $z & 0x0f;
+		$chunk = $world->getChunk($x >> Chunk::COORD_BIT_SIZE, $z >> Chunk::COORD_BIT_SIZE);
+		$chunk_block_x = $x & Chunk::COORD_MASK;
+		$chunk_block_z = $z & Chunk::COORD_MASK;
 
 		for($y = $world_height_m1; $y >= 0; --$y){
 			if($y <= $this->random->nextBoundedInt($this->bedrock_roughness) || $y >= $world_height_m1 - $this->random->nextBoundedInt($this->bedrock_roughness)){
-				$chunk->setFullBlock($chunk_block_x, $y, $chunk_block_z, $block_bedrock);
+				$chunk->setBlockStateId($chunk_block_x, $y, $chunk_block_z, $block_bedrock);
 				continue;
 			}
-			$mat = $chunk->getFullBlock($chunk_block_x, $y, $chunk_block_z);
+			$mat = $chunk->getBlockStateId($chunk_block_x, $y, $chunk_block_z);
 			if($mat === $block_air){
 				$deep = -1;
 			}elseif($mat === $block_nether_rack){
@@ -294,13 +307,13 @@ class NetherGenerator extends VanillaGenerator{
 
 					$deep = $surface_height;
 					if($y >= 63){
-						$chunk->setFullBlock($chunk_block_x, $y, $chunk_block_z, $top_mat);
+						$chunk->setBlockStateId($chunk_block_x, $y, $chunk_block_z, $top_mat);
 					}else{
-						$chunk->setFullBlock($chunk_block_x, $y, $chunk_block_z, $ground_mat);
+						$chunk->setBlockStateId($chunk_block_x, $y, $chunk_block_z, $ground_mat);
 					}
 				}elseif($deep > 0){
 					--$deep;
-					$chunk->setFullBlock($chunk_block_x, $y, $chunk_block_z, $ground_mat);
+					$chunk->setBlockStateId($chunk_block_x, $y, $chunk_block_z, $ground_mat);
 				}
 			}
 		}

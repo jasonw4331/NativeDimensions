@@ -1,6 +1,16 @@
---- # Poggit-CI Manifest. Open the CI at https://poggit.pmmp.io/ci/jasonwynn10/NativeDimensions
+--- # Poggit-CI Manifest. Open the CI at https://poggit.pmmp.io/ci/jasonw4331/NativeDimensions
 projects:
   NativeDimensions:
     path: ""
-    icon: icon.gif
+    icon: "icon.gif"
+    excludeDirs:
+      - .github
+      - build
+    excludeFiles:
+      - .gitignore
+      - CONTRIBUTING.md
+      - SECURITY.md
+      - phpstan.neon.dist
+      - phpstan-baseline.php
+      - .php-cs-fixer.php
 ...

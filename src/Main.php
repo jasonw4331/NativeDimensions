@@ -1,20 +1,20 @@
 <?php
-declare(strict_types=1);
-namespace jasonwynn10\NativeDimensions;
 
-use jasonwynn10\NativeDimensions\block\EndPortal;
-use jasonwynn10\NativeDimensions\block\Obsidian;
-use jasonwynn10\NativeDimensions\block\Portal;
-use jasonwynn10\NativeDimensions\event\DimensionListener;
-use jasonwynn10\NativeDimensions\network\DimensionSpecificCompressor;
-use jasonwynn10\NativeDimensions\world\DimensionalWorld;
-use jasonwynn10\NativeDimensions\world\DimensionalWorldManager;
-use jasonwynn10\NativeDimensions\world\generator\ender\EnderGenerator;
-use jasonwynn10\NativeDimensions\world\generator\nether\NetherGenerator;
-use pocketmine\block\BlockFactory;
-use pocketmine\block\BlockIdentifier;
-use pocketmine\block\BlockTypeIds;
+declare(strict_types=1);
+
+namespace jasonw4331\NativeDimensions;
+
+use jasonw4331\NativeDimensions\block\ExtraVanillaBlocks;
+use jasonw4331\NativeDimensions\event\DimensionListener;
+use jasonw4331\NativeDimensions\network\DimensionSpecificCompressor;
+use jasonw4331\NativeDimensions\world\DimensionalWorld;
+use jasonw4331\NativeDimensions\world\DimensionalWorldManager;
+use jasonw4331\NativeDimensions\world\generator\ender\EnderGenerator;
+use jasonw4331\NativeDimensions\world\generator\nether\NetherGenerator;
+use jasonw4331\NativeDimensions\world\provider\DimensionalWorldProviderManager;
+use pocketmine\block\RuntimeBlockStateRegistry;
 use pocketmine\block\VanillaBlocks;
+use pocketmine\data\bedrock\block\BlockTypeNames as Ids;
 use pocketmine\event\EventPriority;
 use pocketmine\event\player\PlayerLoginEvent;
 use pocketmine\event\world\WorldLoadEvent;
@@ -24,12 +24,27 @@ use pocketmine\math\Facing;
 use pocketmine\network\mcpe\cache\ChunkCache;
 use pocketmine\network\mcpe\compression\Compressor;
 use pocketmine\network\mcpe\compression\ZlibCompressor;
+use pocketmine\network\mcpe\protocol\types\DimensionIds;
 use pocketmine\plugin\PluginBase;
+use pocketmine\scheduler\AsyncTask;
+use pocketmine\world\format\io\GlobalBlockStateHandlers;
 use pocketmine\world\generator\GeneratorManager;
 use pocketmine\world\Position;
-use Webmozart\PathUtil\Path;
+use ReflectionClass;
+use ReflectionProperty;
+use Symfony\Component\Filesystem\Path;
+use function array_search;
+use function count;
+use function in_array;
+use function mb_strtolower;
+use function mt_rand;
+use function spl_object_id;
+use function str_contains;
 
-class Main extends PluginBase {
+class Main extends PluginBase{
+
+	/** @var array<string, DimensionIds::*> */
+	private array $applicable_worlds = [];
 
 	/** @var Compressor[] */
 	private array $known_compressors = [];
@@ -37,22 +52,20 @@ class Main extends PluginBase {
 	private static self $instance;
 
 	/** @var int[] $teleporting */
-	protected static $teleporting = [];
+	protected static array $teleporting = [];
 
-	private static int $end_portal = BlockTypeIds::FIRST_UNUSED_BLOCK_ID;
-
-	public static function getInstance() : Main {
+	public static function getInstance() : Main{
 		return self::$instance;
 	}
 
-	public function onLoad() : void {
+	public function onLoad() : void{
 		self::$instance = $this;
 
 		GeneratorManager::getInstance()->addGenerator(NetherGenerator::class, 'nether', fn() => null, true);
 		GeneratorManager::getInstance()->addGenerator(EnderGenerator::class, 'ender', fn() => null, true);
 
 		$config = $this->getConfig();
-		if(count($config->get('Portal Disabled Worlds', [])) === 0)
+		if(count((array) $config->get('Portal Disabled Worlds', [])) === 0)
 			$config->set('Portal Disabled Worlds', []);
 
 		$this->getLogger()->debug("Unloading Worlds");
@@ -66,10 +79,7 @@ class Main extends PluginBase {
 		$this->getLogger()->debug("Worlds Successfully Unloaded");
 
 		// replace default world manager with one that supports dimensions
-		$ref = new \ReflectionClass($server);
-		$prop = $ref->getProperty('worldManager');
-		$prop->setAccessible(true);
-		$prop->setValue($server, new DimensionalWorldManager($server, Path::join($server->getDataPath(), "worlds")));
+		(new ReflectionClass($server))->getProperty('worldManager')->setValue($server, new DimensionalWorldManager($server, Path::join($server->getDataPath(), "worlds"), new DimensionalWorldProviderManager()));
 
 		if($this->getServer()->getWorldManager() instanceof DimensionalWorldManager)
 			$this->getLogger()->debug("WorldManager Successfully swapped");
@@ -78,41 +88,48 @@ class Main extends PluginBase {
 			$server->getWorldManager()->loadWorld($worldName);
 	}
 
-	public function onEnable() : void {
+	public function onEnable() : void{
 		$this->getServer()->getPluginManager()->registerEvent(PlayerLoginEvent::class, function(PlayerLoginEvent $event) : void{
 			$this->registerKnownCompressor($event->getPlayer()->getNetworkSession()->getCompressor());
 		}, EventPriority::LOWEST, $this);
 		$this->getServer()->getPluginManager()->registerEvent(WorldLoadEvent::class, function(WorldLoadEvent $event) : void{
 			/** @var DimensionalWorld $world */
 			$world = $event->getWorld();
-			$this->registerHackToWorld($world);
+			$this->registerHackToWorldIfApplicable($world);
 		}, EventPriority::LOWEST, $this);
 
 		// register already-registered values
 		$this->registerKnownCompressor(ZlibCompressor::getInstance());
 		/** @var DimensionalWorld $world */
 		foreach($this->getServer()->getWorldManager()->getWorlds() as $world){
-			$this->registerHackToWorld($world);
+			if($world->getDimensionId() !== DimensionIds::OVERWORLD)
+				$this->applyToWorld($world->getFolderName(), $world->getDimensionId());
 		}
 
 		new DimensionListener($this);
-		$factory = BlockFactory::getInstance();
+
+		self::registerBlocks();
+
+		$this->getServer()->getAsyncPool()->addWorkerStartHook(function(int $worker) : void{
+			$this->getServer()->getAsyncPool()->submitTaskToWorker(new class extends AsyncTask{
+				public function onRun() : void{
+					Main::registerBlocks();
+				}
+			}, $worker);
+		});
+	}
+
+	public static function registerBlocks() : void{
+		$namespace = mb_strtolower(self::getInstance()->getName());
+
+		// Custom End Portal Registration
+		RuntimeBlockStateRegistry::getInstance()->register(ExtraVanillaBlocks::END_PORTAL());
+		GlobalBlockStateHandlers::getSerializer()->mapSimple(ExtraVanillaBlocks::END_PORTAL(), Ids::END_PORTAL);
+		GlobalBlockStateHandlers::getDeserializer()->mapSimple(Ids::END_PORTAL, fn() => ExtraVanillaBlocks::END_PORTAL());
+
 		$parser = StringToItemParser::getInstance();
-		for($i = BlockTypeIds::FIRST_UNUSED_BLOCK_ID; $i < BlockTypeIds::FIRST_UNUSED_BLOCK_ID + 256; ++$i){
-			if(!$factory->isRegistered($i)){
-				$block = new EndPortal(new BlockIdentifier(self::$end_portal = $i)); // TODO: handle cases where other plugins steal our id
-				$factory->register($block);
-				$parser->override($block->getName(), fn(string $input) => $block->asItem());
-				return;
-			}
-		}
-		foreach([
-			new Obsidian(),
-			new Portal()
-		] as $block) {
-			$factory->register($block, true);
-			$parser->override($block->getName(), fn(string $input) => $block->asItem());
-		}
+		$parser->override('end_portal', fn() => ExtraVanillaBlocks::END_PORTAL()->asItem());
+		$parser->registerBlock("$namespace:end_portal", fn() => ExtraVanillaBlocks::END_PORTAL());
 	}
 
 	private function registerKnownCompressor(Compressor $compressor) : void{
@@ -121,47 +138,63 @@ class Main extends PluginBase {
 		}
 
 		$this->known_compressors[$id] = $compressor;
-		/** @var DimensionalWorld $world */
+		/** @phpstan-var DimensionalWorld $world */
 		foreach($this->getServer()->getWorldManager()->getWorlds() as $world){
-			$this->registerHackToWorld($world);
+			$this->registerHackToWorldIfApplicable($world);
 		}
 	}
 
-	private function registerHackToWorld(DimensionalWorld $world) : void{
-		if($world->getOverworld() === $world)
-			return;
-
-		static $_chunk_cache_instances = null;
-		if($_chunk_cache_instances === null){
-			$_chunk_cache_instances = new \ReflectionProperty(ChunkCache::class, "instances");
-			$_chunk_cache_instances->setAccessible(true);
+	private function registerHackToWorldIfApplicable(DimensionalWorld $world) : bool{
+		if(!isset($this->applicable_worlds[$world_name = $world->getFolderName()])){
+			return false;
 		}
 
+		$dimension_id = $this->applicable_worlds[$world_name];
+		$this->registerHackToWorld($world, $dimension_id);
+		return true;
+	}
+
+	/**
+	 * @phpstan-param DimensionIds::* $dimension_id
+	 */
+	private function registerHackToWorld(DimensionalWorld $world, int $dimension_id) : void{
+		/** @see ChunkCache::$compressor */
 		static $_chunk_cache_compressor = null;
-		if($_chunk_cache_compressor === null){
-			$_chunk_cache_compressor = new \ReflectionProperty(ChunkCache::class, "compressor");
-			$_chunk_cache_compressor->setAccessible(true);
-		}
+		$_chunk_cache_compressor ??= new ReflectionProperty(ChunkCache::class, "compressor");
 
 		foreach($this->known_compressors as $compressor){
 			$chunk_cache = ChunkCache::getInstance($world, $compressor);
 			$compressor = $_chunk_cache_compressor->getValue($chunk_cache);
-			if($compressor instanceof DimensionSpecificCompressor){
-				continue;
+			if(!($compressor instanceof DimensionSpecificCompressor)){
+				$_chunk_cache_compressor->setValue($chunk_cache, new DimensionSpecificCompressor($compressor, $dimension_id));
 			}
-
-			$_chunk_cache_compressor->setValue(ChunkCache::getInstance($world, $compressor), new DimensionSpecificCompressor($compressor));
 		}
 	}
 
-	public static function makeNetherPortal(Position $position) : bool {
+	/**
+	 * @phpstan-param DimensionIds::* $dimension_id
+	 */
+	public function applyToWorld(string $world_folder_name, int $dimension_id) : void{
+		$this->applicable_worlds[$world_folder_name] = $dimension_id;
+		/** @var DimensionalWorld $world */
+		$world = $this->getServer()->getWorldManager()->getWorldByName($world_folder_name);
+		if($world !== null){
+			$this->registerHackToWorldIfApplicable($world);
+		}
+	}
+
+	public function unapplyFromWorld(string $world_folder_name) : void{
+		unset($this->applicable_worlds[$world_folder_name]);
+	}
+
+	public static function makeNetherPortal(Position $position) : bool{
 		if(!$position->isValid())
 			return false;
 		$world = $position->getWorld();
-		$portalBlock = new Portal();
-		$frameBlock = new Obsidian();
+		$portalBlock = VanillaBlocks::NETHER_PORTAL();
+		$frameBlock = VanillaBlocks::OBSIDIAN();
 		$air = VanillaBlocks::AIR();
-		if(mt_rand(0,1) === 0) {
+		if(mt_rand(0, 1) === 0){
 			self::getInstance()->getLogger()->debug('Generating Z Axis Nether Portal');
 			$portalBlock->setAxis(Axis::Z);
 			// portal blocks
@@ -242,12 +275,12 @@ class Main extends PluginBase {
 		return true;
 	}
 
-	public static function makeEndSpawn(DimensionalWorld $world) : bool {
+	public static function makeEndSpawn(DimensionalWorld $world) : bool{
 		$world = $world->getEnd();
 		$position = $world->getSpawnLocation();
 
-		for($x = $position->x - 2; $x < $position->x + 3; ++$x) {
-			for($z = $position->z - 2; $z < $position->z + 3; ++$z) {
+		for($x = $position->x - 2; $x < $position->x + 3; ++$x){
+			for($z = $position->z - 2; $z < $position->z + 3; ++$z){
 				$world->setBlockAt($x, $position->y - 1, $z, VanillaBlocks::OBSIDIAN(), false);
 				for($y = 0; $y < 3; ++$y)
 					$world->setBlockAt($x, $position->y + $y, $z, VanillaBlocks::AIR(), false);
@@ -256,25 +289,25 @@ class Main extends PluginBase {
 		return true;
 	}
 
-	public static function makeEndExit(DimensionalWorld $world) {
+	public static function makeEndExit(DimensionalWorld $world) : void{
 		$world = $world->getEnd();
 		$position = new Position(0, 64, 0, $world);
 
-		$endPortal = BlockFactory::getInstance()->fromTypeId(self::$end_portal);
+		$endPortal = ExtraVanillaBlocks::END_PORTAL();
 		$bedrock = VanillaBlocks::BEDROCK();
 		$endStone = VanillaBlocks::END_STONE();
 		$dragonEgg = VanillaBlocks::DRAGON_EGG();
 		$torch = VanillaBlocks::TORCH();
 
 		$world->setBlock($position->getSide(Facing::UP, 4), $dragonEgg, false);
-		for($h = 3; $h > 0; --$h) {
+		for($h = 3; $h > 0; --$h){
 			$world->setBlock($position->getSide(Facing::UP, $h), $bedrock, false);
 		}
 		$world->setBlock($position, $bedrock, false);
 		$world->setBlock($position->getSide(Facing::DOWN), $bedrock, false);
 		$world->setBlock($position->getSide(Facing::DOWN, 2), $endStone, false);
 
-		foreach(Facing::HORIZONTAL as $side) {
+		foreach(Facing::HORIZONTAL as $side){
 			$world->setBlock($position->getSide(Facing::UP, 2)->getSide($side), $torch->setFacing($side), false);
 
 			$world->setBlock($position->getSide($side), $endPortal, false);
@@ -316,17 +349,17 @@ class Main extends PluginBase {
 	/**
 	 * @return int[]
 	 */
-	public static function getTeleporting() : array {
+	public static function getTeleporting() : array{
 		return self::$teleporting;
 	}
 
-	public static function addTeleportingId(int $id) : void {
-		if(!in_array($id, self::$teleporting))
+	public static function addTeleportingId(int $id) : void{
+		if(!in_array($id, self::$teleporting, true))
 			self::$teleporting[] = $id;
 	}
 
 	public static function removeTeleportingId(int $id) : void{
-		$key = array_search($id, self::$teleporting);
+		$key = array_search($id, self::$teleporting, true);
 		if($key !== false){
 			unset(self::$teleporting[$key]);
 			self::$instance->getLogger()->debug("Player can use a portal again");
