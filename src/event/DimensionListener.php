@@ -35,12 +35,9 @@ use pocketmine\world\Position;
 use function in_array;
 
 class DimensionListener implements Listener{
-	/** @var Main */
-	protected $plugin;
 
-	public function __construct(Main $plugin){
+	public function __construct(protected Main $plugin){
 		$plugin->getServer()->getPluginManager()->registerEvents($this, $plugin);
-		$this->plugin = $plugin;
 	}
 
 	public function onDataPacket(DataPacketSendEvent $event) : void{
