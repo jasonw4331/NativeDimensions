@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace jasonw4331\NativeDimensions;
 
-use jasonw4331\NativeDimensions\block\EndPortal;
-use jasonw4331\NativeDimensions\block\Obsidian;
-use jasonw4331\NativeDimensions\block\Portal;
+use jasonw4331\NativeDimensions\block\ExtraVanillaBlocks;
 use jasonw4331\NativeDimensions\event\DimensionListener;
 use jasonw4331\NativeDimensions\network\DimensionSpecificCompressor;
 use jasonw4331\NativeDimensions\world\DimensionalWorld;
 use jasonw4331\NativeDimensions\world\DimensionalWorldManager;
 use jasonw4331\NativeDimensions\world\generator\ender\EnderGenerator;
 use jasonw4331\NativeDimensions\world\generator\nether\NetherGenerator;
-use pocketmine\block\BlockFactory;
+use jasonw4331\NativeDimensions\world\provider\DimensionalWorldProviderManager;
+use pocketmine\block\RuntimeBlockStateRegistry;
 use pocketmine\block\VanillaBlocks;
+use pocketmine\data\bedrock\block\BlockTypeNames as Ids;
 use pocketmine\event\EventPriority;
 use pocketmine\event\player\PlayerLoginEvent;
 use pocketmine\event\world\WorldLoadEvent;
@@ -26,12 +26,17 @@ use pocketmine\network\mcpe\compression\Compressor;
 use pocketmine\network\mcpe\compression\ZlibCompressor;
 use pocketmine\network\mcpe\protocol\types\DimensionIds;
 use pocketmine\plugin\PluginBase;
+use pocketmine\scheduler\AsyncTask;
+use pocketmine\world\format\io\GlobalBlockStateHandlers;
 use pocketmine\world\generator\GeneratorManager;
 use pocketmine\world\Position;
-use Webmozart\PathUtil\Path;
+use ReflectionClass;
+use ReflectionProperty;
+use Symfony\Component\Filesystem\Path;
 use function array_search;
 use function count;
 use function in_array;
+use function mb_strtolower;
 use function mt_rand;
 use function spl_object_id;
 use function str_contains;
@@ -105,16 +110,29 @@ class Main extends PluginBase{
 		}
 
 		new DimensionListener($this);
-		$factory = BlockFactory::getInstance();
+
+		self::registerBlocks();
+
+		$this->getServer()->getAsyncPool()->addWorkerStartHook(function(int $worker) : void{
+			$this->getServer()->getAsyncPool()->submitTaskToWorker(new class extends AsyncTask{
+				public function onRun() : void{
+					Main::registerBlocks();
+				}
+			}, $worker);
+		});
+	}
+
+	public static function registerBlocks() : void{
+		$namespace = mb_strtolower(self::getInstance()->getName());
+
+		// Custom End Portal Registration
+		RuntimeBlockStateRegistry::getInstance()->register(ExtraVanillaBlocks::END_PORTAL());
+		GlobalBlockStateHandlers::getSerializer()->mapSimple(ExtraVanillaBlocks::END_PORTAL(), Ids::END_PORTAL);
+		GlobalBlockStateHandlers::getDeserializer()->mapSimple(Ids::END_PORTAL, fn() => ExtraVanillaBlocks::END_PORTAL());
+
 		$parser = StringToItemParser::getInstance();
-		foreach([
-			new EndPortal(),
-			new Obsidian(),
-			new Portal()
-		] as $block){
-			$factory->register($block, true);
-			$parser->override($block->getName(), fn(string $input) => $block->asItem());
-		}
+		$parser->override('end_portal', fn() => ExtraVanillaBlocks::END_PORTAL()->asItem());
+		$parser->registerBlock("$namespace:end_portal", fn() => ExtraVanillaBlocks::END_PORTAL());
 	}
 
 	private function registerKnownCompressor(Compressor $compressor) : void{
@@ -176,8 +194,8 @@ class Main extends PluginBase{
 		if(!$position->isValid())
 			return false;
 		$world = $position->getWorld();
-		$portalBlock = new Portal();
-		$frameBlock = new Obsidian();
+		$portalBlock = VanillaBlocks::NETHER_PORTAL();
+		$frameBlock = VanillaBlocks::OBSIDIAN();
 		$air = VanillaBlocks::AIR();
 		if(mt_rand(0, 1) === 0){
 			self::getInstance()->getLogger()->debug('Generating Z Axis Nether Portal');
@@ -278,7 +296,7 @@ class Main extends PluginBase{
 		$world = $world->getEnd();
 		$position = new Position(0, 64, 0, $world);
 
-		$endPortal = new EndPortal();
+		$endPortal = ExtraVanillaBlocks::END_PORTAL();
 		$bedrock = VanillaBlocks::BEDROCK();
 		$endStone = VanillaBlocks::END_STONE();
 		$dragonEgg = VanillaBlocks::DRAGON_EGG();

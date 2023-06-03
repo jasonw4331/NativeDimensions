@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace jasonw4331\NativeDimensions\event;
 
-use jasonw4331\NativeDimensions\block\Obsidian;
-use jasonw4331\NativeDimensions\block\Portal;
 use jasonw4331\NativeDimensions\Main;
 use jasonw4331\NativeDimensions\world\DimensionalWorld;
 use pocketmine\block\Air;
 use pocketmine\block\Bed;
+use pocketmine\block\BlockTypeIds;
 use pocketmine\block\Fire;
 use pocketmine\block\NetherPortal;
 use pocketmine\block\VanillaBlocks;
+use pocketmine\event\block\BlockBreakEvent;
 use pocketmine\event\block\BlockUpdateEvent;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerBedEnterEvent;
@@ -170,9 +170,9 @@ class DimensionListener implements Listener{
 			for($j = 0; $j < $totalHeight; ++$j){
 				for($k = 0; $k < $totalWidth; ++$k){
 					if($direction == Facing::NORTH){
-						$start->getWorld()->setBlock($start->add(0, -$j, $k), (new Portal())->setAxis(Axis::Z), false);
+						$start->getWorld()->setBlock($start->add(0, -$j, $k), VanillaBlocks::NETHER_PORTAL()->setAxis(Axis::Z), false);
 					}else{
-						$start->getWorld()->setBlock($start->add(-$k, -$j, 0), (new Portal())->setAxis(Axis::X), false);
+						$start->getWorld()->setBlock($start->add(-$k, -$j, 0), VanillaBlocks::NETHER_PORTAL()->setAxis(Axis::X), false);
 					}
 				}
 			}
@@ -180,11 +180,23 @@ class DimensionListener implements Listener{
 		}
 	}
 
+	public function onBlockBreak(BlockBreakEvent $event) : void {
+		$block = $event->getBlock();
+		if($block->getTypeId() !== BlockTypeIds::OBSIDIAN && !$block instanceof NetherPortal)
+			return;
+
+		foreach($block->getAllSides() as $portalBlock){
+			if($portalBlock->getTypeId() !== BlockTypeIds::NETHER_PORTAL)
+				continue;
+			$block->getPosition()->getWorld()->useBreakOn($portalBlock->getPosition(), createParticles: true);
+		}
+	}
+
 	private function testDirectionForObsidian(int $direction, Position $start, ?int &$distance = 0) : bool{
 		$distance ??= 0;
 		for($i = 1; $i <= 23; ++$i){
 			$testPos = $start->getSide($direction, $i);
-			if($testPos->getWorld()->getBlock($testPos, true, false) instanceof Obsidian){
+			if($testPos->getWorld()->getBlock($testPos, true, false)->getTypeId() === BlockTypeIds::OBSIDIAN){
 				$distance = $i;
 				return true;
 			}elseif(!$testPos->getWorld()->getBlock($testPos, true, false) instanceof Air){
