@@ -6,7 +6,7 @@ namespace jasonw4331\NativeDimensions\world\provider;
 
 use pocketmine\world\format\io\exception\CorruptedChunkException;
 use pocketmine\world\format\io\region\Anvil;
-use Webmozart\PathUtil\Path;
+use Symfony\Component\Filesystem\Path;
 use function file_exists;
 use function is_dir;
 use function scandir;

@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace jasonw4331\NativeDimensions\world\provider;
 
+use Closure;
+use LevelDB;
+use Logger;
 use pocketmine\network\mcpe\protocol\types\DimensionIds;
 use pocketmine\utils\Utils;
 use pocketmine\world\format\io\region\Anvil;
-use pocketmine\world\format\io\region\McRegion;
-use pocketmine\world\format\io\region\PMAnvil;
 use function strtolower;
 use function trim;
 
@@ -22,20 +23,18 @@ class DimensionalWorldProviderManager{
 	private RewritableWorldProviderManagerEntry $default;
 
 	public function __construct(){
-		$leveldb = new RewritableWorldProviderManagerEntry(\Closure::fromCallable([DimensionLevelDBProvider::class, 'isValid']), fn(string $path, int $dimension, ?\LevelDB $db) => new DimensionLevelDBProvider($path, $dimension, $db), \Closure::fromCallable([DimensionLevelDBProvider::class, 'generate']));
+		$leveldb = new RewritableWorldProviderManagerEntry(DimensionLevelDBProvider::isValid(...), fn(string $path, int $dimension, ?LevelDB $db) => new DimensionLevelDBProvider($path, $dimension, $db), Closure::fromCallable([DimensionLevelDBProvider::class, 'generate']));
 		$this->default = $leveldb;
 		$this->addProvider($leveldb, "leveldb");
 
-		$this->addProvider(new ReadOnlyWorldProviderManagerEntry(\Closure::fromCallable([Anvil::class, 'isValid']), function(string $path, int $dimension = 0){
+		$this->addProvider(new ReadOnlyWorldProviderManagerEntry(Anvil::isValid(...), function(string $path, Logger $logger, int $dimension = 0){
 			return match ($dimension) {
-				DimensionIds::OVERWORLD => new Anvil($path),
-				DimensionIds::NETHER => new NetherAnvilProvider($path),
-				DimensionIds::THE_END => new EnderAnvilProvider($path),
+				DimensionIds::OVERWORLD => new Anvil($path, $logger),
+				DimensionIds::NETHER => new NetherAnvilProvider($path, $logger),
+				DimensionIds::THE_END => new EnderAnvilProvider($path, $logger),
 				default => throw new \UnexpectedValueException("Invalid dimension Id")
 			};
 		}), "anvil");
-		$this->addProvider(new ReadOnlyWorldProviderManagerEntry(\Closure::fromCallable([McRegion::class, 'isValid']), fn(string $path) => new McRegion($path)), "mcregion");
-		$this->addProvider(new ReadOnlyWorldProviderManagerEntry(\Closure::fromCallable([PMAnvil::class, 'isValid']), fn(string $path) => new PMAnvil($path)), "pmanvil");
 	}
 
 	/**
