@@ -61,7 +61,7 @@ class DimensionListener implements Listener{
 			}
 			// sync time across dimensions
 			if($pk instanceof SetTimePacket) {
-				$session = array_shift($event->getTargets());
+				$session = $event->getTargets()[0];
 				$world = $session->getPlayer()->getWorld();
 				// check time to prevent feedback loop
 				if($world->getTime() !== $pk->time) {

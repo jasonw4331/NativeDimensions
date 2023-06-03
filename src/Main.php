@@ -65,7 +65,7 @@ class Main extends PluginBase{
 		GeneratorManager::getInstance()->addGenerator(EnderGenerator::class, 'ender', fn() => null, true);
 
 		$config = $this->getConfig();
-		if(count($config->get('Portal Disabled Worlds', [])) === 0)
+		if(count((array) $config->get('Portal Disabled Worlds', [])) === 0)
 			$config->set('Portal Disabled Worlds', []);
 
 		$this->getLogger()->debug("Unloading Worlds");

@@ -39,6 +39,9 @@ class DimensionalWorld extends World{
 		return $this->getServer()->getWorldManager()->getWorld($this->getId() + (DimensionIds::THE_END - $this->dimensionId));
 	}
 
+	/**
+	 * @phpstan-return DimensionIds::*
+	 */
 	public function getDimensionId() : int{
 		return $this->dimensionId;
 	}
