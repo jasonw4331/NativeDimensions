@@ -15,7 +15,6 @@ use pocketmine\lang\KnownTranslationFactory;
 use pocketmine\network\mcpe\protocol\types\DimensionIds;
 use pocketmine\player\ChunkSelector;
 use pocketmine\Server;
-use pocketmine\timings\Timings;
 use pocketmine\utils\AssumptionFailedError;
 use pocketmine\world\format\Chunk;
 use pocketmine\world\format\io\exception\CorruptedWorldException;
@@ -85,6 +84,9 @@ class DimensionalWorldManager extends WorldManager{
 	 * it only affects the server on runtime
 	 */
 	public function setDefaultWorld(?World $world) : void{
+		if($world instanceof DimensionalWorld) {
+			$world = $world->getOverworld();
+		}
 		if($world === null || ($this->isWorldLoaded($world->getFolderName()) && $world !== $this->defaultWorld)){
 			$this->defaultWorld = $world;
 		}
@@ -134,17 +136,24 @@ class DimensionalWorldManager extends WorldManager{
 		}
 
 		$this->server->getLogger()->info($this->server->getLanguage()->translate(KnownTranslationFactory::pocketmine_level_unloading($world->getDisplayName())));
-		try{
-			$safeSpawn = $this->defaultWorld?->getSafeSpawn();
-		}catch(WorldException $e){
-			$safeSpawn = null;
-		}
-		foreach($world->getPlayers() as $player){
-			if($world === $this->defaultWorld || $safeSpawn === null){
-				$player->disconnect("Forced default world unload");
-			}else{
-				$player->teleport($safeSpawn);
+		if(count($world->getPlayers()) !== 0){
+			try{
+				$safeSpawn = $this->defaultWorld !== null && $this->defaultWorld !== $world ? $this->defaultWorld->getSafeSpawn() : null;
+			}catch(WorldException $e){
+				$safeSpawn = null;
 			}
+			foreach($world->getPlayers() as $player){
+				if($safeSpawn === null){
+					$player->disconnect("Forced default world unload");
+				}else{
+					$player->teleport($safeSpawn);
+				}
+			}
+		}
+
+		if($world instanceof DimensionalWorld && $world->getOverworld() === $world){
+			$this->unloadWorld($world->getEnd(), true);
+			$this->unloadWorld($world->getNether(), true);
 		}
 
 		if($world === $this->defaultWorld){
@@ -474,8 +483,8 @@ class DimensionalWorldManager extends WorldManager{
 			$world->doTick($currentTick);
 			$tickMs = (microtime(true) - $worldTime) * 1000;
 			$world->tickRateTime = $tickMs;
-			if($tickMs >= 50){
-				$world->getLogger()->debug(sprintf("Tick took too long: %gms (%g ticks)", $tickMs, round($tickMs / 50, 2)));
+			if($tickMs >= Server::TARGET_SECONDS_PER_TICK * 1000){
+				$world->getLogger()->debug(sprintf("Tick took too long: %gms (%g ticks)", $tickMs, round($tickMs / (Server::TARGET_SECONDS_PER_TICK * 1000), 2)));
 			}
 		}
 
@@ -515,7 +524,6 @@ class DimensionalWorldManager extends WorldManager{
 	}
 
 	private function doAutoSave() : void{
-		Timings::$worldSave->startTiming();
 		foreach($this->worlds as $world){
 			foreach($world->getPlayers() as $player){
 				if($player->spawned){
@@ -524,6 +532,5 @@ class DimensionalWorldManager extends WorldManager{
 			}
 			$world->save(false);
 		}
-		Timings::$worldSave->stopTiming();
 	}
 }
