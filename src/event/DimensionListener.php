@@ -70,7 +70,7 @@ class DimensionListener implements Listener{
 				if($world->getTime() !== $pk->time) {
 					$event->cancel();
 				}
-				if($world instanceof DimensionalWorld and $world->getTime() !== $pk->time) {
+				if($world instanceof DimensionalWorld && $world->getTime() !== $pk->time) {
 					$world->getOverworld()->setTime($pk->time);
 					$world->getEnd()->setTime($pk->time);
 					$world->getNether()->setTime($pk->time);
