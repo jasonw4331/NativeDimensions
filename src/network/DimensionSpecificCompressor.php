@@ -13,27 +13,34 @@ use pocketmine\network\mcpe\protocol\serializer\PacketBatch;
 use pocketmine\network\mcpe\protocol\serializer\PacketSerializer;
 use pocketmine\network\mcpe\protocol\serializer\PacketSerializerContext;
 use pocketmine\network\mcpe\protocol\types\DimensionIds;
-use function assert;
+use pocketmine\utils\BinaryStream;
+use pocketmine\world\format\Chunk;
+use pocketmine\world\format\PalettedBlockArray;
+use function array_key_first;
+use function array_key_last;
+use function count;
 use function substr;
-use function substr_replace;
 
 final class DimensionSpecificCompressor implements Compressor{
 
-	private int $biome_palettes_to_reduce;
-
 	/**
+	 * @param Compressor $compressor
 	 * @param DimensionIds::* $dimension_id
+	 * @return Compressor
 	 */
-	public function __construct(
-		private Compressor $inner,
-		int $dimension_id
-	){
-		$this->biome_palettes_to_reduce = match($dimension_id){ // values relative to 24
-			DimensionIds::NETHER => 16,
-			DimensionIds::THE_END => 8,
-			default => 0
+	public static function fromDimensionId(Compressor $compressor, int $dimension_id) : Compressor{
+		return match($dimension_id){
+			DimensionIds::NETHER => new self($compressor, 0, 7),
+			DimensionIds::THE_END => new self($compressor, 0, 15),
+			default => $compressor
 		};
 	}
+
+	public function __construct(
+		readonly private Compressor $inner,
+		readonly private int $min_sub_chunk_index,
+		readonly private int $max_sub_chunk_index
+	){}
 
 	public function getCompressionThreshold() : ?int{
 		return $this->inner->getCompressionThreshold();
@@ -45,79 +52,117 @@ final class DimensionSpecificCompressor implements Compressor{
 
 	public function compress(string $payload) : string{
 		$context = new PacketSerializerContext(TypeConverter::getInstance()->getItemTypeDictionary());
-		foreach((new PacketBatch($payload))->getPackets(PacketPool::getInstance(), $context, 1) as [$packet, $buffer]){
+		$pool = PacketPool::getInstance();
+		foreach(PacketBatch::decodeRaw(new BinaryStream($payload)) as $buffer){
+			$packet = $pool->getPacket($buffer);
 			if($packet instanceof LevelChunkPacket){
 				$packet->decode(PacketSerializer::decoder($buffer, 0, $context));
-				$payload_with_reduced_biomes = $this->reduceBiomePalettesInPayload($context, $packet->getSubChunkCount() - 4, $packet->getExtraPayload(), $this->biome_palettes_to_reduce);
-				$payload = PacketBatch::fromPackets($context, LevelChunkPacket::create(
-					$packet->getChunkPosition(),
-					$packet->getSubChunkCount() - 4,
-					$packet->isClientSubChunkRequestEnabled(),
-					$packet->getUsedBlobHashes(),
-					substr($payload_with_reduced_biomes, 4 * 2)
-				))->getBuffer();
+				$packet = $this->modifyPacket($packet, $context);
+
+				$stream = new BinaryStream();
+				PacketBatch::encodePackets($stream, $context, [$packet]);
+				$payload = $stream->getBuffer();
 			}
 		}
 		return $this->inner->compress($payload);
 	}
 
-	/**
-	 * This method reduces the number of biome palettes in a chunk's extra payload relative to this value:
-	 * https://github.com/pmmp/PocketMine-MP/blob/38d6284671e8b657ba557e765a6c29b24a7705f5/src/network/mcpe/serializer/ChunkSerializer.php#L81
-	 */
-	private function reduceBiomePalettesInPayload(PacketSerializerContext $context, int $sub_chunk_count, string $payload, int $reduction) : string{
-		$extra_payload = PacketSerializer::decoder($payload, 0, $context);
-		$extra_payload->get(4 * 2); // undo fake subchunks for negative space
+	private function modifyPacket(LevelChunkPacket $packet, PacketSerializerContext $context) : LevelChunkPacket{
+		$original_sub_chunk_count = $packet->getSubChunkCount();
+		if($original_sub_chunk_count === 0){
+			return $packet;
+		}
 
-		static $BITS_PER_BLOCK_TO_WORD_ARRAY_LENGTH = [0, 512, 1024, 1640, 2048, 2732, 3280];
+		$stream = PacketSerializer::decoder($packet->getExtraPayload(), 0, $context);
 
-		for($y = 0; $y < $sub_chunk_count; ++$y){
-			$version = $extra_payload->getByte();
-			assert($version === 8);
+		$sub_chunks = [];
+		for($i = Chunk::MIN_SUBCHUNK_INDEX, $max = $original_sub_chunk_count; $max-- > 0; $i++){
+			$begin = $stream->getOffset();
+			$this->readSubChunk($stream);
+			$end = $stream->getOffset();
+			$sub_chunks[$i] = [$begin, $end - 1];
+		}
 
-			$layers = $extra_payload->getByte();
-			for($i = 0; $i < $layers; ++$i){
-				$byte = $extra_payload->getByte();
-				$bits_per_block = $byte >> 1;
-				$persistent_block_states = ($byte & 0x01) === 0;
+		$biomes = [];
+		for($i = Chunk::MIN_SUBCHUNK_INDEX; $i <= Chunk::MAX_SUBCHUNK_INDEX; $i++){
+			$begin = $stream->getOffset();
+			$this->readBiome($stream);
+			$end = $stream->getOffset();
+			$biomes[$i] = [$begin, $end - 1];
+		}
 
-				$extra_payload->get($BITS_PER_BLOCK_TO_WORD_ARRAY_LENGTH[$bits_per_block]); // words
-				if($bits_per_block !== 0){
-					$palette_count = $extra_payload->getUnsignedVarInt() >> 1;
-				}else{
-					$palette_count = 1;
+		// set payload to contain only a slice of the chunks
+		$resulting_chunks = [];
+		for($i = $this->min_sub_chunk_index; $i <= $this->max_sub_chunk_index && isset($sub_chunks[$i]); $i++){
+			$resulting_chunks[] = $sub_chunks[$i];
+		}
+		$begin = $resulting_chunks[array_key_first($resulting_chunks)][0];
+		$end = $resulting_chunks[array_key_last($resulting_chunks)][1];
+		$payload = substr($packet->getExtraPayload(), $begin, 1 + ($end - $begin));
+
+		// set payload to contain only a slice of the biomes
+		$resulting_biomes = [];
+		for($i = $this->min_sub_chunk_index; $i <= $this->max_sub_chunk_index; $i++){
+			$resulting_biomes[] = $biomes[$i];
+		}
+		$begin = $resulting_biomes[array_key_first($resulting_biomes)][0];
+		$end = $resulting_biomes[array_key_last($resulting_biomes)][1];
+		$payload .= substr($packet->getExtraPayload(), $begin, 1 + ($end - $begin));
+
+		// add remaining payload (containing tiles)
+		$end = $biomes[array_key_last($biomes)][1];
+		$payload .= substr($packet->getExtraPayload(), $end + 1);
+
+		return LevelChunkPacket::create(
+			$packet->getChunkPosition(),
+			count($resulting_chunks),
+			$packet->isClientSubChunkRequestEnabled(),
+			$packet->getUsedBlobHashes(),
+			$payload
+		);
+	}
+
+	private function readSubChunk(PacketSerializer $stream) : void{
+		$stream->getByte(); // version
+		$layers_c = $stream->getByte();
+		for($i = 0; $i < $layers_c; $i++){
+			$byte = $stream->getByte();
+			$bitsPerBlock = $byte >> 1;
+			$persistentBlockStates = ($byte & 1) === 0;
+			$stream->get(PalettedBlockArray::getExpectedWordArraySize($bitsPerBlock));
+			if($bitsPerBlock !== 0){
+				$palette_c = $stream->getUnsignedVarInt() >> 1;
+			}else{
+				$palette_c = 1;
+			}
+			if($persistentBlockStates){
+				$nbtSerializer = new NetworkNbtSerializer();
+				$remaining = substr($stream->getBuffer(), $stream->getOffset());
+				$nbt_offset = 0;
+				for($j = 0; $j < $palette_c; ++$j){
+					$nbtSerializer->read($remaining, $nbt_offset, 512);
 				}
-				if($persistent_block_states){
-					$nbt_serializer = new NetworkNbtSerializer();
-					$remaining = substr($extra_payload->getBuffer(), $extra_payload->getOffset());
-					$nbt_offset = 0;
-					for($j = 0; $j < $palette_count; ++$j){
-						$nbt_serializer->read($remaining, $nbt_offset, 512);
-					}
-					$extra_payload->get($nbt_offset);
-				}else{
-					for($j = 0; $j < $palette_count; ++$j){
-						$extra_payload->getUnsignedVarInt();
-					}
+				$stream->get($nbt_offset);
+			}else{
+				for($k = 0; $k < $palette_c; ++$k){
+					$stream->getUnsignedVarInt();
 				}
 			}
 		}
+	}
 
-		// read one biome to find length of a biome
-		$biome_start_offset = $extra_payload->getOffset();
-		$biome_palette_bits_per_block = $extra_payload->getByte() >> 1;
-		$extra_payload->get($BITS_PER_BLOCK_TO_WORD_ARRAY_LENGTH[$biome_palette_bits_per_block]); // word array
-		if($biome_palette_bits_per_block !== 0){
-			$biome_palette_count = $extra_payload->getUnsignedVarInt() >> 1;
+	private function readBiome(PacketSerializer $stream) : void{
+		$biomePaletteBitsPerBlock = $stream->getByte() >> 1;
+		$stream->get(PalettedBlockArray::getExpectedWordArraySize($biomePaletteBitsPerBlock));
+
+		if($biomePaletteBitsPerBlock !== 0){
+			$palette_c = $stream->getUnsignedVarInt() >> 1;
 		}else{
-			$biome_palette_count = 1;
+			$palette_c = 1;
 		}
-		for($i = 0; $i < $biome_palette_count; ++$i){
-			$extra_payload->getUnsignedVarInt();
-		}
-		$biome_end_offset = $extra_payload->getOffset();
-		$biome_length = $biome_end_offset - $biome_start_offset;
 
-		return substr_replace($payload, "", $biome_start_offset + 1, $biome_length * $reduction);
+		for($i = 0; $i < $palette_c; $i++){
+			$stream->getUnsignedVarInt();
+		}
 	}
 }
