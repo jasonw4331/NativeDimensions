@@ -14,7 +14,8 @@ use pocketmine\utils\CloningRegistryTrait;
 /**
  * @generate-registry-docblock
  *
- * @method static \jasonw4331\NativeDimensions\block\EndPortal END_PORTAL()
+ * @method static EndPortal END_PORTAL()
+ * @method static NetherPortal NETHER_PORTAL()
  */
 final class ExtraVanillaBlocks{
 	use CloningRegistryTrait;
@@ -40,5 +41,6 @@ final class ExtraVanillaBlocks{
 
 	protected static function setup() : void{
 		self::register('end_portal', new EndPortal(new BID(Ids::newId()), "End Portal", new Info(BreakInfo::indestructible())));
+		self::register('nether_portal', new NetherPortal(new BID(Ids::NETHER_PORTAL), "Nether Portal", new Info(BreakInfo::indestructible())));
 	}
 }

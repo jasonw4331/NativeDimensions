@@ -15,6 +15,7 @@ use jasonw4331\NativeDimensions\world\provider\DimensionalWorldProviderManager;
 use pocketmine\block\RuntimeBlockStateRegistry;
 use pocketmine\block\VanillaBlocks;
 use pocketmine\data\bedrock\block\BlockTypeNames as Ids;
+use pocketmine\data\bedrock\block\convert\BlockStateWriter;
 use pocketmine\event\EventPriority;
 use pocketmine\event\player\PlayerLoginEvent;
 use pocketmine\event\world\WorldLoadEvent;
@@ -27,8 +28,10 @@ use pocketmine\network\mcpe\compression\ZlibCompressor;
 use pocketmine\network\mcpe\protocol\types\DimensionIds;
 use pocketmine\plugin\PluginBase;
 use pocketmine\scheduler\AsyncTask;
+use pocketmine\utils\AssumptionFailedError;
 use pocketmine\world\format\io\GlobalBlockStateHandlers;
 use pocketmine\world\generator\GeneratorManager;
+use pocketmine\world\light\LightUpdate;
 use pocketmine\world\Position;
 use ReflectionClass;
 use ReflectionProperty;
@@ -130,6 +133,66 @@ class Main extends PluginBase{
 		$parser = StringToItemParser::getInstance();
 		$parser->override('end_portal', fn() => ExtraVanillaBlocks::END_PORTAL()->asItem());
 		$parser->registerBlock("$namespace:end_portal", fn() => ExtraVanillaBlocks::END_PORTAL());
+
+		// Hack to override nether portal registration
+		$block = ExtraVanillaBlocks::END_PORTAL();
+		$refClass = new ReflectionClass(RuntimeBlockStateRegistry::getInstance());
+		$refProp = $refClass->getProperty('typeIndex');
+		$oldValue = $refProp->getValue();
+		$oldValue[$block->getTypeId()] = clone $block;
+		$refProp->setValue(RuntimeBlockStateRegistry::getInstance(), $oldValue);
+
+		foreach($block->generateStatePermutations() as $v){
+			$index = $v->getStateId();
+			$fullId = $block->getStateId();
+			if($index !== $fullId){
+				throw new AssumptionFailedError("Cannot fill static arrays for an invalid blockstate");
+			}else{
+				$refProp = $refClass->getProperty('fullList');
+				$oldValue = $refProp->getValue();
+				$oldValue[$index] = $v;
+				$refProp->setValue(RuntimeBlockStateRegistry::getInstance(), $oldValue);
+				$refProp = $refClass->getProperty('blastResistance');
+				$oldValue = $refProp->getValue();
+				$oldValue[$index] = $v->getBreakInfo()->getBlastResistance();
+				$refProp->setValue(RuntimeBlockStateRegistry::getInstance(), $oldValue);
+				$refProp = $refClass->getProperty('light');
+				$oldValue = $refProp->getValue();
+				$oldValue[$index] = $v->getLightLevel();
+				$refProp->setValue(RuntimeBlockStateRegistry::getInstance(), $oldValue);
+				$refProp = $refClass->getProperty('lightFilter');
+				$oldValue = $refProp->getValue();
+				$oldValue[$index] = min(15, $v->getLightFilter() + LightUpdate::BASE_LIGHT_FILTER);
+				$refProp->setValue(RuntimeBlockStateRegistry::getInstance(), $oldValue);
+				if($v->blocksDirectSkyLight()){
+					$refProp = $refClass->getProperty('blocksDirectSkyLight');
+					$oldValue = $refProp->getValue();
+					$oldValue[$index] = true;
+					$refProp->setValue(RuntimeBlockStateRegistry::getInstance(), $oldValue);
+				}
+			}
+		}
+
+		$refClass = new ReflectionClass(GlobalBlockStateHandlers::getSerializer());
+		$refProp = $refClass->getProperty('serializers');
+		$oldValue = $refProp->getValue();
+		$oldValue[$block->getTypeId()] = BlockStateWriter::create(Ids::PORTAL);
+		$refProp->setValue(GlobalBlockStateHandlers::getSerializer(), $oldValue);
+
+		$refClass = new ReflectionClass(GlobalBlockStateHandlers::getDeserializer());
+		$refProp = $refClass->getProperty('deserializeFuncs');
+		$oldValue = $refProp->getValue();
+		$oldValue[Ids::PORTAL] = fn() => ExtraVanillaBlocks::END_PORTAL();
+		$refProp->setValue(GlobalBlockStateHandlers::getDeserializer(), $oldValue);
+
+		$refClass = new ReflectionClass(VanillaBlocks::class);
+		$oldValue = $refClass->getStaticPropertyValue('members', []);
+		$oldValue[mb_strtoupper($block->getName())] = clone $block;
+		$refClass->setStaticPropertyValue('members', $oldValue);
+
+		$parser = StringToItemParser::getInstance();
+		$parser->override('nether_portal', fn() => ExtraVanillaBlocks::NETHER_PORTAL()->asItem());
+		$parser->registerBlock("$namespace:nether_portal", fn() => ExtraVanillaBlocks::NETHER_PORTAL());
 	}
 
 	private function registerKnownCompressor(Compressor $compressor) : void{
@@ -155,7 +218,8 @@ class Main extends PluginBase{
 	}
 
 	/**
-	 * @phpstan-param DimensionIds::* $dimension_id
+	 * @param DimensionalWorld $world
+	 * @param DimensionIds::* $dimension_id
 	 */
 	private function registerHackToWorld(DimensionalWorld $world, int $dimension_id) : void{
 		/** @see ChunkCache::$compressor */
@@ -166,13 +230,14 @@ class Main extends PluginBase{
 			$chunk_cache = ChunkCache::getInstance($world, $compressor);
 			$compressor = $_chunk_cache_compressor->getValue($chunk_cache);
 			if(!($compressor instanceof DimensionSpecificCompressor)){
-				$_chunk_cache_compressor->setValue($chunk_cache, new DimensionSpecificCompressor($compressor, $dimension_id));
+				$_chunk_cache_compressor->setValue($chunk_cache, DimensionSpecificCompressor::fromDimensionId($compressor, $dimension_id));
 			}
 		}
 	}
 
 	/**
-	 * @phpstan-param DimensionIds::* $dimension_id
+	 * @param string $world_folder_name
+	 * @param DimensionIds::* $dimension_id
 	 */
 	public function applyToWorld(string $world_folder_name, int $dimension_id) : void{
 		$this->applicable_worlds[$world_folder_name] = $dimension_id;
