@@ -138,7 +138,7 @@ class Main extends PluginBase{
 		$block = ExtraVanillaBlocks::END_PORTAL();
 		$refClass = new ReflectionClass(RuntimeBlockStateRegistry::getInstance());
 		$refProp = $refClass->getProperty('typeIndex');
-		$oldValue = $refProp->getValue();
+		$oldValue = $refProp->getValue(RuntimeBlockStateRegistry::getInstance());
 		$oldValue[$block->getTypeId()] = clone $block;
 		$refProp->setValue(RuntimeBlockStateRegistry::getInstance(), $oldValue);
 
@@ -149,24 +149,24 @@ class Main extends PluginBase{
 				throw new AssumptionFailedError("Cannot fill static arrays for an invalid blockstate");
 			}else{
 				$refProp = $refClass->getProperty('fullList');
-				$oldValue = $refProp->getValue();
+				$oldValue = $refProp->getValue(RuntimeBlockStateRegistry::getInstance());
 				$oldValue[$index] = $v;
 				$refProp->setValue(RuntimeBlockStateRegistry::getInstance(), $oldValue);
 				$refProp = $refClass->getProperty('blastResistance');
-				$oldValue = $refProp->getValue();
+				$oldValue = $refProp->getValue(RuntimeBlockStateRegistry::getInstance());
 				$oldValue[$index] = $v->getBreakInfo()->getBlastResistance();
 				$refProp->setValue(RuntimeBlockStateRegistry::getInstance(), $oldValue);
 				$refProp = $refClass->getProperty('light');
-				$oldValue = $refProp->getValue();
+				$oldValue = $refProp->getValue(RuntimeBlockStateRegistry::getInstance());
 				$oldValue[$index] = $v->getLightLevel();
 				$refProp->setValue(RuntimeBlockStateRegistry::getInstance(), $oldValue);
 				$refProp = $refClass->getProperty('lightFilter');
-				$oldValue = $refProp->getValue();
+				$oldValue = $refProp->getValue(RuntimeBlockStateRegistry::getInstance());
 				$oldValue[$index] = min(15, $v->getLightFilter() + LightUpdate::BASE_LIGHT_FILTER);
 				$refProp->setValue(RuntimeBlockStateRegistry::getInstance(), $oldValue);
 				if($v->blocksDirectSkyLight()){
 					$refProp = $refClass->getProperty('blocksDirectSkyLight');
-					$oldValue = $refProp->getValue();
+					$oldValue = $refProp->getValue(RuntimeBlockStateRegistry::getInstance());
 					$oldValue[$index] = true;
 					$refProp->setValue(RuntimeBlockStateRegistry::getInstance(), $oldValue);
 				}
@@ -175,13 +175,13 @@ class Main extends PluginBase{
 
 		$refClass = new ReflectionClass(GlobalBlockStateHandlers::getSerializer());
 		$refProp = $refClass->getProperty('serializers');
-		$oldValue = $refProp->getValue();
+		$oldValue = $refProp->getValue(GlobalBlockStateHandlers::getSerializer());
 		$oldValue[$block->getTypeId()] = BlockStateWriter::create(Ids::PORTAL);
 		$refProp->setValue(GlobalBlockStateHandlers::getSerializer(), $oldValue);
 
 		$refClass = new ReflectionClass(GlobalBlockStateHandlers::getDeserializer());
 		$refProp = $refClass->getProperty('deserializeFuncs');
-		$oldValue = $refProp->getValue();
+		$oldValue = $refProp->getValue(GlobalBlockStateHandlers::getDeserializer());
 		$oldValue[Ids::PORTAL] = fn() => ExtraVanillaBlocks::END_PORTAL();
 		$refProp->setValue(GlobalBlockStateHandlers::getDeserializer(), $oldValue);
 
