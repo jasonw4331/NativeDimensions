@@ -99,14 +99,19 @@ class NetherPortal extends \pocketmine\block\NetherPortal{
 						Main::makeNetherPortal($position);
 					$world->getLogger()->debug("Teleporting to the Nether");
 					if($entity instanceof Player){
+						$refProp = new \ReflectionProperty($entity, 'chunksPerTick');
+						$oldChunksPerTick = $refProp->getValue($entity);
+						$refProp->setValue($entity, 40);
 						if(!$entity->isCreative()){
-							Main::getInstance()->getScheduler()->scheduleDelayedTask(new ClosureTask(function() use ($entity, $position) : void{
+							Main::getInstance()->getScheduler()->scheduleDelayedTask(new ClosureTask(function() use ($entity, $position, $refProp, $oldChunksPerTick) : void{
 								$entity->getNetworkSession()->sendDataPacket(ChangeDimensionPacket::create(DimensionIds::NETHER, $entity->getPosition(), false));
 								$entity->teleport($position);
+								$refProp->setValue($entity, $oldChunksPerTick);
 							}), 20 * 6);
 							return;
 						}
 						$entity->getNetworkSession()->sendDataPacket(ChangeDimensionPacket::create(DimensionIds::NETHER, $entity->getPosition(), false));
+						$refProp->setValue($entity, $oldChunksPerTick);
 					}
 					$entity->teleport($position);
 				},
@@ -126,14 +131,19 @@ class NetherPortal extends \pocketmine\block\NetherPortal{
 						Main::makeNetherPortal($position);
 					$world->getLogger()->debug("Teleporting to the Overworld");
 					if($entity instanceof Player){
+						$refProp = new \ReflectionProperty($entity, 'chunksPerTick');
+						$oldChunksPerTick = $refProp->getValue($entity);
+						$refProp->setValue($entity, 40);
 						if(!$entity->isCreative()){
-							Main::getInstance()->getScheduler()->scheduleDelayedTask(new ClosureTask(function() use ($entity, $position) : void{
+							Main::getInstance()->getScheduler()->scheduleDelayedTask(new ClosureTask(function() use ($entity, $position, $refProp, $oldChunksPerTick) : void{
 								$entity->getNetworkSession()->sendDataPacket(ChangeDimensionPacket::create(DimensionIds::OVERWORLD, $entity->getPosition(), false));
 								$entity->teleport($position);
+								$refProp->setValue($entity, $oldChunksPerTick);
 							}), 20 * 6);
 							return;
 						}
 						$entity->getNetworkSession()->sendDataPacket(ChangeDimensionPacket::create(DimensionIds::OVERWORLD, $entity->getPosition(), false));
+						$refProp->setValue($entity, $oldChunksPerTick);
 					}
 					$entity->teleport($position);
 				},
