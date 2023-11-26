@@ -123,7 +123,7 @@ class Main extends PluginBase{
 	}
 
 	public static function registerBlocks() : void{
-		$namespace = mb_strtolower(self::getInstance()->getName());
+		$namespace = "nativedimensions";
 
 		// Custom End Portal Registration
 		RuntimeBlockStateRegistry::getInstance()->register(ExtraVanillaBlocks::END_PORTAL());
