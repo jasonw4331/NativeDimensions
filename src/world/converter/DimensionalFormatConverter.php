@@ -9,6 +9,7 @@ use jasonw4331\NativeDimensions\world\provider\DimensionLevelDBProvider;
 use jasonw4331\NativeDimensions\world\provider\RewritableWorldProviderManagerEntry;
 use pocketmine\network\mcpe\protocol\types\DimensionIds;
 use pocketmine\utils\Filesystem;
+use pocketmine\world\format\Chunk;
 use pocketmine\world\format\io\WorldData;
 use pocketmine\world\format\io\WorldProvider;
 use pocketmine\world\format\io\WritableWorldProvider;
@@ -94,9 +95,9 @@ class DimensionalFormatConverter{
 
 		$this->logger->info("Conversion completed");
 		return [
-			$overworld = $this->newProvider->fromPath($path, DimensionIds::OVERWORLD),
-			$this->newProvider->fromPath($path, DimensionIds::NETHER, $overworld->getDatabase()),
-			$this->newProvider->fromPath($path, DimensionIds::THE_END, $overworld->getDatabase()),
+			$overworld = $this->newProvider->fromPath($path, new \PrefixedLogger($this->logger, "World Provider: {$overworld->getWorldData()->getName()}"), DimensionIds::OVERWORLD),
+			$this->newProvider->fromPath($path, new \PrefixedLogger($this->logger, "World Provider: {$nether->getWorldData()->getName()}"), DimensionIds::NETHER, $overworld->getDatabase()),
+			$this->newProvider->fromPath($path, new \PrefixedLogger($this->logger, "World Provider: {$end->getWorldData()->getName()}"), DimensionIds::THE_END, $overworld->getDatabase()),
 		];
 	}
 
@@ -123,9 +124,9 @@ class DimensionalFormatConverter{
 		);
 
 		return [
-			$overworld = $this->newProvider->fromPath($convertedOutput, DimensionIds::OVERWORLD),
-			$this->newProvider->fromPath($convertedOutput, DimensionIds::NETHER, $overworld->getDatabase()),
-			$this->newProvider->fromPath($convertedOutput, DimensionIds::THE_END, $overworld->getDatabase()),
+			$overworld = $this->newProvider->fromPath($convertedOutput, new \PrefixedLogger($this->logger, "World Provider: {$data->getName()}"), DimensionIds::OVERWORLD),
+			$this->newProvider->fromPath($convertedOutput, new \PrefixedLogger($this->logger, "World Provider: {$data->getName()}"), DimensionIds::NETHER, $overworld->getDatabase()),
+			$this->newProvider->fromPath($convertedOutput, new \PrefixedLogger($this->logger, "World Provider: {$data->getName()}"), DimensionIds::THE_END, $overworld->getDatabase()),
 		];
 	}
 
