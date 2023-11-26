@@ -123,6 +123,9 @@ class DimensionalWorldManager extends WorldManager{
 		if($world->isDoingTick()){
 			throw new \InvalidArgumentException("Cannot unload a world during world tick");
 		}
+		if($world instanceof DimensionalWorld && !$world->isLoaded()) {
+			return true; // we already unloaded the dimension
+		}
 
 		$ev = new WorldUnloadEvent($world);
 		if($world === $this->defaultWorld && !$forceUnload){
@@ -151,7 +154,7 @@ class DimensionalWorldManager extends WorldManager{
 			}
 		}
 
-		if($world instanceof DimensionalWorld && $world->getOverworld() === $world){
+		if($world instanceof DimensionalWorld && $world->getDimensionId() === DimensionIds::OVERWORLD){
 			$this->unloadWorld($world->getEnd(), true);
 			$this->unloadWorld($world->getNether(), true);
 		}
