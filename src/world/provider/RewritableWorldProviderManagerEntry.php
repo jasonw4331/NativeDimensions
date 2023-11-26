@@ -11,7 +11,7 @@ use pocketmine\world\format\io\WritableWorldProvider;
 use pocketmine\world\WorldCreationOptions;
 
 /**
- * @phpstan-type FromPath \Closure(string $path, int $dimension, \LevelDB $db) : DimensionLevelDBProvider
+ * @phpstan-type FromPath \Closure(string $path, Logger $logger, int $dimension, \LevelDB $db) : DimensionLevelDBProvider
  * @phpstan-type Generate \Closure(string $path, string $name, WorldCreationOptions $options) : void
  */
 final class RewritableWorldProviderManagerEntry extends DimensionProviderManagerEntry{
@@ -33,7 +33,7 @@ final class RewritableWorldProviderManagerEntry extends DimensionProviderManager
 	}
 
 	public function fromPath(string $path, Logger $logger, int $dimension = 0, LevelDB $db = null) : WritableWorldProvider{
-		return ($this->fromPath)($path, $dimension, $db);
+		return ($this->fromPath)($path, $logger, $dimension, $db);
 	}
 
 	/**

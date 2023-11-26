@@ -155,10 +155,9 @@ class DimensionalFormatConverter{
 
 		$start = microtime(true);
 		$thisRound = $start;
-		foreach($provider->getAllChunks(true, $this->logger) as $coords => $chunk){
+		foreach($provider->getAllChunks(true, $this->logger) as $coords => $loadedChunkData){
 			[$chunkX, $chunkZ] = $coords;
-			$chunk->getChunk()->setTerrainDirty();
-			$new->saveChunk($chunkX, $chunkZ, $chunk);
+			$new->saveChunk($chunkX, $chunkZ, $loadedChunkData->getData(), Chunk::DIRTY_FLAGS_ALL);
 			$counter++;
 			if(($counter % $this->chunksPerProgressUpdate) === 0){
 				$time = microtime(true);

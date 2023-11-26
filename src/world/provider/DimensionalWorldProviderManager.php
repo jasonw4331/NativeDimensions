@@ -23,7 +23,7 @@ class DimensionalWorldProviderManager{
 	private RewritableWorldProviderManagerEntry $default;
 
 	public function __construct(){
-		$leveldb = new RewritableWorldProviderManagerEntry(DimensionLevelDBProvider::isValid(...), fn(string $path, int $dimension, ?LevelDB $db) => new DimensionLevelDBProvider($path, $dimension, $db), Closure::fromCallable([DimensionLevelDBProvider::class, 'generate']));
+		$leveldb = new RewritableWorldProviderManagerEntry(DimensionLevelDBProvider::isValid(...), fn(string $path, Logger $logger, int $dimension, ?LevelDB $db) => new DimensionLevelDBProvider($path, $logger, $dimension, $db), DimensionLevelDBProvider::generate(...));
 		$this->default = $leveldb;
 		$this->addProvider($leveldb, "leveldb");
 

@@ -19,6 +19,7 @@ use pocketmine\network\mcpe\protocol\types\DimensionIds;
 use pocketmine\utils\Binary;
 use pocketmine\utils\BinaryDataException;
 use pocketmine\utils\BinaryStream;
+use pocketmine\VersionInfo;
 use pocketmine\world\format\Chunk;
 use pocketmine\world\format\io\BaseWorldProvider;
 use pocketmine\world\format\io\ChunkData;
@@ -31,6 +32,7 @@ use pocketmine\world\format\io\leveldb\ChunkDataKey;
 use pocketmine\world\format\io\leveldb\ChunkVersion;
 use pocketmine\world\format\io\leveldb\LevelDB;
 use pocketmine\world\format\io\leveldb\SubChunkVersion;
+use pocketmine\world\format\io\LoadedChunkData;
 use pocketmine\world\format\io\WorldData;
 use pocketmine\world\format\PalettedBlockArray;
 use pocketmine\world\format\SubChunk;
@@ -280,12 +282,12 @@ class DimensionLevelDBProvider extends LevelDB{
 		return $result;
 	}
 
-	private static function serialize3dBiomes(BinaryStream $stream, Chunk $chunk) : void{
+	private static function serialize3dBiomes(BinaryStream $stream, array $subChunks) : void{
 		//TODO: the server-side min/max may not coincide with the world storage min/max - we may need additional logic to handle this
 		for($y = Chunk::MIN_SUBCHUNK_INDEX; $y <= Chunk::MAX_SUBCHUNK_INDEX; $y++){
 			//TODO: is it worth trying to use the previous palette if it's the same as the current one? vanilla supports
 			//this, but it's not clear if it's worth the effort to implement.
-			self::serializeBiomePalette($stream, $chunk->getSubChunk($y)->getBiomeArray());
+			self::serializeBiomePalette($stream, $subChunks[$y]->getBiomeArray());
 		}
 	}
 
@@ -523,7 +525,7 @@ class DimensionLevelDBProvider extends LevelDB{
 	/**
 	 * @throws CorruptedChunkException
 	 */
-	public function loadChunk(int $chunkX, int $chunkZ) : ?ChunkData{
+	public function loadChunk(int $chunkX, int $chunkZ) : ?LoadedChunkData{
 		$index = self::dimensionalChunkIndex($chunkX, $chunkZ, $this->dimensionId);
 
 		$chunkVersion = $this->readVersion($chunkX, $chunkZ);
@@ -531,6 +533,8 @@ class DimensionLevelDBProvider extends LevelDB{
 			//TODO: this might be a slightly-corrupted chunk with a missing version field
 			return null;
 		}
+
+		//TODO: read PM_DATA_VERSION - we'll need it to fix up old chunks
 
 		$logger = new \PrefixedLogger($this->logger, "Loading chunk x=$chunkX z=$chunkZ v$chunkVersion");
 
@@ -622,30 +626,24 @@ class DimensionLevelDBProvider extends LevelDB{
 
 		//TODO: tile ticks, biome states (?)
 
-		$chunk = new Chunk(
-			$subChunks,
-			$terrainPopulated
+		return new LoadedChunkData(
+			data: new ChunkData($subChunks, $terrainPopulated, $entities, $tiles),
+			upgraded: $hasBeenUpgraded,
+			fixerFlags: LoadedChunkData::FIXER_FLAG_ALL //TODO: fill this by version rather than just setting all flags
 		);
-
-		if($hasBeenUpgraded){
-			$logger->debug("Flagging chunk as dirty due to upgraded data");
-			$chunk->setTerrainDirty(); //trigger rewriting chunk to disk if it was converted from an older format
-		}
-
-		return new ChunkData($chunk, $entities, $tiles);
 	}
 
-	public function saveChunk(int $chunkX, int $chunkZ, ChunkData $chunkData) : void{
+	public function saveChunk(int $chunkX, int $chunkZ, ChunkData $chunkData, int $dirtyFlags) : void{
 		$index = self::dimensionalChunkIndex($chunkX, $chunkZ, $this->dimensionId);
 
 		$write = new \LevelDBWriteBatch();
 
 		$write->put($index . ChunkDataKey::NEW_VERSION, chr(self::CURRENT_LEVEL_CHUNK_VERSION));
+		$write->put($index . ChunkDataKey::PM_DATA_VERSION, Binary::writeLLong(VersionInfo::WORLD_DATA_VERSION));
 
-		$chunk = $chunkData->getChunk();
+		$subChunks = $chunkData->getSubChunks();
 
-		if($chunk->getTerrainDirtyFlag(Chunk::DIRTY_FLAG_BLOCKS)){
-			$subChunks = $chunk->getSubChunks();
+		if(($dirtyFlags & Chunk::DIRTY_FLAG_BLOCKS) !== 0){
 
 			foreach($subChunks as $y => $subChunk){
 				$key = $index . ChunkDataKey::SUBCHUNK . chr($y);
@@ -666,16 +664,16 @@ class DimensionLevelDBProvider extends LevelDB{
 			}
 		}
 
-		if($chunk->getTerrainDirtyFlag(Chunk::DIRTY_FLAG_BIOMES)){
+		if(($dirtyFlags & Chunk::DIRTY_FLAG_BIOMES) !== 0){
 			$write->delete($index . ChunkDataKey::HEIGHTMAP_AND_2D_BIOMES);
 			$stream = new BinaryStream();
 			$stream->put(str_repeat("\x00", 512)); //fake heightmap
-			self::serialize3dBiomes($stream, $chunk);
+			self::serialize3dBiomes($stream, $subChunks);
 			$write->put($index . ChunkDataKey::HEIGHTMAP_AND_3D_BIOMES, $stream->getBuffer());
 		}
 
 		//TODO: use this properly
-		$write->put($index . ChunkDataKey::FINALIZATION, chr($chunk->isPopulated() ? self::FINALISATION_DONE : self::FINALISATION_NEEDS_POPULATION));
+		$write->put($index . ChunkDataKey::FINALIZATION, chr($chunkData->isPopulated() ? self::FINALISATION_DONE : self::FINALISATION_NEEDS_POPULATION));
 
 		$this->writeTags($chunkData->getTileNBT(), $index . ChunkDataKey::BLOCK_ENTITIES, $write);
 		$this->writeTags($chunkData->getEntityNBT(), $index . ChunkDataKey::ENTITIES, $write);
