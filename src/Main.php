@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace jasonw4331\NativeDimensions;
 
-use jasonw4331\NativeDimensions\vanilla\ExtraVanillaBlocks;
 use jasonw4331\NativeDimensions\event\WorldListener;
 use jasonw4331\NativeDimensions\exoblock\ExoBlockFactory;
-use jasonw4331\NativeDimensions\network\DimensionSpecificCompressor;
 use jasonw4331\NativeDimensions\player\PlayerManager;
+use jasonw4331\NativeDimensions\utils\DimensionChunkCache;
+use jasonw4331\NativeDimensions\vanilla\ExtraVanillaBlocks;
 use jasonw4331\NativeDimensions\vanilla\ExtraVanillaData;
 use jasonw4331\NativeDimensions\world\DimensionalWorld;
 use jasonw4331\NativeDimensions\world\DimensionalWorldManager;
@@ -29,11 +29,8 @@ use pocketmine\plugin\PluginBase;
 use pocketmine\world\generator\GeneratorManager;
 use pocketmine\world\Position;
 use ReflectionClass;
-use ReflectionProperty;
 use Symfony\Component\Filesystem\Path;
-use function array_search;
 use function count;
-use function in_array;
 use function mt_rand;
 use function spl_object_id;
 use function str_contains;
@@ -137,15 +134,15 @@ class Main extends PluginBase{
 	 * @param DimensionIds::* $dimension_id
 	 */
 	private function registerHackToWorld(DimensionalWorld $world, int $dimension_id) : void{
-		/** @see ChunkCache::$compressor */
-		static $_chunk_cache_compressor = null;
-		$_chunk_cache_compressor ??= new ReflectionProperty(ChunkCache::class, "compressor");
+		/** @see ChunkCache::$instances */
+		static $_chunk_cache = new ReflectionClass(ChunkCache::class);
 
 		foreach($this->known_compressors as $compressor){
 			$chunk_cache = ChunkCache::getInstance($world, $compressor);
-			$compressor = $_chunk_cache_compressor->getValue($chunk_cache);
-			if(!($compressor instanceof DimensionSpecificCompressor)){
-				$_chunk_cache_compressor->setValue($chunk_cache, DimensionSpecificCompressor::fromDimensionId($compressor, $dimension_id));
+			if(!($chunk_cache instanceof DimensionChunkCache)){
+				$instances = $_chunk_cache->getStaticPropertyValue("instances");
+				$instances[spl_object_id($world)][spl_object_id($compressor)] = DimensionChunkCache::from($chunk_cache, $dimension_id);
+				$_chunk_cache->setStaticPropertyValue("instances", $instances);
 			}
 		}
 	}
@@ -156,9 +153,8 @@ class Main extends PluginBase{
 	 */
 	public function applyToWorld(string $world_folder_name, int $dimension_id) : void{
 		$this->applicable_worlds[$world_folder_name] = $dimension_id;
-		/** @var DimensionalWorld $world */
 		$world = $this->getServer()->getWorldManager()->getWorldByName($world_folder_name);
-		if($world !== null){
+		if($world instanceof DimensionalWorld){
 			$this->registerHackToWorldIfApplicable($world);
 		}
 	}
