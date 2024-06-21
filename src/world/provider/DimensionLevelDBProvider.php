@@ -8,10 +8,10 @@ use jasonw4331\NativeDimensions\world\data\DimensionalBedrockWorldData;
 use LevelDBException;
 use Logger;
 use pocketmine\block\Block;
-use pocketmine\block\BlockTypeIds;
 use pocketmine\data\bedrock\BiomeIds;
 use pocketmine\data\bedrock\block\BlockStateDeserializeException;
 use pocketmine\nbt\LittleEndianNbtSerializer;
+use pocketmine\nbt\NBT;
 use pocketmine\nbt\NbtDataException;
 use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\nbt\TreeRoot;
@@ -148,7 +148,35 @@ class DimensionLevelDBProvider extends LevelDB{
 		$nbt = new LittleEndianNbtSerializer();
 		$palette = [];
 
-		$paletteSize = $bitsPerBlock === 0 ? 1 : $stream->getLInt();
+		if($bitsPerBlock === 0){
+			$paletteSize = 1;
+			/*
+			 * Due to code copy-paste in a public plugin, some PM4 worlds have 0 bpb palettes with a length prefix.
+			 * This is invalid and does not happen in vanilla.
+			 * These palettes were accepted by PM4 despite being invalid, but PM5 considered them corrupt, causing loss
+			 * of data. Since many users were affected by this, a workaround is therefore necessary to allow PM5 to read
+			 * these worlds without data loss.
+			 *
+			 * References:
+			 * - https://github.com/Refaltor77/CustomItemAPI/issues/68
+			 * - https://github.com/pmmp/PocketMine-MP/issues/5911
+			 */
+			$offset = $stream->getOffset();
+			$byte1 = $stream->getByte();
+			$stream->setOffset($offset); //reset offset
+
+			if($byte1 !== NBT::TAG_Compound){ //normally the first byte would be the NBT of the blockstate
+				$susLength = $stream->getLInt();
+				if($susLength !== 1){ //make sure the data isn't complete garbage
+					throw new CorruptedChunkException("CustomItemAPI borked 0 bpb palette should always have a length of 1");
+				}
+				$logger->error("Unexpected palette size for 0 bpb palette");
+			}
+		}else{
+			$paletteSize = $stream->getLInt();
+		}
+
+		$blockDecodeErrors = [];
 
 		for($i = 0; $i < $paletteSize; ++$i){
 			try{
@@ -165,16 +193,23 @@ class DimensionLevelDBProvider extends LevelDB{
 				$blockStateData = $this->blockDataUpgrader->upgradeBlockStateNbt($blockStateNbt);
 			}catch(BlockStateDeserializeException $e){
 				//while not ideal, this is not a fatal error
-				$logger->error("Failed to upgrade blockstate: " . $e->getMessage() . " offset $i in palette, blockstate NBT: " . $blockStateNbt->toString());
+				$blockDecodeErrors[] = "Palette offset $i / Upgrade error: " . $e->getMessage() . ", NBT: " . $blockStateNbt->toString();
 				$palette[] = $this->blockStateDeserializer->deserialize(GlobalBlockStateHandlers::getUnknownBlockStateData());
 				continue;
 			}
 			try{
 				$palette[] = $this->blockStateDeserializer->deserialize($blockStateData);
+			}catch(UnsupportedBlockStateException $e){
+				$blockDecodeErrors[] = "Palette offset $i / " . $e->getMessage();
+				$palette[] = $this->blockStateDeserializer->deserialize(GlobalBlockStateHandlers::getUnknownBlockStateData());
 			}catch(BlockStateDeserializeException $e){
-				$logger->error("Failed to deserialize blockstate: " . $e->getMessage() . " offset $i in palette, blockstate NBT: " . $blockStateNbt->toString());
+				$blockDecodeErrors[] = "Palette offset $i / Deserialize error: " . $e->getMessage() . ", NBT: " . $blockStateNbt->toString();
 				$palette[] = $this->blockStateDeserializer->deserialize(GlobalBlockStateHandlers::getUnknownBlockStateData());
 			}
+		}
+
+		if(count($blockDecodeErrors) > 0){
+			$logger->error("Errors decoding blocks:\n - " . implode("\n - ", $blockDecodeErrors));
 		}
 
 		//TODO: exceptions
@@ -269,6 +304,10 @@ class DimensionLevelDBProvider extends LevelDB{
 				$previous = $decoded;
 				if($nextIndex <= Chunk::MAX_SUBCHUNK_INDEX){ //older versions wrote additional superfluous biome palettes
 					$result[$nextIndex++] = $decoded;
+				}elseif($stream->feof()){
+					//not enough padding biome arrays for the given version - this is non-critical since we discard the excess anyway, but this should be logged
+					$logger->error("Wrong number of 3D biome palettes for this chunk version: expected $expectedCount, but got " . ($i + 1) . " - this is not a problem, but may indicate a corrupted chunk");
+					break;
 				}
 			}catch(BinaryDataException $e){
 				throw new CorruptedChunkException("Failed to deserialize biome palette $i: " . $e->getMessage(), 0, $e);
@@ -282,6 +321,9 @@ class DimensionLevelDBProvider extends LevelDB{
 		return $result;
 	}
 
+	/**
+	 * @param SubChunk[] $subChunks
+	 */
 	private static function serialize3dBiomes(BinaryStream $stream, array $subChunks) : void{
 		//TODO: the server-side min/max may not coincide with the world storage min/max - we may need additional logic to handle this
 		for($y = Chunk::MIN_SUBCHUNK_INDEX; $y <= Chunk::MAX_SUBCHUNK_INDEX; $y++){
@@ -341,17 +383,17 @@ class DimensionLevelDBProvider extends LevelDB{
 
 		$subChunks = [];
 		for($yy = 0; $yy < 8; ++$yy){
-			$storages = [$this->palettizeLegacySubChunkFromColumn($fullIds, $fullData, $yy)];
+			$storages = [$this->palettizeLegacySubChunkFromColumn($fullIds, $fullData, $yy, new \PrefixedLogger($logger, "Subchunk y=$yy"))];
 			if(isset($convertedLegacyExtraData[$yy])){
 				$storages[] = $convertedLegacyExtraData[$yy];
 			}
-			$subChunks[$yy] = new SubChunk(BlockTypeIds::AIR << Block::INTERNAL_STATE_DATA_BITS, $storages, clone $biomes3d);
+			$subChunks[$yy] = new SubChunk(Block::EMPTY_STATE_ID, $storages, clone $biomes3d);
 		}
 
 		//make sure extrapolated biomes get filled in correctly
 		for($yy = Chunk::MIN_SUBCHUNK_INDEX; $yy <= Chunk::MAX_SUBCHUNK_INDEX; ++$yy){
 			if(!isset($subChunks[$yy])){
-				$subChunks[$yy] = new SubChunk(BlockTypeIds::AIR << Block::INTERNAL_STATE_DATA_BITS, [], clone $biomes3d);
+				$subChunks[$yy] = new SubChunk(Block::EMPTY_STATE_ID, [], clone $biomes3d);
 			}
 		}
 
@@ -380,12 +422,12 @@ class DimensionLevelDBProvider extends LevelDB{
 			}
 		}
 
-		$storages = [$this->palettizeLegacySubChunkXZY($blocks, $blockData)];
+		$storages = [$this->palettizeLegacySubChunkXZY($blocks, $blockData, $logger)];
 		if($convertedLegacyExtraData !== null){
 			$storages[] = $convertedLegacyExtraData;
 		}
 
-		return new SubChunk(BlockTypeIds::AIR << Block::INTERNAL_STATE_DATA_BITS, $storages, $biomePalette);
+		return new SubChunk(Block::EMPTY_STATE_ID, $storages, $biomePalette);
 	}
 
 	/**
@@ -409,7 +451,7 @@ class DimensionLevelDBProvider extends LevelDB{
 				if($convertedLegacyExtraData !== null){
 					$storages[] = $convertedLegacyExtraData;
 				}
-				return new SubChunk(BlockTypeIds::AIR << Block::INTERNAL_STATE_DATA_BITS, $storages, $biomePalette);
+				return new SubChunk(Block::EMPTY_STATE_ID, $storages, $biomePalette);
 			case SubChunkVersion::PALETTED_MULTI:
 			case SubChunkVersion::PALETTED_MULTI_WITH_OFFSET:
 				//legacy extradata layers intentionally ignored because they aren't supposed to exist in v8
@@ -424,7 +466,7 @@ class DimensionLevelDBProvider extends LevelDB{
 				for($k = 0; $k < $storageCount; ++$k){
 					$storages[] = $this->deserializeBlockPalette($binaryStream, $logger);
 				}
-				return new SubChunk(BlockTypeIds::AIR << Block::INTERNAL_STATE_DATA_BITS, $storages, $biomePalette);
+			return new SubChunk(Block::EMPTY_STATE_ID, $storages, $biomePalette);
 			default:
 				//this should never happen - an unsupported chunk appearing in a supported world is a sign of corruption
 				throw new CorruptedChunkException("don't know how to decode LevelDB subchunk format version $subChunkVersion");
@@ -454,7 +496,7 @@ class DimensionLevelDBProvider extends LevelDB{
 		$subChunkKeyOffset = self::hasOffsetCavesAndCliffsSubChunks($chunkVersion) ? self::CAVES_CLIFFS_EXPERIMENTAL_SUBCHUNK_KEY_OFFSET : 0;
 		for($y = Chunk::MIN_SUBCHUNK_INDEX; $y <= Chunk::MAX_SUBCHUNK_INDEX; ++$y){
 			if(($data = $this->db->get($index . ChunkDataKey::SUBCHUNK . chr($y + $subChunkKeyOffset))) === false){
-				$subChunks[$y] = new SubChunk(BlockTypeIds::AIR << Block::INTERNAL_STATE_DATA_BITS, [], $biomeArrays[$y]);
+				$subChunks[$y] = new SubChunk(Block::EMPTY_STATE_ID, [], $biomeArrays[$y]);
 				continue;
 			}
 
