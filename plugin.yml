@@ -1,7 +1,7 @@
 name: NativeDimensions
 main: jasonw4331\NativeDimensions\Main
 src-namespace-prefix: jasonw4331\NativeDimensions
-version: 1.0.0-beta11
+version: 1.0.0
 api: 5.0.0
 description: "A plugin which loads dimensions within worlds and provides an API for managing dimensions across worlds"
 author: "jasonw4331"
