@@ -9,6 +9,8 @@ use Logger;
 use pocketmine\network\mcpe\protocol\types\DimensionIds;
 use pocketmine\utils\Utils;
 use pocketmine\world\format\io\region\Anvil;
+use pocketmine\world\format\io\region\McRegion;
+use pocketmine\world\format\io\region\PMAnvil;
 use function strtolower;
 use function trim;
 
@@ -34,6 +36,8 @@ class DimensionalWorldProviderManager{
 				default => throw new \UnexpectedValueException("Invalid dimension Id")
 			};
 		}), "anvil");
+		$this->addProvider(new ReadOnlyWorldProviderManagerEntry(McRegion::isValid(...), fn(string $path, \Logger $logger) => new McRegion($path, $logger)), "mcregion");
+		$this->addProvider(new ReadOnlyWorldProviderManagerEntry(PMAnvil::isValid(...), fn(string $path, \Logger $logger) => new PMAnvil($path, $logger)), "pmanvil");
 	}
 
 	/**
