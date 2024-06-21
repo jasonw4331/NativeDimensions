@@ -11,7 +11,6 @@ use pocketmine\block\Bed;
 use pocketmine\event\entity\EntityTeleportEvent;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerBedEnterEvent;
-use pocketmine\event\player\PlayerRespawnEvent;
 use pocketmine\player\Player;
 use pocketmine\world\Explosion;
 

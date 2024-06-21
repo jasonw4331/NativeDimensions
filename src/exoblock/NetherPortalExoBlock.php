@@ -4,22 +4,19 @@ declare(strict_types=1);
 
 namespace jasonw4331\NativeDimensions\exoblock;
 
+use jasonw4331\NativeDimensions\utils\WorldUtils;
+use jasonw4331\NativeDimensions\vanilla\ExtraVanillaBlocks;
 use pocketmine\block\Block;
-use pocketmine\block\BlockTypeIds;
 use pocketmine\block\NetherPortal;
-use pocketmine\block\RuntimeBlockStateRegistry;
 use pocketmine\block\VanillaBlocks;
-use pocketmine\entity\Location;
 use pocketmine\item\Item;
+use pocketmine\math\Axis;
 use pocketmine\math\Facing;
 use pocketmine\math\Vector3;
 use pocketmine\network\mcpe\protocol\types\DimensionIds;
 use pocketmine\player\Player;
-use pocketmine\world\format\Chunk;
-use pocketmine\world\utils\SubChunkExplorer;
-use pocketmine\world\utils\SubChunkExplorerStatus;
+use pocketmine\world\BlockTransaction;
 use pocketmine\world\World;
-use SplQueue;
 use function assert;
 
 class NetherPortalExoBlock extends PortalExoBlock{
@@ -32,43 +29,55 @@ class NetherPortalExoBlock extends PortalExoBlock{
 		return DimensionIds::NETHER;
 	}
 
-	public function getTargetWorldTeleportLocation(Player $player) : Location{
-		$to_nether = $player->getWorld()->getOverworld() === $player->getWorld();
-		$location = $player->getLocation();
-		$location->world = $to_nether ? $player->getWorld()->getNether() : $player->getWorld()->getOverworld();
-		$location->x = floor($to_nether ? $location->x / 8 : $location->x * 8) + 0.5;
-		$location->z = floor($to_nether ? $location->z / 8 : $location->z * 8) + 0.5;
-		return $location;
+	public function meetsSupportConditions(BlockTransaction $transaction, Vector3 $pos) : bool{
+		$faces = [];
+		if($pos->y < World::Y_MAX - 1){
+			$faces[] = Facing::UP;
+		}
+		if($pos->y > World::Y_MIN){
+			$faces[] = Facing::DOWN;
+		}
+		$portal_block = $transaction->fetchBlockAt($pos->x, $pos->y, $pos->z);
+		if($portal_block instanceof NetherPortal){
+			$axis = $portal_block->getAxis();
+		}else{
+			$axis = Axis::Z;
+		}
+		if($axis === Axis::Z){
+			$faces[] = Facing::SOUTH;
+			$faces[] = Facing::NORTH;
+		}else{
+			assert($axis === Axis::X);
+			$faces[] = Facing::WEST;
+			$faces[] = Facing::EAST;
+		}
+		foreach($faces as $face){
+			$side_pos = $pos->getSide($face);
+			$block = $transaction->fetchBlockAt($side_pos->x, $side_pos->y, $side_pos->z);
+			if(!$this->isValid($block)){
+				return false;
+			}
+		}
+		return true;
 	}
 
 	public function update(Block $wrapping) : bool{
 		assert($wrapping instanceof NetherPortal);
-
 		$pos = $wrapping->getPosition();
 		$world = $pos->getWorld();
-
-		$shouldKeep = 1;
-		if($pos->y < World::Y_MAX - 1){
-			$shouldKeep &= $this->isValid($world->getBlockAt($pos->x, $pos->y + 1, $pos->z));
+		if(!$this->meetsSupportConditions(new BlockTransaction($world), $pos)){
+			$check_sides = [Facing::UP, Facing::DOWN];
+			$axis = $wrapping->getAxis();
+			if($axis === Axis::X){
+				$check_sides[] = Facing::EAST;
+				$check_sides[] = Facing::WEST;
+			}else{
+				assert($axis === Axis::Z);
+				$check_sides[] = Facing::NORTH;
+				$check_sides[] = Facing::SOUTH;
+			}
+			return WorldUtils::removeTouchingBlocks($world, ExtraVanillaBlocks::END_PORTAL()->getTypeId(), $pos, $check_sides)?->apply() ?? false;
 		}
-		if($pos->y > 0){
-			$shouldKeep &= $this->isValid($world->getBlockAt($pos->x, $pos->y - 1, $pos->z));
-		}
-
-		$metadata = $wrapping->getAxis();
-		if($metadata < 2){
-			$shouldKeep &= $this->isValid($world->getBlockAt($pos->x - 1, $pos->y, $pos->z));
-			$shouldKeep &= $this->isValid($world->getBlockAt($pos->x + 1, $pos->y, $pos->z));
-		}else{
-			$shouldKeep &= $this->isValid($world->getBlockAt($pos->x, $pos->y, $pos->z - 1));
-			$shouldKeep &= $this->isValid($world->getBlockAt($pos->x, $pos->y, $pos->z + 1));
-		}
-
-		if($shouldKeep === 0){
-			$this->fill($world, $pos, $metadata);
-			return true;
-		}
-
 		return false;
 	}
 
@@ -78,40 +87,6 @@ class NetherPortalExoBlock extends PortalExoBlock{
 
 	public function isValid(Block $block) : bool{
 		$blockId = $block->getTypeId();
-		return $blockId === BlockTypeIds::OBSIDIAN || $blockId === BlockTypeIds::NETHER_PORTAL;
-	}
-
-	public function fill(World $world, Vector3 $origin, int $metadata) : void{
-		$visits = new SplQueue();
-		$visits->enqueue($origin);
-
-		$iterator = new SubChunkExplorer($world);
-		$air = VanillaBlocks::AIR();
-
-		$block_state_registry = RuntimeBlockStateRegistry::getInstance();
-
-		while(!$visits->isEmpty()){
-			/** @var Vector3 $coordinates */
-			$coordinates = $visits->dequeue();
-			if(
-				$iterator->moveTo($coordinates->x, $coordinates->y, $coordinates->z) === SubChunkExplorerStatus::INVALID ||
-				$block_state_registry->fromStateId($iterator->currentSubChunk->getBlockStateId($coordinates->x & Chunk::COORD_MASK, $coordinates->y & Chunk::COORD_MASK, $coordinates->z & Chunk::COORD_MASK))->getTypeId() !== BlockTypeIds::NETHER_PORTAL
-			){
-				continue;
-			}
-
-			$world->setBlockAt($coordinates->x, $coordinates->y, $coordinates->z, $air);
-
-			if($metadata === 0){
-				$visits->enqueue($coordinates->getSide(Facing::EAST));
-				$visits->enqueue($coordinates->getSide(Facing::WEST));
-			}else{
-				$visits->enqueue($coordinates->getSide(Facing::NORTH));
-				$visits->enqueue($coordinates->getSide(Facing::SOUTH));
-			}
-
-			$visits->enqueue($coordinates->getSide(Facing::UP));
-			$visits->enqueue($coordinates->getSide(Facing::DOWN));
-		}
+		return $blockId === VanillaBlocks::END_PORTAL_FRAME()->getTypeId() || $blockId === ExtraVanillaBlocks::END_PORTAL()->getTypeId();
 	}
 }

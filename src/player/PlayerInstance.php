@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace jasonw4331\NativeDimensions\player;
 
-use Logger;
 use jasonw4331\NativeDimensions\event\player\PlayerEnterPortalEvent;
 use jasonw4331\NativeDimensions\event\player\PlayerPortalTeleportEvent;
 use jasonw4331\NativeDimensions\exoblock\PortalExoBlock;
+use Logger;
+use pocketmine\entity\Location;
 use pocketmine\math\Vector3;
 use pocketmine\network\mcpe\protocol\ChangeDimensionPacket;
+use pocketmine\network\mcpe\protocol\types\DimensionIds;
 use pocketmine\player\Player;
+use pocketmine\world\Position;
 use PrefixedLogger;
 use ReflectionProperty;
 
@@ -33,10 +36,10 @@ final class PlayerInstance{
 		$this->_chunksPerTick = $_chunksPerTick;
 	}
 
-	public function onEnterPortal(PortalExoBlock $block) : void{
-		($ev = new PlayerEnterPortalEvent($this->player, $block, $this->player->isCreative() ? 0 : $block->teleportation_duration))->call();
+	public function onEnterPortal(PortalExoBlock $block, Position $position) : void{
+		($ev = new PlayerEnterPortalEvent($this->player, $block, $position, $this->player->isCreative() ? 0 : $block->teleportation_duration))->call();
 		if(!$ev->isCancelled()){
-			$this->in_portal = new PlayerPortalInfo($block, $ev->teleport_duration);
+			$this->in_portal = new PlayerPortalInfo($block, $position, $ev->teleport_duration);
 			PlayerManager::scheduleTicking($this->player);
 		}
 	}
@@ -85,8 +88,15 @@ final class PlayerInstance{
 	}
 
 	private function teleport() : void{
-		$target = $this->in_portal->block->getTargetWorldTeleportLocation($this->player);
-		($ev = new PlayerPortalTeleportEvent($this->player, $this->in_portal->block, $target))->call();
+		$to = $this->in_portal->block->getTargetWorldDimensionId();
+		$world = match ($to) {
+			DimensionIds::OVERWORLD => $this->player->getWorld()->getOverworld(),
+			DimensionIds::NETHER => $this->player->getWorld()->getNether(),
+			DimensionIds::THE_END => $this->player->getWorld()->getEnd(),
+			default => throw new \Error("Unknown dimension ID: $to")
+		};
+		$target = Location::fromObject($world->getSpawnLocation(), $world, 0.0, 0.0);
+		($ev = new PlayerPortalTeleportEvent($this->player, $this->in_portal->block, $this->in_portal->block_position, $target))->call();
 		if(!$ev->isCancelled()){
 			$this->player->teleport($ev->target);
 		}

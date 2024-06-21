@@ -37,9 +37,6 @@ use function str_contains;
 
 class Main extends PluginBase{
 
-	/** @var array<string, DimensionIds::*> */
-	private array $applicable_worlds = [];
-
 	/** @var Compressor[] */
 	private array $known_compressors = [];
 
@@ -91,7 +88,7 @@ class Main extends PluginBase{
 		$this->getServer()->getPluginManager()->registerEvent(WorldLoadEvent::class, function(WorldLoadEvent $event) : void{
 			/** @var DimensionalWorld $world */
 			$world = $event->getWorld();
-			$this->registerHackToWorldIfApplicable($world);
+			$this->registerHackToWorld($world);
 		}, EventPriority::LOWEST, $this);
 
 		// register already-registered values
@@ -99,7 +96,7 @@ class Main extends PluginBase{
 		/** @var DimensionalWorld $world */
 		foreach($this->getServer()->getWorldManager()->getWorlds() as $world){
 			if($world->getDimensionId() !== DimensionIds::OVERWORLD)
-				$this->applyToWorld($world->getFolderName(), $world->getDimensionId());
+				$this->applyToWorld($world->getFolderName());
 		}
 
 		ExoBlockFactory::init($this);
@@ -115,25 +112,14 @@ class Main extends PluginBase{
 		$this->known_compressors[$id] = $compressor;
 		/** @phpstan-var DimensionalWorld $world */
 		foreach($this->getServer()->getWorldManager()->getWorlds() as $world){
-			$this->registerHackToWorldIfApplicable($world);
+			$this->registerHackToWorld($world);
 		}
-	}
-
-	private function registerHackToWorldIfApplicable(DimensionalWorld $world) : bool{
-		if(!isset($this->applicable_worlds[$world_name = $world->getFolderName()])){
-			return false;
-		}
-
-		$dimension_id = $this->applicable_worlds[$world_name];
-		$this->registerHackToWorld($world, $dimension_id);
-		return true;
 	}
 
 	/**
 	 * @param DimensionalWorld $world
-	 * @param DimensionIds::* $dimension_id
 	 */
-	private function registerHackToWorld(DimensionalWorld $world, int $dimension_id) : void{
+	private function registerHackToWorld(DimensionalWorld $world) : void{
 		/** @see ChunkCache::$instances */
 		static $_chunk_cache = new ReflectionClass(ChunkCache::class);
 
@@ -141,7 +127,7 @@ class Main extends PluginBase{
 			$chunk_cache = ChunkCache::getInstance($world, $compressor);
 			if(!($chunk_cache instanceof DimensionChunkCache)){
 				$instances = $_chunk_cache->getStaticPropertyValue("instances");
-				$instances[spl_object_id($world)][spl_object_id($compressor)] = DimensionChunkCache::from($chunk_cache, $dimension_id);
+				$instances[spl_object_id($world)][spl_object_id($compressor)] = DimensionChunkCache::from($chunk_cache, $world->getDimensionId());
 				$_chunk_cache->setStaticPropertyValue("instances", $instances);
 			}
 		}
@@ -151,16 +137,11 @@ class Main extends PluginBase{
 	 * @param string $world_folder_name
 	 * @param DimensionIds::* $dimension_id
 	 */
-	public function applyToWorld(string $world_folder_name, int $dimension_id) : void{
-		$this->applicable_worlds[$world_folder_name] = $dimension_id;
+	public function applyToWorld(string $world_folder_name) : void{
 		$world = $this->getServer()->getWorldManager()->getWorldByName($world_folder_name);
 		if($world instanceof DimensionalWorld){
-			$this->registerHackToWorldIfApplicable($world);
+			$this->registerHackToWorld($world);
 		}
-	}
-
-	public function unapplyFromWorld(string $world_folder_name) : void{
-		unset($this->applicable_worlds[$world_folder_name]);
 	}
 
 	public static function makeNetherPortal(Position $position) : bool{

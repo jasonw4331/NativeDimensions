@@ -5,18 +5,21 @@ declare(strict_types=1);
 namespace jasonw4331\NativeDimensions\exoblock;
 
 use jasonw4331\NativeDimensions\event\player\PlayerCreateNetherPortalEvent;
-use jasonw4331\NativeDimensions\utils\ArrayUtils;
+use jasonw4331\NativeDimensions\vanilla\ExtraVanillaBlocks;
 use pocketmine\block\Block;
 use pocketmine\block\BlockTypeIds;
 use pocketmine\block\VanillaBlocks;
 use pocketmine\item\Item;
 use pocketmine\item\ItemTypeIds;
+use pocketmine\math\Axis;
 use pocketmine\math\Facing;
 use pocketmine\math\Vector2;
 use pocketmine\math\Vector3;
 use pocketmine\player\Player;
+use pocketmine\world\BlockTransaction;
 use pocketmine\world\World;
 use SplQueue;
+use function assert;
 
 class NetherPortalFrameExoBlock implements ExoBlock{
 
@@ -31,20 +34,12 @@ class NetherPortalFrameExoBlock implements ExoBlock{
 			$affectedBlock = $wrapping->getSide($face);
 			if($affectedBlock->getTypeId() === BlockTypeIds::AIR){
 				$world = $player->getWorld();
-				$pos = $affectedBlock->getPosition()->asVector3();
-				$blocks = $this->fill($world, $pos, 10, Facing::WEST);
-				if(count($blocks) === 0){
-					$blocks = $this->fill($world, $pos, 10, Facing::NORTH);
-				}
-				if(count($blocks) > 0){
-					($ev = new PlayerCreateNetherPortalEvent($player, $wrapping->getPosition()))->call();
+				$pos = $affectedBlock->getPosition();
+				$transaction = $this->fill($world, $pos, Axis::X, $frame_blocks) ?? $this->fill($world, $pos, Axis::Z, $frame_blocks);
+				if($transaction !== null){
+					($ev = new PlayerCreateNetherPortalEvent($player, $wrapping->getPosition(), $frame_blocks, $transaction))->call();
 					if(!$ev->isCancelled()){
-						foreach($blocks as $hash => $block){
-							if($block->getTypeId() === BlockTypeIds::NETHER_PORTAL){
-								World::getBlockXYZ($hash, $x, $y, $z);
-								$world->setBlockAt($x, $y, $z, $block, false);
-							}
-						}
+						$transaction->apply();
 						return true;
 					}
 				}
@@ -66,71 +61,52 @@ class NetherPortalFrameExoBlock implements ExoBlock{
 	/**
 	 * @param World $world
 	 * @param Vector3 $origin
-	 * @param int $radius
-	 * @param int $direction
-	 * @return array<int, Block>
+	 * @param Axis::X|Axis::Z  $axis
+	 * @param list<Block>|null $frame_blocks
+	 * @param-out list<Block>  $frame_blocks
+	 *
+	 * @return BlockTransaction|null
 	 */
-	public function fill(World $world, Vector3 $origin, int $radius, int $direction) : array{
-		$blocks = [];
-
+	public function fill(World $world, Vector3 $origin, int $axis, ?array &$frame_blocks) : ?BlockTransaction{
 		$visits = new SplQueue();
 		$visits->enqueue($origin);
+		$portal_block = (clone ExtraVanillaBlocks::END_PORTAL())->setAxis($axis);
+		$portal_block_id = $portal_block->getTypeId();
+		$transaction = new BlockTransaction($world);
+		$changed = 0;
+		$frame_blocks = [];
 		while(!$visits->isEmpty()){
 			/** @var Vector3 $coordinates */
 			$coordinates = $visits->dequeue();
 			if($origin->distanceSquared($coordinates) >= $this->length_squared){
-				return [];
+				return null;
 			}
 
-			$coordinates_hash = World::blockHash($coordinates->x, $coordinates->y, $coordinates->z);
-			$block = $world->getBlockAt($coordinates->x, $coordinates->y, $coordinates->z);
+			if($transaction->fetchBlockAt($coordinates->x, $coordinates->y, $coordinates->z)->getTypeId() === $portal_block_id){
+				continue;
+			}
 
-			if(
-				$block->getTypeId() === BlockTypeIds::AIR &&
-				ArrayUtils::firstOrDefault(
-					$blocks,
-					static function(int $hash, Block $block) use($coordinates_hash) : bool{ return $hash === $coordinates_hash; }
-				) === null
-			){
-				$this->visit($coordinates, $blocks, $direction);
-				if($direction === Facing::WEST){
+			$block = $world->getBlockAt($coordinates->x, $coordinates->y, $coordinates->z);
+			$block_type_id = $block->getTypeId();
+			if($block_type_id === BlockTypeIds::AIR){
+				$transaction->addBlockAt($coordinates->x, $coordinates->y, $coordinates->z, $portal_block);
+				if($axis === Axis::Z){
 					$visits->enqueue($coordinates->getSide(Facing::NORTH));
 					$visits->enqueue($coordinates->getSide(Facing::SOUTH));
-				}elseif($direction === Facing::NORTH){
+				}else{
+					assert($axis === Axis::X);
 					$visits->enqueue($coordinates->getSide(Facing::WEST));
 					$visits->enqueue($coordinates->getSide(Facing::EAST));
 				}
 				$visits->enqueue($coordinates->getSide(Facing::UP));
 				$visits->enqueue($coordinates->getSide(Facing::DOWN));
-			}elseif(!$this->isValid($block, $coordinates_hash, $blocks)){
-				return [];
+				$changed++;
+			}elseif($block_type_id !== VanillaBlocks::END_PORTAL_FRAME()->getTypeId()){
+				return null;
+			}else{
+				$frame_blocks[] = $block;
 			}
 		}
-
-		return $blocks;
-	}
-
-	/**
-	 * @param Vector3 $coordinates
-	 * @param array<int, Block> $blocks
-	 * @param int $direction
-	 */
-	public function visit(Vector3 $coordinates, array &$blocks, int $direction) : void{
-		$axis = Facing::axis(Facing::rotateY($direction, true));
-		$blocks[World::blockHash($coordinates->x, $coordinates->y, $coordinates->z)] = VanillaBlocks::NETHER_PORTAL()->setAxis($axis);
-	}
-
-	/**
-	 * @param Block $block
-	 * @param int $coordinates_hash
-	 * @param array<int, Block> $portals
-	 * @return bool
-	 */
-	private function isValid(Block $block, int $coordinates_hash, array $portals) : bool{
-		return $block->getTypeId() === BlockTypeIds::OBSIDIAN ||
-			ArrayUtils::firstOrDefault(
-				$portals,
-				static function(int $hash, Block $b) use($coordinates_hash) : bool{ return $hash === $coordinates_hash && $b->getTypeId() === BlockTypeIds::NETHER_PORTAL; }
-			) !== null;
+		return $changed > 0 ? $transaction : null;
 	}
 }
