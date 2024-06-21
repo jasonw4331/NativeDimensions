@@ -31,27 +31,22 @@ use function rtrim;
 use const DIRECTORY_SEPARATOR;
 
 class DimensionalFormatConverter{
-
-	/** @var WorldProvider[] $oldProviders */
-	private array $oldProviders;
-	private RewritableWorldProviderManagerEntry $newProvider;
-
 	private string $backupPath;
-
 	private \Logger $logger;
-
-	private int $chunksPerProgressUpdate;
 
 	/**
 	 * @param WorldProvider[] $oldProviders
 	 *
 	 * @throws Exception
 	 */
-	public function __construct(array $oldProviders, RewritableWorldProviderManagerEntry $newProvider, string $backupPath, \Logger $logger, int $chunksPerProgressUpdate = 256){
-		$this->oldProviders = $oldProviders;
-		$this->newProvider = $newProvider;
+	public function __construct(
+		private array $oldProviders,
+		private RewritableWorldProviderManagerEntry $newProvider,
+		string $backupPath,
+		\Logger $logger,
+		private int $chunksPerProgressUpdate = 256
+	){
 		$this->logger = new PrefixedLogger($logger, "World Converter: " . $oldProviders[DimensionIds::OVERWORLD]->getWorldData()->getName());
-		$this->chunksPerProgressUpdate = $chunksPerProgressUpdate;
 
 		if(!file_exists($backupPath)){
 			@mkdir($backupPath, 0777, true);
@@ -115,7 +110,7 @@ class DimensionalFormatConverter{
 		}
 		$this->newProvider->generate($convertedOutput, $data->getName(), WorldCreationOptions::create()
 			//TODO: defaulting to NORMAL here really isn't very good behaviour, but it's consistent with what pocketmine already
-			//does; WorldManager checks for unknown generators before this is reached anyways.
+			//did previously; besides, WorldManager checks for unknown generators before this is reached anyway.
 			->setGeneratorClass(GeneratorManager::getInstance()->getGenerator($data->getGenerator())?->getGeneratorClass() ?? Normal::class)
 			->setGeneratorOptions($data->getGeneratorOptions())
 			->setSeed($data->getSeed())
@@ -124,9 +119,9 @@ class DimensionalFormatConverter{
 		);
 
 		return [
-			$overworld = $this->newProvider->fromPath($convertedOutput, new \PrefixedLogger($this->logger, "World Provider: {$data->getName()}"), DimensionIds::OVERWORLD),
-			$this->newProvider->fromPath($convertedOutput, new \PrefixedLogger($this->logger, "World Provider: {$data->getName()}"), DimensionIds::NETHER, $overworld->getDatabase()),
-			$this->newProvider->fromPath($convertedOutput, new \PrefixedLogger($this->logger, "World Provider: {$data->getName()}"), DimensionIds::THE_END, $overworld->getDatabase()),
+			$overworld = $this->newProvider->fromPath($convertedOutput, new PrefixedLogger($this->logger, "World Provider: {$data->getName()}"), DimensionIds::OVERWORLD),
+			$this->newProvider->fromPath($convertedOutput, new PrefixedLogger($this->logger, "World Provider: {$data->getName()}"), DimensionIds::NETHER, $overworld->getDatabase()),
+			$this->newProvider->fromPath($convertedOutput, new PrefixedLogger($this->logger, "World Provider: {$data->getName()}"), DimensionIds::THE_END, $overworld->getDatabase()),
 		];
 	}
 
