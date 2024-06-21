@@ -37,7 +37,7 @@ final class PlayerManager{
 		$plugin->getServer()->getPluginManager()->registerEvents(new PlayerDimensionChangeListener(), $plugin);
 
 		SimplePacketHandler::createInterceptor($plugin)->interceptOutgoing(static function(StartGamePacket $packet, NetworkSession $target) : bool{
-			$dimensionId = $target->getPlayer()->getWorld()->getDimensionId();
+			$dimensionId = $target->getPlayer()->getWorld()->dimensionId;
 			if($dimensionId !== $packet->levelSettings->spawnSettings->getDimension()){
 				$pk = clone $packet;
 				$pk->levelSettings->spawnSettings = new SpawnSettings(

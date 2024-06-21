@@ -14,10 +14,7 @@ use pocketmine\world\World;
 
 class DimensionalWorld extends World{
 
-	private int $dimensionId;
-
-	public function __construct(Server $server, string $name, WritableWorldProvider $provider, AsyncPool $workerPool, int $dimensionId){
-		$this->dimensionId = $dimensionId;
+	public function __construct(Server $server, string $name, WritableWorldProvider $provider, AsyncPool $workerPool, public readonly int $dimensionId){
 		parent::__construct($server, $name, $provider, $workerPool);
 	}
 
@@ -37,13 +34,6 @@ class DimensionalWorld extends World{
 		if($this->dimensionId === DimensionIds::THE_END)
 			return $this;
 		return $this->getServer()->getWorldManager()->getWorld($this->getId() + (DimensionIds::THE_END - $this->dimensionId));
-	}
-
-	/**
-	 * @phpstan-return DimensionIds::*
-	 */
-	public function getDimensionId() : int{
-		return $this->dimensionId;
 	}
 
 	public function save(bool $force = false) : bool{

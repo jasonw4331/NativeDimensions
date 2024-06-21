@@ -95,7 +95,7 @@ class Main extends PluginBase{
 		$this->registerKnownCompressor(ZlibCompressor::getInstance());
 		/** @var DimensionalWorld $world */
 		foreach($this->getServer()->getWorldManager()->getWorlds() as $world){
-			if($world->getDimensionId() !== DimensionIds::OVERWORLD)
+			if($world->dimensionId !== DimensionIds::OVERWORLD)
 				$this->applyToWorld($world->getFolderName());
 		}
 
@@ -127,7 +127,7 @@ class Main extends PluginBase{
 			$chunk_cache = ChunkCache::getInstance($world, $compressor);
 			if(!($chunk_cache instanceof DimensionChunkCache)){
 				$instances = $_chunk_cache->getStaticPropertyValue("instances");
-				$instances[spl_object_id($world)][spl_object_id($compressor)] = DimensionChunkCache::from($chunk_cache, $world->getDimensionId());
+				$instances[spl_object_id($world)][spl_object_id($compressor)] = DimensionChunkCache::from($chunk_cache, $world->dimensionId);
 				$_chunk_cache->setStaticPropertyValue("instances", $instances);
 			}
 		}

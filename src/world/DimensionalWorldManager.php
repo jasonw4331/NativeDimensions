@@ -154,7 +154,7 @@ class DimensionalWorldManager extends WorldManager{
 			}
 		}
 
-		if($world instanceof DimensionalWorld && $world->getDimensionId() === DimensionIds::OVERWORLD){
+		if($world instanceof DimensionalWorld && $world->dimensionId === DimensionIds::OVERWORLD){
 			$this->unloadWorld($world->getEnd(), true);
 			$this->unloadWorld($world->getNether(), true);
 		}

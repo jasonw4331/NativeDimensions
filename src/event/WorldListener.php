@@ -32,9 +32,9 @@ final class WorldListener implements Listener{
 			$to = $event->getTo();
 			/** @var DimensionalWorld $to_world */
 			$to_world = $to->getWorld();
-			if($from_world->getDimensionId() !== $to_world->getDimensionId()){
+			if($from_world->dimensionId !== $to_world->dimensionId){
 				// Player can be null if a plugin teleports the player before PlayerLoginEvent @ MONITOR
-				PlayerManager::getNullable($player)?->onBeginDimensionChange($to_world->getDimensionId(), $to->asVector3(), !$player->isAlive());
+				PlayerManager::getNullable($player)?->onBeginDimensionChange($to_world->dimensionId, $to->asVector3(), !$player->isAlive());
 			}
 		}
 	}
